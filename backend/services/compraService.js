@@ -127,13 +127,15 @@ export class CompraService {
       throw new NotFoundError('El tipo de entrada solicitado no existe en este evento.');
     }
 
-    // Regla de dominio: validar cupo disponible
-    if (!tipoEntrada.hayCupoPara(cantidadNum)) {
-      throw new ConflictError('No hay cupos suficientes para el tipo de entrada seleccionado.');
+    // Regla de dominio: validar y decrementar cupo usando método de dominio de TipoEntrada
+    if (typeof tipoEntrada.descontarCupo === 'function') {
+      tipoEntrada.descontarCupo(cantidadNum);
+    } else {
+      if (!tipoEntrada.hayCupoPara(cantidadNum)) {
+        throw new ConflictError('No hay cupos suficientes para el tipo de entrada seleccionado.');
+      }
+      tipoEntrada.cupo -= cantidadNum;
     }
-
-    // Decrementar cupo del tipo de entrada
-    tipoEntrada.cupo -= cantidadNum;
     if (this.eventoRepository.update) {
       await this.eventoRepository.update(evento.id, evento);
     }
@@ -303,7 +305,11 @@ export class CompraService {
           t => this.extraerId(t) === tipoEntradaId
         );
         if (tipo) {
-          tipo.cupo = (Number(tipo.cupo) || 0) + compra.cantidad;
+          if (typeof tipo.restituirCupo === 'function') {
+            tipo.restituirCupo(compra.cantidad);
+          } else {
+            tipo.cupo = (Number(tipo.cupo) || 0) + compra.cantidad;
+          }
           if (compra.tipoEntrada && compra.tipoEntrada !== tipo) {
             compra.tipoEntrada.cupo = tipo.cupo;
           }
@@ -316,7 +322,11 @@ export class CompraService {
     }
 
     if (!cupoRestituido && compra.tipoEntrada) {
-      compra.tipoEntrada.cupo = (Number(compra.tipoEntrada.cupo) || 0) + compra.cantidad;
+      if (typeof compra.tipoEntrada.restituirCupo === 'function') {
+        compra.tipoEntrada.restituirCupo(compra.cantidad);
+      } else {
+        compra.tipoEntrada.cupo = (Number(compra.tipoEntrada.cupo) || 0) + compra.cantidad;
+      }
     }
   }
 
@@ -469,10 +479,14 @@ export class CompraService {
       enviado: this.obtenerFechaActual()
     });
 
-    if (!Array.isArray(compra.mensajes)) {
-      compra.mensajes = [];
+    if (typeof compra.agregarMensaje === 'function') {
+      compra.agregarMensaje(nuevoMensaje);
+    } else {
+      if (!Array.isArray(compra.mensajes)) {
+        compra.mensajes = [];
+      }
+      compra.mensajes.push(nuevoMensaje);
     }
-    compra.mensajes.push(nuevoMensaje);
 
     await this.compraRepository.update(compra.id, compra);
     return nuevoMensaje;

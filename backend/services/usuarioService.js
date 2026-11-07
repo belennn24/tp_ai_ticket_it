@@ -77,15 +77,11 @@ export class UsuarioService {
 
     const usuario = await this.obtenerOUCrearUsuario(usuarioId);
 
-    const yaEsFavorito = usuario.favoritos.some(
-      f => String(f?.id !== undefined ? f.id : f) === String(eventoId)
-    );
-
-    if (yaEsFavorito) {
+    if (usuario.tieneFavorito(eventoId)) {
       throw new ConflictError('El evento ya se encuentra en la lista de favoritos.');
     }
 
-    usuario.favoritos.push(evento);
+    usuario.agregarFavorito(evento);
     await this.usuarioRepository.update(usuario.id, usuario);
 
     return {
@@ -109,15 +105,11 @@ export class UsuarioService {
 
     const usuario = await this.obtenerOUCrearUsuario(usuarioId);
 
-    const indice = usuario.favoritos.findIndex(
-      f => String(f?.id !== undefined ? f.id : f) === String(eventoId)
-    );
-
-    if (indice === -1) {
+    if (!usuario.tieneFavorito(eventoId)) {
       throw new NotFoundError('El evento no se encontraba en la lista de favoritos.');
     }
 
-    usuario.favoritos.splice(indice, 1);
+    usuario.eliminarFavorito(eventoId);
     await this.usuarioRepository.update(usuario.id, usuario);
 
     return {

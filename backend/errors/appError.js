@@ -21,6 +21,12 @@ export class ValidationError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message = 'Petición inválida') {
+    super(message, 400);
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message = 'Conflicto con el recurso existente') {
     super(message, 409);
