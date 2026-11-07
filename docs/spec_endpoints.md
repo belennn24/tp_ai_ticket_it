@@ -1,17 +1,9 @@
 ## Spec para endpoints
 
 ### Especificación de endpoint (genérica)
-- **Ruta:** 'METODO/api/recurso'
-- **Autenticación y Autorización:** rol
-- **Params/query:** especificar
-- **Body (JSON):** campos, tipos, formatos
-- **Salida exitosa (200 o 201):** código HTTP y JSON respuesta
-- **Manejo de erores:** 
-  - `400 Bad Request`: si falla la validación del schema.
-  - `401 Unauthorized`: si falta el token o expiró.
-  - `403 Forbidden`: si el usuario no tiene permisos o no le pertenece el recurso.
-  - `404 Not Found`: si el recurso buscado no existe.
-  - `409 Conflict`: si viola una regla de negocio.
+**Recibe:** [Headers / Params / Body con tipos y restricciones clave]
+**Errores:** [Condición error 1] → [Código error 400/401/403/404/409]. [Condición error 2] → [Código error 400/401/403/404/409]
+**Éxito:** [Efecto en dominio / persistencia], responde [Código 200/201] con [estructura/datos de salida]
 
 ### Plan técnico en capas
 - **Validation (Zod):** nombre del schema y validaciones específicas.
