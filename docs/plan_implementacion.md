@@ -45,6 +45,7 @@ flowchart TD
     E3 --> E4["Etapa 4: Módulo de Interacción (Chat y Reseñas) + Tests"]
     E4 --> E5["Etapa 5: Autenticación Formal y Autorización RBAC + Tests"]
     E5 --> E6["Etapa 6: Auditoría SOLID, Cobertura Integral y Cierre"]
+    E6 --> E7["Etapa 7: Precarga de Datos (Seed) y Preparación para Pruebas de Flujo E2E"]
 ```
 
 ---
@@ -201,11 +202,36 @@ flowchart TD
   - Medición de cobertura global con Jest: asegurar umbrales altos de cobertura en services y models.
   - Verificación de casos borde: eventos con cupo cero, eventos en la fecha límite, compradores cancelando múltiples veces.
   - Checklist de calidad de arquitectura:
-    - [ ] ¿Los controladores delegan todas las operaciones a los servicios sin contener lógica de negocio?
-    - [ ] ¿Los servicios reciben sus dependencias por inyección en el constructor (DIP)?
-    - [ ] ¿Los repositorios en memoria encapsulan completamente su almacenamiento interno?
-    - [ ] ¿Los modelos de dominio defienden sus invariantes (`hayCupoPara`, transiciones de estado)?
-    - [ ] ¿Todos los errores son instancias tipadas de `AppError` capturadas por el middleware central?
+    - [x] ¿Los controladores delegan todas las operaciones a los servicios sin contener lógica de negocio?
+    - [x] ¿Los servicios reciben sus dependencias por inyección en el constructor (DIP)?
+    - [x] ¿Los repositorios en memoria encapsulan completamente su almacenamiento interno?
+    - [x] ¿Los modelos de dominio defienden sus invariantes (`hayCupoPara`, transiciones de estado)?
+    - [x] ¿Todos los errores son instancias tipadas de `AppError` capturadas por el middleware central?
+
+---
+
+### Etapa 7: Precarga de Datos (Seed) y Preparación para Pruebas de Flujo E2E
+
+**Objetivo:** Proveer un conjunto representativo, coherente e interconectado de entidades del dominio en memoria para facilitar las pruebas manuales de flujo (Postman, cURL) y la futura integración con el cliente frontend móvil.
+
+- **Componentes a implementar:**
+  - Módulo sembrador (`backend/utils/seed.js`):
+    - Instanciación de modelos ricos de dominio: `Usuario`, `Categoria`, `TipoEntrada`, `Evento`, `Compra`, `CambioEstadoCompra`, `Mensaje`, `Resenia`.
+    - Precarga de usuarios con roles y credenciales coincidentes con las colecciones de Postman (`usr-organizador-1`, `usr-organizador-2`, `usr-comprador-1`, `usr-comprador-2`, `usr-admin-1`).
+    - Precarga de 4 categorías temáticas (Música, Teatro, Deportes, Conferencias).
+    - Precarga de 4 eventos con fechas relativas (futuros y pasados) y variedad de tipos de entrada, precios y cupos (incluyendo eventos de cupo limitado para testear agotamiento).
+    - Precarga de compras en distintos estados (`CONFIRMADA` con cálculo dinámico de `diasFaltantes`, `UTILIZADA` para habilitar calificación).
+    - Precarga de chat bidireccional sobre compra activa y reseñas con cálculo automático de reputación del organizador.
+    - Precarga de eventos favoritos para el comprador.
+  - Integración en el ciclo de vida del servidor:
+    - Ejecución automática de `seedDatabase()` en `backend/server.js` al levantar la aplicación.
+    - Rutas de desarrollo `POST /api/seed` y `GET /api/seed` en `backend/routes/seedRoutes.js` para reinicialización y verificación en caliente.
+    - Script standalone `"seed": "node backend/utils/seed.js"` en `package.json`.
+- **Testing a la par:**
+  - Suite `tests/seed.test.js`:
+    - Verificación del resumen de entidades sembradas.
+    - Validación de métodos de dominio sobre datos precargados (`tuPrecioEstaEntre`, `yaOcurrio`, `tieneFavorito`).
+    - Validación de los endpoints HTTP `/api/seed`.
 
 ---
 

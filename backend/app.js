@@ -6,6 +6,7 @@ import { usuarioRoutes } from './routes/usuarioRoutes.js';
 import { reseniaRoutes } from './routes/reseniaRoutes.js';
 import { organizadorRoutes } from './routes/organizadorRoutes.js';
 import { authRoutes } from './routes/authRoutes.js';
+import { seedRoutes } from './routes/seedRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'ticketit_jwt_secret_key_2026';
@@ -18,6 +19,9 @@ app.use(express.json());
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'AI Ticket It API', timestamp: new Date().toISOString() });
 });
+
+// Rutas de desarrollo para reiniciar y verificar el Seed
+app.use('/api/seed', seedRoutes);
 
 // Rutas de autenticación y tokens
 app.use('/api/auth', authRoutes);
