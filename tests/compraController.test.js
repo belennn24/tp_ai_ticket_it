@@ -18,6 +18,7 @@ describe('CompraController (Pruebas Unitarias)', () => {
       create: jest.fn(),
       cancelar: jest.fn(),
       utilizar: jest.fn(),
+      cambiarEstado: jest.fn(),
       agregarMensaje: jest.fn()
     };
 
@@ -97,6 +98,23 @@ describe('CompraController (Pruebas Unitarias)', () => {
 
     expect(mockService.cancelar).toHaveBeenCalledWith('c-1', {
       motivo: 'Problemas',
+      usuarioActual: req.user
+    });
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(cancelada);
+  });
+
+  it('cambiarEstado debe delegar en service.cambiarEstado y responder 200 con la compra actualizada', async () => {
+    const cancelada = { id: 'c-1', estado: 'CANCELADA' };
+    mockService.cambiarEstado.mockResolvedValue(cancelada);
+    req.params = { id: 'c-1' };
+    req.body = { estado: 'CANCELADA', motivo: 'Problemas de agenda' };
+
+    await controller.cambiarEstado(req, res, next);
+
+    expect(mockService.cambiarEstado).toHaveBeenCalledWith('c-1', {
+      estado: 'CANCELADA',
+      motivo: 'Problemas de agenda',
       usuarioActual: req.user
     });
     expect(res.status).toHaveBeenCalledWith(200);

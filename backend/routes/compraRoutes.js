@@ -6,7 +6,8 @@ import {
   crearCompraSchema,
   cancelarCompraSchema,
   agregarMensajeSchema,
-  utilizarCompraSchema
+  utilizarCompraSchema,
+  cambiarEstadoCompraSchema
 } from '../validations/compraValidation.js';
 
 const router = Router();
@@ -50,6 +51,24 @@ router.post(
   requireRole('comprador'),
   validate(crearCompraSchema),
   compraController.create
+);
+
+// PATCH /api/compras/:id/estado - Cambiar estado de compra (CANCELADA por comprador / UTILIZADA por organizador)
+router.patch(
+  '/:id/estado',
+  authMiddleware,
+  requireRole('comprador', 'organizador'),
+  validate(cambiarEstadoCompraSchema),
+  compraController.cambiarEstado
+);
+
+// PATCH /api/compras/:id - Modificar estado de compra (estándar REST)
+router.patch(
+  '/:id',
+  authMiddleware,
+  requireRole('comprador', 'organizador'),
+  validate(cambiarEstadoCompraSchema),
+  compraController.cambiarEstado
 );
 
 // PATCH /api/compras/:id/cancelar - Cancelar compra y restituir cupo (solo comprador dueño)

@@ -193,6 +193,10 @@ export class CompraService {
 
   validarEsComprador(compra, usuarioActual) {
     if (!usuarioActual) return;
+    const rol = usuarioActual.role || usuarioActual.rol;
+    if (rol && rol.toLowerCase() !== 'comprador') {
+      throw new ForbiddenError('Solo el comprador puede cancelar la compra.');
+    }
     if (this.extraerId(usuarioActual) !== this.extraerId(compra.comprador)) {
       throw new ForbiddenError('La compra no pertenece al comprador autenticado.');
     }
@@ -200,6 +204,10 @@ export class CompraService {
 
   validarEsOrganizadorEvento(compra, usuarioActual) {
     if (!usuarioActual) return;
+    const rol = usuarioActual.role || usuarioActual.rol;
+    if (rol && rol.toLowerCase() !== 'organizador') {
+      throw new ForbiddenError('Solo el organizador puede utilizar la compra.');
+    }
     if (this.extraerId(usuarioActual) !== this.extraerId(compra.evento?.organizador)) {
       throw new ForbiddenError('El organizador no es dueño del evento asociado a la compra.');
     }
@@ -418,6 +426,19 @@ export class CompraService {
 
   utilizarCompra(id, opciones) {
     return this.utilizar(id, opciones);
+  }
+
+  /**
+   * Caso de uso: Modificar el estado de una compra (CANCELADA o UTILIZADA)
+   */
+  async cambiarEstado(id, { estado, motivo, quien, usuarioActual } = {}) {
+    if (estado === estadoCompra.CANCELADA) {
+      return this.cancelar(id, { motivo, quien, usuarioActual });
+    }
+    if (estado === estadoCompra.UTILIZADA) {
+      return this.utilizar(id, { quien, usuarioActual });
+    }
+    throw new ValidationError('El estado es obligatorio y debe ser CANCELADA o UTILIZADA.');
   }
 
   /**

@@ -37,22 +37,28 @@
         - Si la compra no existe -> 404
     - **Camino feliz:** Retorna 200 con la cronología de estados en `CambioEstadoCompra` para esa compra.
 
-- `PATCH /api/compras/:id/cancelar`
+- `PATCH /api/compras/:id/estado` — **Cancelar Compra**
     - **Rol:** Comprador
-    - **Recibe:** Params: `id`, Body: `motivo` (opcional)
+    - **Recibe:** 
+        - Params: `id`
+        - Body: `estado` ("CANCELADA"), `motivo` (opcional)
     - **Errores:**
+        - Campo `estado` faltante o con valor inválido -> 400
         - Token ausente o inválido -> 401
         - Compra no pertenece al comprador -> 403
         - Si la compra no existe -> 404
         - Compra ya en estado `UTILIZADA`, `CANCELADA` o la fecha del evento ya expiró -> 409
-    - **Camino feliz:** Restituye cupo al `TipoEntrada`, cambia estado a `CANCELADA`, registra `CambioEstadoCompra` y responde 200.
+    - **Camino feliz:** Restituye cupo al `TipoEntrada`, cambia estado a `CANCELADA`, registra `CambioEstadoCompra` (con motivo si fue provisto) y responde 200 con la compra actualizada.
 
-- `PATCH /api/compras/:id/utilizar`
+- `PATCH /api/compras/:id/estado` — **Marcar como utilizada**
     - **Rol:** Organizador
-    - **Recibe:** Params: `id`
+    - **Recibe:** 
+        - Params: `id`
+        - Body: `estado` ("UTILIZADA")
     - **Errores:**
+        - Campo `estado` faltante o con valor inválido -> 400
         - Token ausente o inválido -> 401
         - Organizador no es dueño del evento -> 403
         - Si la compra no existe -> 404
         - Compra no está en estado `CONFIRMADA` o el evento ya finalizó -> 409
-    - **Camino feliz:** Marca la entrada en estado `UTILIZADA`, registra `CambioEstadoCompra` y responde 200.
+    - **Camino feliz:** Marca la entrada en estado `UTILIZADA`, registra `CambioEstadoCompra` y responde 200 con la compra actualizada.

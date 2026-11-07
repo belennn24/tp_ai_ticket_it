@@ -4,6 +4,7 @@ import {
     actualizarCompraSchema,
     cancelarCompraSchema,
     utilizarCompraSchema,
+    cambiarEstadoCompraSchema,
     agregarMensajeSchema,
     cantidadSchema,
     totalSchema,
@@ -137,6 +138,25 @@ describe('CompraValidation (Declarativo)', () => {
 
         test('utilizarCompraSchema acepta cuerpo vacío', () => {
             expect(utilizarCompraSchema.safeParse({}).success).toBe(true);
+        });
+
+        test('cambiarEstadoCompraSchema valida estado CANCELADA (con/sin motivo) y UTILIZADA', () => {
+            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'CANCELADA' }).success).toBe(true);
+            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'CANCELADA', motivo: 'Problemas de agenda' }).success).toBe(true);
+            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'UTILIZADA' }).success).toBe(true);
+        });
+
+        test('cambiarEstadoCompraSchema rechaza estado faltante o inválido (para responder 400)', () => {
+            const sinEstado = cambiarEstadoCompraSchema.safeParse({});
+            expect(sinEstado.success).toBe(false);
+            expect(sinEstado.error.issues[0].message).toContain('CANCELADA o UTILIZADA');
+
+            const estadoInvalido = cambiarEstadoCompraSchema.safeParse({ estado: 'CONFIRMADA' });
+            expect(estadoInvalido.success).toBe(false);
+            expect(estadoInvalido.error.issues[0].message).toContain('CANCELADA o UTILIZADA');
+
+            const otroInvalido = cambiarEstadoCompraSchema.safeParse({ estado: 'OTRO_ESTADO' });
+            expect(otroInvalido.success).toBe(false);
         });
 
         test('agregarMensajeSchema valida texto no vacío y reutiliza idSchema para usuarioId', () => {

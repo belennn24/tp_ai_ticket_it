@@ -1,7 +1,7 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { CompraService } from '../backend/services/compraService.js';
 import { Evento, TipoEntrada, Compra, CambioEstadoCompra, estadoCompra } from '../backend/models/index.js';
-import { NotFoundError, ValidationError, ConflictError } from '../backend/errors/appError.js';
+import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '../backend/errors/appError.js';
 import { CompraRepository } from '../backend/repositories/compraRepository.js';
 import { EventoRepository } from '../backend/repositories/eventoRepository.js';
 import { CambioEstadoCompraRepository } from '../backend/repositories/cambioEstadoCompraRepository.js';
@@ -508,6 +508,123 @@ describe('CompraService (Pruebas Unitarias)', () => {
 
     it('debe lanzar NotFoundError si la compra a utilizar no existe', async () => {
       await expect(service.utilizar('inexistente')).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  describe('Modificación de estado unificada (cambiarEstado)', () => {
+    it('debe cancelar compra con estado CANCELADA y motivo, restituyendo cupo', async () => {
+      const tipoEntrada = new TipoEntrada({ id: 't-1', cupo: 2 });
+      const evento = new Evento({ id: 'ev-1', fecha: fechaEventoFuturo, tiposEntrada: [tipoEntrada] });
+      await eventoRepo.save(evento);
+
+      const compra = new Compra({
+        id: 'compra-patch-1',
+        evento,
+        tipoEntrada,
+        cantidad: 2,
+        comprador: 'user-comprador',
+        estado: estadoCompra.CONFIRMADA
+      });
+      await compraRepo.save(compra);
+
+      const resultado = await service.cambiarEstado('compra-patch-1', {
+        estado: 'CANCELADA',
+        motivo: 'Inconveniente personal',
+        usuarioActual: { id: 'user-comprador', role: 'comprador' }
+      });
+
+      expect(resultado.estado).toBe(estadoCompra.CANCELADA);
+      expect(tipoEntrada.cupo).toBe(4);
+      const historial = await cambioEstadoRepo.findByCompraId('compra-patch-1');
+      expect(historial).toHaveLength(1);
+      expect(historial[0].estado).toBe(estadoCompra.CANCELADA);
+    });
+
+    it('debe marcar compra como UTILIZADA cuando el organizador lo solicita', async () => {
+      const evento = new Evento({
+        id: 'ev-org-1',
+        organizador: 'org-123',
+        fecha: fechaEventoFuturo
+      });
+      await eventoRepo.save(evento);
+
+      const compra = new Compra({
+        id: 'compra-patch-2',
+        evento,
+        comprador: 'user-comp',
+        estado: estadoCompra.CONFIRMADA
+      });
+      await compraRepo.save(compra);
+
+      const resultado = await service.cambiarEstado('compra-patch-2', {
+        estado: 'UTILIZADA',
+        usuarioActual: { id: 'org-123', role: 'organizador' }
+      });
+
+      expect(resultado.estado).toBe(estadoCompra.UTILIZADA);
+      const historial = await cambioEstadoRepo.findByCompraId('compra-patch-2');
+      expect(historial).toHaveLength(1);
+      expect(historial[0].estado).toBe(estadoCompra.UTILIZADA);
+    });
+
+    it('debe lanzar ForbiddenError si el usuario no es el comprador o si no tiene rol comprador al cancelar', async () => {
+      const evento = new Evento({ id: 'ev-1', fecha: fechaEventoFuturo });
+      await eventoRepo.save(evento);
+
+      const compra = new Compra({
+        id: 'compra-403',
+        evento,
+        comprador: 'user-1',
+        estado: estadoCompra.CONFIRMADA
+      });
+      await compraRepo.save(compra);
+
+      // Comprador ajeno
+      await expect(service.cambiarEstado('compra-403', {
+        estado: 'CANCELADA',
+        usuarioActual: { id: 'user-hacker', role: 'comprador' }
+      })).rejects.toThrow(ForbiddenError);
+
+      // Rol organizador intentando cancelar
+      await expect(service.cambiarEstado('compra-403', {
+        estado: 'CANCELADA',
+        usuarioActual: { id: 'user-1', role: 'organizador' }
+      })).rejects.toThrow(ForbiddenError);
+    });
+
+    it('debe lanzar ForbiddenError si el usuario no es el organizador dueño del evento al utilizar', async () => {
+      const evento = new Evento({
+        id: 'ev-org',
+        organizador: 'org-real',
+        fecha: fechaEventoFuturo
+      });
+      await eventoRepo.save(evento);
+
+      const compra = new Compra({
+        id: 'compra-util-403',
+        evento,
+        comprador: 'user-1',
+        estado: estadoCompra.CONFIRMADA
+      });
+      await compraRepo.save(compra);
+
+      // Organizador ajeno
+      await expect(service.cambiarEstado('compra-util-403', {
+        estado: 'UTILIZADA',
+        usuarioActual: { id: 'org-impostor', role: 'organizador' }
+      })).rejects.toThrow(ForbiddenError);
+
+      // Rol comprador intentando utilizar entrada
+      await expect(service.cambiarEstado('compra-util-403', {
+        estado: 'UTILIZADA',
+        usuarioActual: { id: 'org-real', role: 'comprador' }
+      })).rejects.toThrow(ForbiddenError);
+    });
+
+    it('debe lanzar ValidationError si el estado solicitado no es soportado', async () => {
+      await expect(service.cambiarEstado('c-1', {
+        estado: 'INVALIDO'
+      })).rejects.toThrow(ValidationError);
     });
   });
 

@@ -31,6 +31,16 @@ describe('Rutas y Seguridad - Delegación de Permisos en Routers', () => {
       expect(handles).toContain(authMiddleware);
     });
 
+    it('PATCH /:id/estado debe incluir authMiddleware', () => {
+      const handles = obtenerMiddlewaresDeRuta(compraRoutes, '/:id/estado', 'patch');
+      expect(handles).toContain(authMiddleware);
+    });
+
+    it('PATCH /:id (modificación parcial) debe incluir authMiddleware', () => {
+      const handles = obtenerMiddlewaresDeRuta(compraRoutes, '/:id', 'patch');
+      expect(handles).toContain(authMiddleware);
+    });
+
     it('PATCH /:id/cancelar debe incluir authMiddleware', () => {
       const handles = obtenerMiddlewaresDeRuta(compraRoutes, '/:id/cancelar', 'patch');
       expect(handles).toContain(authMiddleware);

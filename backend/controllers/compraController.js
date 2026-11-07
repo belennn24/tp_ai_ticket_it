@@ -84,6 +84,21 @@ export class CompraController {
     }
   };
 
+  cambiarEstado = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { estado, motivo } = req.body;
+      const compraActualizada = await this.service.cambiarEstado(id, {
+        estado,
+        motivo,
+        usuarioActual: req.user
+      });
+      res.status(200).json(compraActualizada);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   cancelar = async (req, res, next) => {
     try {
       const { id } = req.params;
