@@ -1,0 +1,193 @@
+{
+  "info": {
+    "_postman_id": "ticketit-cu10",
+    "name": "AI Ticket It - CU10 - Visualizar reseñas de eventos anteriores y reputación (Comprador)",
+    "description": "Como comprador, quiero que las reseñas de eventos anteriores se visualicen en los Eventos de cada organizador para conocer experiencias previas antes de comprar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDA2NjUwNn0.5yM5FU5KIlgboMNn_IEDaqF8_-5FYzUkF1iIhF3lZNQ",
+      "type": "string"
+    },
+    {
+      "key": "token_organizador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQwNjY1MDZ9.M-VCGUw9bh2YuZUZ7o0mJuaIGNHv831eDscCq_oC_ew",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQwNjY1MDZ9.hGOJH9zyGUVVShr9ujflxcWsi6kd2TSTKwL5cIDBo2g",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador_2",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQwNjY1MDZ9.cXf5dBHoqqUEtnjR_ypLy4BUxr0f6IKwAfoFFMqEdeM",
+      "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaGeneralId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaPlateaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaVipId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "compraId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "compra2Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organizadorId",
+      "value": "usr-organizador-1",
+      "type": "string"
+    },
+    {
+      "key": "compradorId",
+      "value": "usr-comprador-1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Público consulta reseñas y reputación promedio del Organizador",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/organizadores/{{organizadorId}}/resenias",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "organizadores",
+            "{{organizadorId}}",
+            "resenias"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Retorna lista de opiniones y reputación numérica calculada\", () => {",
+              "    const data = pm.response.json();",
+              "    pm.expect(data).to.have.property('resenias');",
+              "    pm.expect(Array.isArray(data.resenias)).to.be.true;",
+              "    pm.expect(data).to.have.property('reputacionPromedio');",
+              "    pm.expect(typeof data.reputacionPromedio).to.equal('number');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Consultar reseñas vía ruta alternativa de especificación",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/resenias/organizadores/{{organizadorId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resenias",
+            "organizadores",
+            "{{organizadorId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Error - Consultar reseñas de organizador inexistente (404)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/organizadores/organizador-no-existe-999/resenias",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "organizadores",
+            "organizador-no-existe-999",
+            "resenias"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 404 Not Found\", () => {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

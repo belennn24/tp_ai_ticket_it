@@ -1,0 +1,295 @@
+{
+  "info": {
+    "_postman_id": "ticketit-cu_extra_favs",
+    "name": "AI Ticket It - CU_EXTRA - Gestión de Favoritos (Comprador)",
+    "description": "Funcionalidad de guardado y remoción de eventos favoritos para compradores según especificación técnica.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDA2NjUwNn0.5yM5FU5KIlgboMNn_IEDaqF8_-5FYzUkF1iIhF3lZNQ",
+      "type": "string"
+    },
+    {
+      "key": "token_organizador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQwNjY1MDZ9.M-VCGUw9bh2YuZUZ7o0mJuaIGNHv831eDscCq_oC_ew",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQwNjY1MDZ9.hGOJH9zyGUVVShr9ujflxcWsi6kd2TSTKwL5cIDBo2g",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador_2",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQwNjY1MDZ9.cXf5dBHoqqUEtnjR_ypLy4BUxr0f6IKwAfoFFMqEdeM",
+      "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaGeneralId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaPlateaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaVipId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "compraId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "compra2Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organizadorId",
+      "value": "usr-organizador-1",
+      "type": "string"
+    },
+    {
+      "key": "compradorId",
+      "value": "usr-comprador-1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Comprador agrega evento a su lista de Favoritos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/me/favoritos/{{eventoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "me",
+            "favoritos",
+            "{{eventoId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Evento agregado con éxito\", () => {",
+              "    const data = pm.response.json();",
+              "    pm.expect(data.favoritos).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Conflicto - Intento de agregar nuevamente el mismo evento a favoritos (409)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/me/favoritos/{{eventoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "me",
+            "favoritos",
+            "{{eventoId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 409 Conflict (ya es favorito)\", () => {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Comprador consulta sus eventos Favoritos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/me/favoritos",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "me",
+            "favoritos"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Lista contiene el evento guardado\", () => {",
+              "    const data = pm.response.json();",
+              "    pm.expect(Array.isArray(data)).to.be.true;",
+              "    pm.expect(data.some(e => e.id === pm.collectionVariables.get(\"eventoId\"))).to.be.true;",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Comprador elimina el evento de sus Favoritos",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/me/favoritos/{{eventoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "me",
+            "favoritos",
+            "{{eventoId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Error - Intentar eliminar un evento que ya no está en favoritos (404)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/me/favoritos/{{eventoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "me",
+            "favoritos",
+            "{{eventoId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 404 Not Found\", () => {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

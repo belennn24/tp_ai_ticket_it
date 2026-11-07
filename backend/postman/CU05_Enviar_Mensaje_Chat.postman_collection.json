@@ -1,0 +1,296 @@
+{
+  "info": {
+    "_postman_id": "ticketit-cu05",
+    "name": "AI Ticket It - CU05 - Enviar mensajes en chat de compra (Comprador)",
+    "description": "Como comprador, quiero poder enviar mensajes en cualquier momento relacionados a una compra mediante un chat dentro de la misma.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDA2NjUwNn0.5yM5FU5KIlgboMNn_IEDaqF8_-5FYzUkF1iIhF3lZNQ",
+      "type": "string"
+    },
+    {
+      "key": "token_organizador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQwNjY1MDZ9.M-VCGUw9bh2YuZUZ7o0mJuaIGNHv831eDscCq_oC_ew",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQwNjY1MDZ9.hGOJH9zyGUVVShr9ujflxcWsi6kd2TSTKwL5cIDBo2g",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador_2",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQwNjY1MDZ9.cXf5dBHoqqUEtnjR_ypLy4BUxr0f6IKwAfoFFMqEdeM",
+      "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaGeneralId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaPlateaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaVipId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "compraId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "compra2Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organizadorId",
+      "value": "usr-organizador-1",
+      "type": "string"
+    },
+    {
+      "key": "compradorId",
+      "value": "usr-comprador-1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Comprador envía consulta sobre el acceso en la compra",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}/mensajes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}",
+            "mensajes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"Hola! ¿A qué hora abren las puertas para el ingreso?\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Mensaje registrado con usuario emisor y fechaHora\", () => {",
+              "    const data = pm.response.json();",
+              "    pm.expect(data).to.have.property('mensaje');",
+              "    pm.expect(data.mensaje).to.equal('Hola! ¿A qué hora abren las puertas para el ingreso?');",
+              "    pm.expect(data).to.have.property('fechaHora');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Comprador consulta historial del chat de la compra",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}/mensajes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}",
+            "mensajes"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Lista de mensajes en orden cronológico\", () => {",
+              "    const data = pm.response.json();",
+              "    pm.expect(Array.isArray(data)).to.be.true;",
+              "    pm.expect(data.length).to.be.above(0);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Error de validación - Enviar mensaje vacío (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}/mensajes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}",
+            "mensajes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 400 Bad Request\", () => {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Seguridad - Usuario ajeno a la compra intenta enviar mensaje (403)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador_2}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}/mensajes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}",
+            "mensajes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"Intento infiltrarme en esta conversación ajena\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 403 Forbidden para usuario ajeno a la compra\", () => {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}

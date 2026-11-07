@@ -1,0 +1,299 @@
+{
+  "info": {
+    "_postman_id": "ticketit-cu12",
+    "name": "AI Ticket It - CU12 - Realizar compra con validación de cupo (Comprador)",
+    "description": "Como comprador, quiero poder realizar una compra sobre un Evento seleccionando uno de los tipos de entrada disponibles y la cantidad deseada, sin superar el cupo disponible.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDA2NjUwNn0.5yM5FU5KIlgboMNn_IEDaqF8_-5FYzUkF1iIhF3lZNQ",
+      "type": "string"
+    },
+    {
+      "key": "token_organizador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQwNjY1MDZ9.M-VCGUw9bh2YuZUZ7o0mJuaIGNHv831eDscCq_oC_ew",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQwNjY1MDZ9.hGOJH9zyGUVVShr9ujflxcWsi6kd2TSTKwL5cIDBo2g",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador_2",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQwNjY1MDZ9.cXf5dBHoqqUEtnjR_ypLy4BUxr0f6IKwAfoFFMqEdeM",
+      "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaGeneralId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaPlateaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaVipId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "compraId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "compra2Id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organizadorId",
+      "value": "usr-organizador-1",
+      "type": "string"
+    },
+    {
+      "key": "compradorId",
+      "value": "usr-comprador-1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Comprador adquiere entradas válidas dentro del cupo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"tipoEntradaId\": \"{{tipoEntradaGeneralId}}\",\n  \"cantidad\": 2\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Compra creada en estado CONFIRMADA y descuenta cupo\", () => {",
+              "    const data = pm.response.json();",
+              "    pm.expect(data).to.have.property('id');",
+              "    pm.expect(data.estado).to.equal('CONFIRMADA');",
+              "    pm.expect(data.cantidad).to.equal(2);",
+              "    pm.expect(data.total).to.equal(10000); // 2 * 5000",
+              "    pm.collectionVariables.set(\"compraId\", data.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Conflicto - Intentar comprar superando el cupo disponible (409)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"tipoEntradaId\": \"{{tipoEntradaGeneralId}}\",\n  \"cantidad\": 999999\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 409 Conflict por cupo insuficiente\", () => {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Error de validación - Cantidad menor o igual a cero (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"tipoEntradaId\": \"{{tipoEntradaGeneralId}}\",\n  \"cantidad\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 400 Bad Request\", () => {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Error - Tipo de entrada inexistente para el evento (404)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"tipoEntradaId\": \"tipo-inexistente-123\",\n  \"cantidad\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 404 Not Found\", () => {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}
