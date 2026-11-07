@@ -9,7 +9,8 @@ import { cambioEstadoCompraRepository as defaultCambioEstadoCompraRepository } f
 import {
   NotFoundError,
   ValidationError,
-  ConflictError
+  ConflictError,
+  ForbiddenError
 } from '../errors/appError.js';
 
 
@@ -53,6 +54,11 @@ export class CompraService {
     return crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
   }
 
+  extraerId(ref) {
+    if (!ref) return '';
+    return String(ref.id !== undefined ? ref.id : ref);
+  }
+
   calcularDiasFaltantes(fechaEvento) {
     if (!fechaEvento) return null;
     const fechaEv = new Date(fechaEvento);
@@ -68,7 +74,7 @@ export class CompraService {
     if (eventoRef.fecha) {
       return new Date(eventoRef.fecha);
     }
-    const eventoId = eventoRef.id !== undefined ? eventoRef.id : eventoRef;
+    const eventoId = this.extraerId(eventoRef);
     if (eventoId && this.eventoRepository) {
       const evento = await this.eventoRepository.findById(eventoId);
       if (evento && evento.fecha) {
@@ -87,6 +93,10 @@ export class CompraService {
       compra.diasFaltantes = null;
     }
     return compra;
+  }
+
+  async enriquecerColeccion(compras = []) {
+    return Promise.all(compras.map(c => this.enriquecerConDiasFaltantes(c)));
   }
 
   /**
@@ -149,14 +159,11 @@ export class CompraService {
     const compraGuardada = await this.compraRepository.save(nuevaCompra);
 
     // Registro de auditoría
-    const cambioEstado = new CambioEstadoCompra({
-      id: this.generarId(),
-      compra: compraGuardada.id,
-      estado: estadoCompra.CONFIRMADA,
-      quien: compradorId || 'COMPRADOR',
-      fechaHora: this.obtenerFechaActual()
-    });
-    await this.cambioEstadoCompraRepository.save(cambioEstado);
+    await this.registrarCambioEstado(
+      compraGuardada.id,
+      estadoCompra.CONFIRMADA,
+      compradorId || 'COMPRADOR'
+    );
 
     return this.enriquecerConDiasFaltantes(compraGuardada);
   }
@@ -170,73 +177,127 @@ export class CompraService {
    */
   async getAll(filtros = {}) {
     const compras = await this.compraRepository.findAll(filtros);
-    return Promise.all(compras.map(c => this.enriquecerConDiasFaltantes(c)));
+    return this.enriquecerColeccion(compras);
   }
 
   obtenerCompras(filtros) {
     return this.getAll(filtros);
   }
 
-  /**
-   * Caso de uso: Obtener detalle de una compra por ID
-   */
-  async getById(id) {
-    const compra = await this.compraRepository.findById(id);
-    if (!compra) {
-      throw new NotFoundError('Compra no encontrada.');
+  validarAccesoCompra(compra, usuarioActual) {
+    if (!usuarioActual) return;
+    const userId = this.extraerId(usuarioActual);
+    const compradorId = this.extraerId(compra.comprador);
+    const organizadorId = this.extraerId(compra.evento?.organizador);
+
+    if (userId !== compradorId && userId !== organizadorId) {
+      throw new ForbiddenError('Usuario ajeno a la compra o evento.');
     }
-    return this.enriquecerConDiasFaltantes(compra);
+  }
+
+  validarEsComprador(compra, usuarioActual) {
+    if (!usuarioActual) return;
+    if (this.extraerId(usuarioActual) !== this.extraerId(compra.comprador)) {
+      throw new ForbiddenError('La compra no pertenece al comprador autenticado.');
+    }
+  }
+
+  validarEsOrganizadorEvento(compra, usuarioActual) {
+    if (!usuarioActual) return;
+    if (this.extraerId(usuarioActual) !== this.extraerId(compra.evento?.organizador)) {
+      throw new ForbiddenError('El organizador no es dueño del evento asociado a la compra.');
+    }
   }
 
   /**
-   * Caso de uso: Obtener compras asociadas a un evento
+   * Método auxiliar para validar que exista una compra o lanzar NotFoundError.
+   * @param {string|object} id - ID de la compra o entidad con propiedad id
+   * @returns {Promise<Compra>}
    */
-  async getByEventoId(eventoId) {
-    const compras = await this.compraRepository.findByEventoId(eventoId);
-    return Promise.all(compras.map(c => this.enriquecerConDiasFaltantes(c)));
-  }
-
-  /**
-   * Caso de uso: Obtener cronología / auditoría de estados de una compra
-   */
-  async getHistorial(id) {
-    const compra = await this.compraRepository.findById(id);
+  async validarExistenciaCompra(id) {
+    const compraId = this.extraerId(id);
+    const compra = await this.compraRepository.findById(compraId);
     if (!compra) {
       throw new NotFoundError('Compra no encontrada.');
     }
-    return this.cambioEstadoCompraRepository.findByCompraId(id);
+    return compra;
+  }
+
+  validarCompraExistente(id) {
+    return this.validarExistenciaCompra(id);
   }
 
   /**
-   * Caso de uso: Cancelar una compra y restituir cupo
+   * Método auxiliar para registrar un cambio de estado en la auditoría de la compra.
+   * @param {string|object} compra - ID de la compra, instancia de compra u objeto de opciones
+   * @param {string} [estado] - Nuevo estado de la compra
+   * @param {string} [quien] - Identificador o rol de quien realiza el cambio
+   * @returns {Promise<CambioEstadoCompra>}
    */
-  async cancelar(id, { motivo, quien, usuarioActual } = {}) {
-    const compra = await this.compraRepository.findById(id);
-    if (!compra) {
-      throw new NotFoundError('Compra no encontrada.');
-    }
+  async registrarCambioEstado(compra, estado, quien) {
+    let compraId;
+    let nuevoEstado = estado;
+    let usuarioQuien = quien;
 
     if (
-      compra.estado === estadoCompra.UTILIZADA ||
-      compra.estado === estadoCompra.CANCELADA
+      compra &&
+      typeof compra === 'object' &&
+      !('actualizarEstado' in compra) &&
+      ('compraId' in compra || ('compra' in compra && 'quien' in compra))
     ) {
-      throw new ConflictError('No se puede cancelar una compra que ya fue utilizada o cancelada.');
+      compraId =
+        compra.compraId ||
+        (compra.compra?.id !== undefined ? compra.compra.id : compra.compra) ||
+        compra.id;
+      nuevoEstado = compra.estado !== undefined ? compra.estado : nuevoEstado;
+      usuarioQuien = compra.quien !== undefined ? compra.quien : usuarioQuien;
+    } else {
+      compraId =
+        compra && typeof compra === 'object' && compra.id !== undefined
+          ? compra.id
+          : compra;
     }
 
-    const fechaEvento = await this.obtenerFechaEvento(compra.evento);
+    const cambio = new CambioEstadoCompra({
+      id: this.generarId(),
+      compra: compraId,
+      estado: nuevoEstado,
+      quien: usuarioQuien || 'SISTEMA',
+      fechaHora: this.obtenerFechaActual()
+    });
+
+    return this.cambioEstadoCompraRepository.save(cambio);
+  }
+
+  guardarCambioEstado(...args) {
+    return this.registrarCambioEstado(...args);
+  }
+
+  /**
+   * Método auxiliar para verificar que el evento de una compra no haya finalizado o expirado.
+   * @param {object|string} eventoRef
+   * @param {string} mensajeError
+   */
+  async validarEventoNoFinalizado(eventoRef, mensajeError = 'El evento ya finalizó.') {
+    const fechaEvento = await this.obtenerFechaEvento(eventoRef);
     if (fechaEvento && fechaEvento.getTime() < this.obtenerFechaActual().getTime()) {
-      throw new ConflictError('No se puede cancelar una compra de un evento que ya finalizó o expiró.');
+      throw new ConflictError(mensajeError);
     }
+  }
 
-    // Restituir cupo
+  /**
+   * Método auxiliar para restituir cupos al cancelar una compra.
+   * @param {Compra} compra
+   */
+  async restituirCupo(compra) {
     let cupoRestituido = false;
-    const eventoId = compra.evento?.id !== undefined ? compra.evento.id : compra.evento;
+    const eventoId = this.extraerId(compra.evento);
     if (eventoId && this.eventoRepository) {
       const evento = await this.eventoRepository.findById(eventoId);
       if (evento && evento.tiposEntrada) {
-        const tipoEntradaId = compra.tipoEntrada?.id !== undefined ? compra.tipoEntrada.id : compra.tipoEntrada;
+        const tipoEntradaId = this.extraerId(compra.tipoEntrada);
         const tipo = evento.tiposEntrada.find(
-          t => String(t.id) === String(tipoEntradaId)
+          t => this.extraerId(t) === tipoEntradaId
         );
         if (tipo) {
           tipo.cupo = (Number(tipo.cupo) || 0) + compra.cantidad;
@@ -254,21 +315,81 @@ export class CompraService {
     if (!cupoRestituido && compra.tipoEntrada) {
       compra.tipoEntrada.cupo = (Number(compra.tipoEntrada.cupo) || 0) + compra.cantidad;
     }
+  }
 
-    compra.actualizarEstado(estadoCompra.CANCELADA);
+  /**
+   * Método auxiliar para actualizar el estado de una compra, persistir el cambio,
+   * registrar la auditoría correspondiente y limpiar diasFaltantes.
+   * @param {Compra} compra
+   * @param {string} nuevoEstado
+   * @param {string} quien
+   * @returns {Promise<Compra>}
+   */
+  async actualizarEstadoYAuditar(compra, nuevoEstado, quien) {
+    compra.actualizarEstado(nuevoEstado);
     const compraActualizada = await this.compraRepository.update(compra.id, compra);
-
-    const cambio = new CambioEstadoCompra({
-      id: this.generarId(),
-      compra: compra.id,
-      estado: estadoCompra.CANCELADA,
-      quien: quien || usuarioActual || compra.comprador || 'COMPRADOR',
-      fechaHora: this.obtenerFechaActual()
-    });
-    await this.cambioEstadoCompraRepository.save(cambio);
-
+    await this.registrarCambioEstado(compra.id, nuevoEstado, quien);
     compraActualizada.diasFaltantes = null;
     return compraActualizada;
+  }
+
+  /**
+   * Caso de uso: Obtener detalle de una compra por ID
+   */
+  async getById(id, { usuarioActual } = {}) {
+    const compra = await this.validarExistenciaCompra(id);
+    this.validarAccesoCompra(compra, usuarioActual);
+    return this.enriquecerConDiasFaltantes(compra);
+  }
+
+  /**
+   * Caso de uso: Obtener compras asociadas a un evento
+   */
+  async getByEventoId(eventoId, { usuarioActual } = {}) {
+    const compras = await this.compraRepository.findByEventoId(eventoId);
+    if (usuarioActual) {
+      compras.forEach(c => this.validarAccesoCompra(c, usuarioActual));
+    }
+    return this.enriquecerColeccion(compras);
+  }
+
+  /**
+   * Caso de uso: Obtener cronología / auditoría de estados de una compra
+   */
+  async getHistorial(id, { usuarioActual } = {}) {
+    const compra = await this.validarExistenciaCompra(id);
+    this.validarAccesoCompra(compra, usuarioActual);
+    return this.cambioEstadoCompraRepository.findByCompraId(id);
+  }
+
+  /**
+   * Caso de uso: Cancelar una compra y restituir cupo
+   */
+  async cancelar(id, { motivo, quien, usuarioActual } = {}) {
+    const compra = await this.validarExistenciaCompra(id);
+
+    this.validarEsComprador(compra, usuarioActual);
+
+    if (
+      compra.estado === estadoCompra.UTILIZADA ||
+      compra.estado === estadoCompra.CANCELADA
+    ) {
+      throw new ConflictError('No se puede cancelar una compra que ya fue utilizada o cancelada.');
+    }
+
+    await this.validarEventoNoFinalizado(
+      compra.evento,
+      'No se puede cancelar una compra de un evento que ya finalizó o expiró.'
+    );
+
+    await this.restituirCupo(compra);
+
+    const usuarioResponsable = usuarioActual?.id || quien || compra.comprador;
+    return this.actualizarEstadoYAuditar(
+      compra,
+      estadoCompra.CANCELADA,
+      usuarioResponsable
+    );
   }
 
   cancelarCompra(id, opciones) {
@@ -279,34 +400,25 @@ export class CompraService {
    * Caso de uso: Marcar una compra como utilizada en el ingreso
    */
   async utilizar(id, { quien, usuarioActual } = {}) {
-    const compra = await this.compraRepository.findById(id);
-    if (!compra) {
-      throw new NotFoundError('Compra no encontrada.');
-    }
+    const compra = await this.validarExistenciaCompra(id);
+
+    this.validarEsOrganizadorEvento(compra, usuarioActual);
 
     if (compra.estado !== estadoCompra.CONFIRMADA) {
       throw new ConflictError('Solo se pueden utilizar compras en estado CONFIRMADA.');
     }
 
-    const fechaEvento = await this.obtenerFechaEvento(compra.evento);
-    if (fechaEvento && fechaEvento.getTime() < this.obtenerFechaActual().getTime()) {
-      throw new ConflictError('No se puede utilizar una compra de un evento que ya finalizó.');
-    }
+    await this.validarEventoNoFinalizado(
+      compra.evento,
+      'No se puede utilizar una compra de un evento que ya finalizó.'
+    );
 
-    compra.actualizarEstado(estadoCompra.UTILIZADA);
-    const compraActualizada = await this.compraRepository.update(compra.id, compra);
-
-    const cambio = new CambioEstadoCompra({
-      id: this.generarId(),
-      compra: compra.id,
-      estado: estadoCompra.UTILIZADA,
-      quien: quien || usuarioActual || 'ORGANIZADOR',
-      fechaHora: this.obtenerFechaActual()
-    });
-    await this.cambioEstadoCompraRepository.save(cambio);
-
-    compraActualizada.diasFaltantes = null;
-    return compraActualizada;
+    const usuarioResponsable = usuarioActual?.id || quien || 'ORGANIZADOR';
+    return this.actualizarEstadoYAuditar(
+      compra,
+      estadoCompra.UTILIZADA,
+      usuarioResponsable
+    );
   }
 
   utilizarCompra(id, opciones) {
@@ -316,30 +428,28 @@ export class CompraService {
   /**
    * Caso de uso: Obtener mensajes de chat de una compra
    */
-  async getMensajes(id) {
-    const compra = await this.compraRepository.findById(id);
-    if (!compra) {
-      throw new NotFoundError('Compra no encontrada.');
-    }
+  async getMensajes(id, { usuarioActual } = {}) {
+    const compra = await this.validarExistenciaCompra(id);
+    this.validarAccesoCompra(compra, usuarioActual);
     return compra.mensajes || [];
   }
 
   /**
    * Caso de uso: Enviar / agregar mensaje en el chat de una compra
    */
-  async agregarMensaje(id, { mensaje, usuarioId } = {}) {
+  async agregarMensaje(id, { mensaje, usuarioId, usuarioActual } = {}) {
     if (!mensaje || typeof mensaje !== 'string' || mensaje.trim().length === 0) {
       throw new ValidationError('El mensaje no puede estar vacío.');
     }
 
-    const compra = await this.compraRepository.findById(id);
-    if (!compra) {
-      throw new NotFoundError('Compra no encontrada.');
-    }
+    const compra = await this.validarExistenciaCompra(id);
+
+    const emisor = usuarioActual || usuarioId;
+    this.validarAccesoCompra(compra, emisor);
 
     const nuevoMensaje = new Mensaje({
       id: this.generarId(),
-      usuario: usuarioId || compra.comprador,
+      usuario: usuarioId || usuarioActual?.id || compra.comprador,
       mensaje: mensaje.trim(),
       enviado: this.obtenerFechaActual()
     });

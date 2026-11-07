@@ -26,7 +26,8 @@ describe('CompraController (Pruebas Unitarias)', () => {
     req = {
       query: {},
       params: {},
-      body: {}
+      body: {},
+      user: { id: 'u-1', role: 'comprador' }
     };
 
     res = {
@@ -37,39 +38,42 @@ describe('CompraController (Pruebas Unitarias)', () => {
     next = jest.fn();
   });
 
-  it('getAll debe retornar 200 con la lista de compras del servicio', async () => {
+  it('getAll debe retornar 200 con compras del usuario autenticado en req.user', async () => {
     const comprasSimuladas = [{ id: '1' }, { id: '2' }];
     mockService.getAll.mockResolvedValue(comprasSimuladas);
-    req.query = { compradorId: 'u1' };
+    req.query = { estado: 'CONFIRMADA' };
 
     await controller.getAll(req, res, next);
 
     expect(mockService.getAll).toHaveBeenCalledWith({
-      compradorId: 'u1',
+      compradorId: 'u-1',
       eventoId: undefined,
-      estado: undefined
+      estado: 'CONFIRMADA'
     });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(comprasSimuladas);
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('getById debe retornar 200 con la compra encontrada', async () => {
+  it('getById debe retornar 200 con la compra pasando usuarioActual', async () => {
     const compra = { id: 'c-1' };
     mockService.getById.mockResolvedValue(compra);
     req.params = { id: 'c-1' };
 
     await controller.getById(req, res, next);
 
-    expect(mockService.getById).toHaveBeenCalledWith('c-1');
+    expect(mockService.getById).toHaveBeenCalledWith('c-1', {
+      usuarioActual: req.user
+    });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(compra);
   });
 
-  it('create debe responder 201 con la compra creada', async () => {
+  it('create debe tomar compradorId exclusivamente de req.user y responder 201', async () => {
     const nuevaCompra = { id: 'c-new', cantidad: 2 };
     mockService.create.mockResolvedValue(nuevaCompra);
-    req.body = { eventoId: 'e-1', tipoEntradaId: 't-1', cantidad: 2, compradorId: 'u-1' };
+    // Aunque el body intente inyectar compradorId ajeno, el controller usa req.user.id
+    req.body = { eventoId: 'e-1', tipoEntradaId: 't-1', cantidad: 2, compradorId: 'hacker-id' };
 
     await controller.create(req, res, next);
 
@@ -83,7 +87,7 @@ describe('CompraController (Pruebas Unitarias)', () => {
     expect(res.json).toHaveBeenCalledWith(nuevaCompra);
   });
 
-  it('cancelar debe responder 200 con la compra cancelada', async () => {
+  it('cancelar debe responder 200 pasando usuarioActual', async () => {
     const cancelada = { id: 'c-1', estado: 'CANCELADA' };
     mockService.cancelar.mockResolvedValue(cancelada);
     req.params = { id: 'c-1' };
@@ -91,34 +95,40 @@ describe('CompraController (Pruebas Unitarias)', () => {
 
     await controller.cancelar(req, res, next);
 
-    expect(mockService.cancelar).toHaveBeenCalledWith('c-1', { motivo: 'Problemas' });
+    expect(mockService.cancelar).toHaveBeenCalledWith('c-1', {
+      motivo: 'Problemas',
+      usuarioActual: req.user
+    });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(cancelada);
   });
 
-  it('utilizar debe responder 200 con la compra utilizada', async () => {
+  it('utilizar debe responder 200 pasando usuarioActual', async () => {
     const utilizada = { id: 'c-1', estado: 'UTILIZADA' };
     mockService.utilizar.mockResolvedValue(utilizada);
     req.params = { id: 'c-1' };
 
     await controller.utilizar(req, res, next);
 
-    expect(mockService.utilizar).toHaveBeenCalledWith('c-1');
+    expect(mockService.utilizar).toHaveBeenCalledWith('c-1', {
+      usuarioActual: req.user
+    });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(utilizada);
   });
 
-  it('agregarMensaje debe responder 201 con el mensaje creado', async () => {
+  it('agregarMensaje debe asignar emisor desde req.user y responder 201', async () => {
     const mensaje = { id: 'm-1', mensaje: 'Hola' };
     mockService.agregarMensaje.mockResolvedValue(mensaje);
     req.params = { id: 'c-1' };
-    req.body = { mensaje: 'Hola', usuarioId: 'u-1' };
+    req.body = { mensaje: 'Hola' };
 
     await controller.agregarMensaje(req, res, next);
 
     expect(mockService.agregarMensaje).toHaveBeenCalledWith('c-1', {
       mensaje: 'Hola',
-      usuarioId: 'u-1'
+      usuarioId: 'u-1',
+      usuarioActual: req.user
     });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(mensaje);
