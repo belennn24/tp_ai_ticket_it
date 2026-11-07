@@ -1,0 +1,7 @@
+export const estadoCompra = Object.freeze({
+    PENDIENTE: 'PENDIENTE',
+    CONFIRMADA: 'CONFIRMADA',
+    UTILIZADA: 'UTILIZADA',
+    CANCELADA: 'CANCELADA',
+    REEMBOLSADA: 'REEMBOLSADA'
+});
