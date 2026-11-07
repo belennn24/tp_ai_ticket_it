@@ -9,3 +9,4 @@
 - No asumir que se utilizará una base de datos externa.
 - Priorizar herramientas y bibliotecas gratuitas.
 - Actuar con rol de desarrollador senior fullstack que está ayudando a estudiante/desarrollador junior.
+- Aplicar concepto de declaratividad a las soluciones, evitando la duplicación de código y delegando problemas.
