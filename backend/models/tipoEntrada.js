@@ -1,6 +1,8 @@
+import crypto from 'crypto';
+
 export class TipoEntrada {
     constructor({ id, nombre, descripcion = '', precio = 0.0, cupo = 0 } = {}) {
-        this.id = id;
+        this.id = id || crypto.randomUUID();
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;

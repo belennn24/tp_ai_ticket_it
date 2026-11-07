@@ -50,10 +50,6 @@ export class CompraService {
     return new Date(this.fechaActualProvider());
   }
 
-  generarId() {
-    return crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-  }
-
   extraerId(ref) {
     if (!ref) return '';
     return String(ref.id !== undefined ? ref.id : ref);
@@ -146,7 +142,7 @@ export class CompraService {
       total !== undefined ? Number(total) : cantidadNum * (Number(tipoEntrada.precio) || 0);
 
     const nuevaCompra = new Compra({
-      id: resto.id || this.generarId(),
+      id: resto.id,
       comprador: compradorId,
       evento,
       tipoEntrada,
@@ -259,7 +255,6 @@ export class CompraService {
     }
 
     const cambio = new CambioEstadoCompra({
-      id: this.generarId(),
       compra: compraId,
       estado: nuevoEstado,
       quien: usuarioQuien || 'SISTEMA',
@@ -448,7 +443,6 @@ export class CompraService {
     this.validarAccesoCompra(compra, emisor);
 
     const nuevoMensaje = new Mensaje({
-      id: this.generarId(),
       usuario: usuarioId || usuarioActual?.id || compra.comprador,
       mensaje: mensaje.trim(),
       enviado: this.obtenerFechaActual()

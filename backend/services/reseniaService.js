@@ -48,10 +48,6 @@ export class ReseniaService {
     }
   }
 
-  generarId() {
-    return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
-  }
-
   extraerId(ref) {
     if (!ref) return '';
     return String(ref.id !== undefined ? ref.id : ref);
@@ -132,7 +128,7 @@ export class ReseniaService {
 
     // 6. Instanciar y guardar la reseña
     const nuevaResenia = new Resenia({
-      id: resto.id || this.generarId(),
+      id: resto.id,
       comprador: compradorId,
       evento,
       detalle,

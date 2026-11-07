@@ -41,10 +41,6 @@ export class EventoService {
     }
   }
 
-  generarId() {
-    return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
-  }
-
   extraerId(ref) {
     if (!ref) return '';
     return String(ref.id !== undefined ? ref.id : ref);
@@ -208,7 +204,7 @@ export class EventoService {
       );
 
       return new TipoEntrada({
-        id: t.id || this.generarId(),
+        id: t.id,
         nombre: t.nombre,
         descripcion: t.descripcion || '',
         precio,
@@ -221,7 +217,7 @@ export class EventoService {
     }
 
     const nuevoEvento = new Evento({
-      id: resto.id || this.generarId(),
+      id: resto.id,
       nombre,
       descripcion,
       categoria: categoriaId,

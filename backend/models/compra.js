@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { estadoCompra } from './estadoCompra.js';
 
 export class Compra {
@@ -11,7 +12,7 @@ export class Compra {
         estado = estadoCompra.PENDIENTE,
         mensajes = []
     } = {}) {
-        this.id = id;
+        this.id = id || crypto.randomUUID();
         this.comprador = comprador;
         this.evento = evento;
         this.tipoEntrada = tipoEntrada;

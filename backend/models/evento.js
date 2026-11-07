@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 export class Evento {
     constructor({
         id,
@@ -9,7 +11,7 @@ export class Evento {
         multimedia = [],
         organizador = null
     } = {}) {
-        this.id = id;
+        this.id = id || crypto.randomUUID();
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.categoria = categoria;

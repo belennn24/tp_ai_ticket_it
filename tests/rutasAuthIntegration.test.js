@@ -2,6 +2,8 @@ import { describe, it, expect } from '@jest/globals';
 import { compraRoutes } from '../backend/routes/compraRoutes.js';
 import { eventoRoutes } from '../backend/routes/eventoRoutes.js';
 import { reseniaRoutes } from '../backend/routes/reseniaRoutes.js';
+import { categoriaRoutes } from '../backend/routes/categoriaRoutes.js';
+import { usuarioRoutes } from '../backend/routes/usuarioRoutes.js';
 import { authMiddleware } from '../backend/middlewares/authMiddleware.js';
 
 describe('Rutas y Seguridad - Delegación de Permisos en Routers', () => {
@@ -71,6 +73,35 @@ describe('Rutas y Seguridad - Delegación de Permisos en Routers', () => {
     it('GET /organizadores/:id debe ser pública (NO debe incluir authMiddleware)', () => {
       const handles = obtenerMiddlewaresDeRuta(reseniaRoutes, '/organizadores/:id', 'get');
       expect(handles).not.toContain(authMiddleware);
+    });
+  });
+
+  describe('categoriaRoutes', () => {
+    it('GET / debe ser pública (NO debe incluir authMiddleware)', () => {
+      const handles = obtenerMiddlewaresDeRuta(categoriaRoutes, '/', 'get');
+      expect(handles).not.toContain(authMiddleware);
+    });
+
+    it('POST / debe requerir authMiddleware', () => {
+      const handles = obtenerMiddlewaresDeRuta(categoriaRoutes, '/', 'post');
+      expect(handles).toContain(authMiddleware);
+    });
+  });
+
+  describe('usuarioRoutes', () => {
+    it('GET /me/favoritos debe requerir authMiddleware', () => {
+      const handles = obtenerMiddlewaresDeRuta(usuarioRoutes, '/me/favoritos', 'get');
+      expect(handles).toContain(authMiddleware);
+    });
+
+    it('POST /me/favoritos/:eventoId debe requerir authMiddleware', () => {
+      const handles = obtenerMiddlewaresDeRuta(usuarioRoutes, '/me/favoritos/:eventoId', 'post');
+      expect(handles).toContain(authMiddleware);
+    });
+
+    it('DELETE /me/favoritos/:eventoId debe requerir authMiddleware', () => {
+      const handles = obtenerMiddlewaresDeRuta(usuarioRoutes, '/me/favoritos/:eventoId', 'delete');
+      expect(handles).toContain(authMiddleware);
     });
   });
 });
