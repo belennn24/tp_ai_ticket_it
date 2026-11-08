@@ -8,17 +8,25 @@ import { organizadorRoutes } from './routes/organizadorRoutes.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { seedRoutes } from './routes/seedRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { limiteGeneral, limiteAuth } from './middlewares/rateLimiting.js';
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'ticketit_jwt_secret_key_2026';
 
 const app = express();
 
+// Confianza en el reverse proxy (para leer X-Forwarded-For correctamente)
+app.set('trust proxy', 1);
+
 app.use(express.json());
 
-// Endpoint de verificación del estado del servicio
+// Endpoint de verificación del estado del servicio (exento de rate limiting)
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'AI Ticket It API', timestamp: new Date().toISOString() });
 });
+
+// Control de tasa (Rate Limiting)
+app.use('/api', limiteGeneral);
+app.use('/api/auth/login', limiteAuth);
 
 // Rutas de desarrollo para reiniciar y verificar el Seed
 app.use('/api/seed', seedRoutes);
