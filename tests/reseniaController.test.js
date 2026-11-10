@@ -42,8 +42,7 @@ describe('ReseniaController (Pruebas Unitarias)', () => {
       eventoId: 'ev-1',
       puntuacion: 5,
       detalle: 'Muy bueno',
-      compradorId: 'user-1',
-      userRole: 'comprador'
+      compradorId: 'user-1'
     });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(reseniaMock);

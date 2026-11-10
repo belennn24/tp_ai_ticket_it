@@ -124,8 +124,24 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
   });
 
   describe('Rutas HTTP de Seed (seedRoutes)', () => {
-    it('POST / debe responder 200 y reiniciar el seed con clearExisting', async () => {
-      const req = {};
+    it('debe proteger POST / y GET / con authMiddleware y requireRole("admin")', () => {
+      const postLayer = seedRoutes.stack.find(
+        l => l.route && l.route.path === '/' && l.route.methods.post
+      );
+      const getLayer = seedRoutes.stack.find(
+        l => l.route && l.route.path === '/' && l.route.methods.get
+      );
+
+      expect(postLayer).toBeDefined();
+      expect(getLayer).toBeDefined();
+
+      // Debe contener al menos el authMiddleware y requireRole antes del handler final
+      expect(postLayer.route.stack.length).toBeGreaterThanOrEqual(3);
+      expect(getLayer.route.stack.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('POST / debe responder 200 y reiniciar el seed con clearExisting al ser invocado por admin', async () => {
+      const req = { user: { id: 'admin-1', rol: 'admin' } };
       const res = {
         statusCode: null,
         data: null,
@@ -144,7 +160,8 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       );
 
       expect(layer).toBeDefined();
-      await layer.route.stack[0].handle(req, res, () => {});
+      const mainHandler = layer.route.stack[layer.route.stack.length - 1].handle;
+      await mainHandler(req, res, () => {});
 
       expect(res.statusCode).toBe(200);
       expect(res.data.resumen.usuarios).toBe(5);
@@ -153,7 +170,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
     });
 
     it('GET / debe responder 200 y reportar el estado del seed sin destruir datos existentes', async () => {
-      const req = {};
+      const req = { user: { id: 'admin-1', rol: 'admin' } };
       const res = {
         statusCode: null,
         data: null,
@@ -172,7 +189,8 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       );
 
       expect(layer).toBeDefined();
-      await layer.route.stack[0].handle(req, res, () => {});
+      const mainHandler = layer.route.stack[layer.route.stack.length - 1].handle;
+      await mainHandler(req, res, () => {});
 
       expect(res.statusCode).toBe(200);
       expect(res.data.resumen.usuarios).toBe(5);

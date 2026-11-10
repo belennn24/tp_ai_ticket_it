@@ -3,6 +3,7 @@ import { UsuarioService } from '../backend/services/usuarioService.js';
 import { UsuarioRepository } from '../backend/repositories/usuarioRepository.js';
 import { EventoRepository } from '../backend/repositories/eventoRepository.js';
 import { Evento } from '../backend/models/evento.js';
+import { Usuario } from '../backend/models/usuario.js';
 import { NotFoundError, ConflictError, ValidationError } from '../backend/errors/appError.js';
 
 describe('UsuarioService (Pruebas Unitarias)', () => {
@@ -10,10 +11,12 @@ describe('UsuarioService (Pruebas Unitarias)', () => {
   let eventoRepo;
   let service;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     usuarioRepo = new UsuarioRepository();
     eventoRepo = new EventoRepository();
     service = new UsuarioService(usuarioRepo, eventoRepo);
+
+    await usuarioRepo.save(new Usuario({ id: 'user-1', nombre: 'Juan' }));
   });
 
   describe('Favoritos (obtenerFavoritos, agregarFavorito, eliminarFavorito)', () => {
@@ -64,6 +67,10 @@ describe('UsuarioService (Pruebas Unitarias)', () => {
       await expect(service.obtenerFavoritos('')).rejects.toThrow(ValidationError);
       await expect(service.agregarFavorito('', 'ev-1')).rejects.toThrow(ValidationError);
       await expect(service.eliminarFavorito('user-1', '')).rejects.toThrow(ValidationError);
+    });
+
+    it('obtenerFavoritos debe lanzar NotFoundError (404) si el usuario no existe', async () => {
+      await expect(service.obtenerFavoritos('usuario-inexistente')).rejects.toThrow(NotFoundError);
     });
   });
 });

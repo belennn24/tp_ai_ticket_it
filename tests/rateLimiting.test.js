@@ -22,12 +22,13 @@ describe('Rate Limiting Middleware', () => {
       expect(tieneLimiteGeneral).toBe(true);
     });
 
-    it('debe registrar el middleware limiteAuth para las rutas de login', () => {
+    it('debe registrar el middleware limiteAuth para las rutas de login y token', () => {
       const stack = (app.router || app._router).stack;
-      const tieneLimiteAuth = stack.some(
+      const capasLimiteAuth = stack.filter(
         layer => layer.handle === limiteAuth
       );
-      expect(tieneLimiteAuth).toBe(true);
+      // Debe estar presente tanto para /api/auth/login como para /api/auth/token
+      expect(capasLimiteAuth.length).toBeGreaterThanOrEqual(2);
     });
   });
 

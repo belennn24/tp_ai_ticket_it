@@ -7,6 +7,7 @@ import {
   Categoria,
   Mensaje,
   Resenia,
+  CambioEstadoCompra,
   estadoCompra
 } from '../backend/models/index.js';
 import { ValidationError, ConflictError } from '../backend/errors/appError.js';
@@ -33,6 +34,39 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
       // Remover favorito
       usuario.eliminarFavorito('ev-10');
       expect(usuario.tieneFavorito('ev-10')).toBe(false);
+    });
+
+    it('debe recalcular su reputación y actualizar fechaModificacion en el dominio', () => {
+      const organizador = new Usuario({ nombre: 'Carlos', rol: 'organizador' });
+      const promedio = organizador.recalcularReputacion([{ puntuacion: 4 }, { puntuacion: 5 }]);
+
+      expect(promedio).toBe(4.5);
+      expect(organizador.reputacion).toBe(4.5);
+      expect(organizador.fechaModificacion).toBeInstanceOf(Date);
+    });
+
+    it('debe permitir modificar sus datos validando invariantes', () => {
+      const usuario = new Usuario({ nombre: 'Juan' });
+      usuario.modificar({ nombre: 'Juan Carlos', apellido: 'Gomez' });
+
+      expect(usuario.nombre).toBe('Juan Carlos');
+      expect(usuario.apellido).toBe('Gomez');
+      expect(usuario.fechaModificacion).toBeInstanceOf(Date);
+      expect(() => usuario.modificar({ nombre: '  ' })).toThrow(ValidationError);
+    });
+
+    it('debe almacenar rol como atributo informativo y permitir modificarlo', () => {
+      const uDefault = new Usuario({ nombre: 'x' });
+      expect(uDefault.rol).toBe('comprador');
+
+      const uOrg = new Usuario({ nombre: 'Organizador Uno', rol: 'organizador' });
+      expect(uOrg.rol).toBe('organizador');
+
+      const uAdmin = new Usuario({ nombre: 'Admin Uno', rol: 'admin' });
+      expect(uAdmin.rol).toBe('admin');
+
+      uDefault.modificar({ rol: 'organizador' });
+      expect(uDefault.rol).toBe('organizador');
     });
   });
 
@@ -76,13 +110,31 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
       expect(eventoFuturo.yaOcurrio()).toBe(false);
     });
 
-    it('debe buscar y agregar tipos de entrada con métodos de dominio', () => {
+    it('debe buscar, descontar cupo, calcular precio mínimo y balance de cupos en el dominio', () => {
       const evento = new Evento({ nombre: 'Festival' });
-      const tipo = new TipoEntrada({ id: 't-1', nombre: 'Campo', precio: 200, cupo: 50 });
+      const tipo1 = new TipoEntrada({ id: 't-1', nombre: 'Campo', precio: 200, cupo: 50 });
+      const tipo2 = new TipoEntrada({ id: 't-2', nombre: 'VIP', precio: 500, cupo: 10 });
 
-      evento.agregarTipoEntrada(tipo);
-      expect(evento.buscarTipoEntrada('t-1')).toBe(tipo);
+      evento.agregarTipoEntrada(tipo1);
+      evento.agregarTipoEntrada(tipo2);
+
+      expect(evento.buscarTipoEntrada('t-1')).toBe(tipo1);
       expect(evento.buscarTipoEntrada('inexistente')).toBeNull();
+      expect(evento.precioMinimo()).toBe(200);
+
+      evento.descontarCupo('t-1', 4);
+      expect(tipo1.cupo).toBe(46);
+
+      const balance = evento.calcularBalanceCupos([
+        { tipoEntrada: 't-1', cantidad: 4, estado: estadoCompra.CONFIRMADA },
+        { tipoEntrada: 't-1', cantidad: 2, estado: estadoCompra.CANCELADA },
+        { tipoEntrada: 't-1', cantidad: 1, estado: estadoCompra.REEMBOLSADA },
+        { tipoEntrada: 't-1', cantidad: 3, estado: estadoCompra.PENDIENTE }
+      ]);
+      const balanceT1 = balance.find(b => b.id === 't-1');
+      expect(balanceT1.entradasVendidas).toBe(4);
+      expect(balanceT1.cupoTotal).toBe(50);
+      expect(balanceT1.cupoDisponible).toBe(46);
     });
   });
 
@@ -100,6 +152,27 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
       expect(compra.estado).toBe(estadoCompra.PENDIENTE);
     });
 
+    it('debe validar transiciones permitidas mediante la tabla de transiciones (puedePasarA y actualizarEstado)', () => {
+      const compra = new Compra({ cantidad: 1, estado: estadoCompra.PENDIENTE });
+      expect(compra.puedePasarA(estadoCompra.CONFIRMADA)).toBe(true);
+      expect(compra.puedePasarA(estadoCompra.CANCELADA)).toBe(true);
+      expect(compra.puedePasarA(estadoCompra.UTILIZADA)).toBe(false);
+
+      compra.actualizarEstado(estadoCompra.CONFIRMADA);
+      expect(compra.estado).toBe(estadoCompra.CONFIRMADA);
+      expect(compra.puedePasarA(estadoCompra.UTILIZADA)).toBe(true);
+      expect(compra.puedePasarA(estadoCompra.CANCELADA)).toBe(true);
+      expect(compra.puedePasarA(estadoCompra.PENDIENTE)).toBe(false);
+      expect(compra.puedePasarA(estadoCompra.REEMBOLSADA)).toBe(false);
+
+      // Pasar a UTILIZADA y verificar que es estado terminal
+      compra.actualizarEstado(estadoCompra.UTILIZADA);
+      expect(compra.estado).toBe(estadoCompra.UTILIZADA);
+      expect(compra.puedePasarA(estadoCompra.CONFIRMADA)).toBe(false);
+      expect(compra.puedePasarA(estadoCompra.CANCELADA)).toBe(false);
+      expect(() => compra.actualizarEstado(estadoCompra.CONFIRMADA)).toThrow(ConflictError);
+    });
+
     it('debe gestionar transiciones de estado de forma segura', () => {
       const compra = new Compra({ cantidad: 1, estado: estadoCompra.CONFIRMADA });
       expect(compra.estado).toBe(estadoCompra.CONFIRMADA);
@@ -112,15 +185,83 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
       expect(() => compra.cancelar()).toThrow(ConflictError);
     });
 
-    it('cancelar debe setear estado CANCELADA y registrar fechaBaja', () => {
-      const compra = new Compra({ cantidad: 1, estado: estadoCompra.CONFIRMADA });
-      compra.cancelar();
+    it('cancelar debe setear estado CANCELADA, registrar fechaBaja y restituir cupo al evento desde el modelo', () => {
+      const tipoEntrada = new TipoEntrada({ id: 't-canc', cupo: 8, precio: 100 });
+      const evento = new Evento({ id: 'ev-canc', tiposEntrada: [tipoEntrada] });
+      const compra = new Compra({
+        evento,
+        tipoEntrada,
+        cantidad: 2,
+        estado: estadoCompra.CONFIRMADA
+      });
+
+      const cambio = compra.cancelar({ quien: 'usuario-1', motivo: 'Cambio de planes' });
 
       expect(compra.estado).toBe(estadoCompra.CANCELADA);
       expect(compra.fechaBaja).toBeInstanceOf(Date);
+      expect(tipoEntrada.cupo).toBe(10); // 8 + 2 devueltas por el modelo
+      expect(cambio).toBeInstanceOf(CambioEstadoCompra);
+      expect(cambio.estado).toBe(estadoCompra.CANCELADA);
+      expect(cambio.quien).toBe('usuario-1');
+      expect(cambio.motivo).toBe('Cambio de planes');
 
-      // No se puede cancelar dos veces
+      // No se puede cancelar dos veces ni confirmar una cancelada
       expect(() => compra.cancelar()).toThrow(ConflictError);
+      expect(() => compra.confirmar()).toThrow(ConflictError);
+
+      // Desde CANCELADA solo se puede pasar a REEMBOLSADA
+      const cambioReembolso = compra.reembolsar('admin-1', new Date(), 'Devolución de dinero');
+      expect(compra.estado).toBe(estadoCompra.REEMBOLSADA);
+      expect(cambioReembolso.estado).toBe(estadoCompra.REEMBOLSADA);
+
+      // Desde REEMBOLSADA ya no se puede confirmar
+      expect(() => compra.confirmar()).toThrow(ConflictError);
+    });
+
+    it('debe verificar pertenencia de comprador, organizador y cálculo de días faltantes en el dominio', () => {
+      const evento = new Evento({
+        id: 'ev-1',
+        nombre: 'Concierto',
+        organizador: 'org-1',
+        fecha: new Date('2026-11-12T12:00:00Z')
+      });
+      const compra = new Compra({
+        comprador: 'comp-1',
+        evento,
+        cantidad: 2,
+        estado: estadoCompra.CONFIRMADA
+      });
+
+      expect(compra.calcularDiasFaltantes(new Date('2026-11-07T12:00:00Z'))).toBe(5);
+      expect(compra.esDeComprador('comp-1')).toBe(true);
+      expect(compra.esDeComprador({ id: 'comp-1' })).toBe(true);
+      expect(compra.esDeComprador('otro')).toBe(false);
+
+      expect(compra.esDeOrganizador('org-1')).toBe(true);
+      expect(compra.esDeOrganizador({ id: 'org-1' })).toBe(true);
+      expect(compra.esDeOrganizador('comp-1')).toBe(false);
+
+      expect(compra.puedeAcceder('comp-1')).toBe(true);
+      expect(compra.puedeAcceder('org-1')).toBe(true);
+      expect(compra.puedeAcceder('ajeno')).toBe(false);
+      expect(compra.puedeAcceder(null)).toBe(false);
+      expect(compra.puedeAcceder(undefined)).toBe(false);
+    });
+
+    it('Usuario toJSON no debe exponer passwordHash ni campos internos al serializar', () => {
+      const u = new Usuario({ nombre: 'Ana', passwordHash: 'hash_secreto_123' });
+      const json = JSON.parse(JSON.stringify(u));
+      expect(json.passwordHash).toBeUndefined();
+      expect(json.borrado).toBeUndefined();
+      expect(json.nombre).toBe('Ana');
+    });
+
+    it('Compra toJSON debe exponer diasFaltantes y no variables privadas', () => {
+      const c = new Compra({ cantidad: 1 });
+      const json = JSON.parse(JSON.stringify(c));
+      expect(json._diasFaltantes).toBeUndefined();
+      expect(json._cupoRestituido).toBeUndefined();
+      expect(json.cantidad).toBe(1);
     });
 
     it('debe permitir agregar mensajes mediante método de dominio', () => {
@@ -134,7 +275,15 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
     });
   });
 
-  describe('Resenia y Mensaje', () => {
+  describe('Categoria, Resenia y Mensaje', () => {
+    it('Categoria debe permitir modificarse con autovalidación', () => {
+      const cat = new Categoria({ nombre: 'Música' });
+      cat.modificar({ nombre: 'Música en Vivo', descripcion: 'Recitales' });
+      expect(cat.nombre).toBe('Música en Vivo');
+      expect(cat.fechaModificacion).toBeInstanceOf(Date);
+      expect(() => cat.modificar({ nombre: '  ' })).toThrow(ValidationError);
+    });
+
     it('Resenia debe validar puntuación entre 0 y 5', () => {
       expect(() => new Resenia({ puntuacion: 6 })).toThrow(ValidationError);
       expect(() => new Resenia({ puntuacion: -1 })).toThrow(ValidationError);

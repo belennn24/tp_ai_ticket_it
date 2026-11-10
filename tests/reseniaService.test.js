@@ -55,8 +55,7 @@ describe('ReseniaService (Pruebas Unitarias)', () => {
         eventoId: 'ev-1',
         puntuacion: 5,
         detalle: 'Increíble experiencia',
-        compradorId: 'user-1',
-        userRole: 'comprador'
+        compradorId: 'user-1'
       });
 
       expect(reseniaCreada).toBeDefined();
@@ -85,8 +84,7 @@ describe('ReseniaService (Pruebas Unitarias)', () => {
       await expect(service.create({
         eventoId: 'ev-1',
         puntuacion: 4,
-        compradorId: 'user-1',
-        userRole: 'comprador'
+        compradorId: 'user-1'
       })).rejects.toThrow(ConflictError);
     });
 
@@ -106,16 +104,14 @@ describe('ReseniaService (Pruebas Unitarias)', () => {
       await service.create({
         eventoId: 'ev-1',
         puntuacion: 5,
-        compradorId: 'user-1',
-        userRole: 'comprador'
+        compradorId: 'user-1'
       });
 
       // Segunda reseña debe fallar
       await expect(service.create({
         eventoId: 'ev-1',
         puntuacion: 3,
-        compradorId: 'user-1',
-        userRole: 'comprador'
+        compradorId: 'user-1'
       })).rejects.toThrow(ConflictError);
     });
 
@@ -123,18 +119,8 @@ describe('ReseniaService (Pruebas Unitarias)', () => {
       await expect(service.create({
         eventoId: 'ev-inexistente',
         puntuacion: 5,
-        compradorId: 'user-1',
-        userRole: 'comprador'
+        compradorId: 'user-1'
       })).rejects.toThrow(NotFoundError);
-    });
-
-    it('debe lanzar ForbiddenError (403) si el rol no es comprador', async () => {
-      await expect(service.create({
-        eventoId: 'ev-1',
-        puntuacion: 5,
-        compradorId: 'user-1',
-        userRole: 'organizador'
-      })).rejects.toThrow(ForbiddenError);
     });
   });
 
@@ -150,8 +136,8 @@ describe('ReseniaService (Pruebas Unitarias)', () => {
       await compraRepo.save(new Compra({ id: 'c-1', comprador: 'u1', evento: 'ev-1', estado: estadoCompra.UTILIZADA }));
       await compraRepo.save(new Compra({ id: 'c-2', comprador: 'u2', evento: 'ev-1', estado: estadoCompra.UTILIZADA }));
 
-      await service.create({ eventoId: 'ev-1', puntuacion: 4, compradorId: 'u1', userRole: 'comprador' });
-      await service.create({ eventoId: 'ev-1', puntuacion: 5, compradorId: 'u2', userRole: 'comprador' });
+      await service.create({ eventoId: 'ev-1', puntuacion: 4, compradorId: 'u1' });
+      await service.create({ eventoId: 'ev-1', puntuacion: 5, compradorId: 'u2' });
 
       const resultado = await service.getByOrganizadorId('org-1');
       expect(resultado.organizadorId).toBe('org-1');
@@ -183,17 +169,9 @@ describe('ReseniaService (Pruebas Unitarias)', () => {
       expect(service.extraerId(undefined)).toBe('');
     });
 
-    it('validarRolComprador debe permitir rol comprador y rechazar cualquier otro', () => {
-      expect(() => service.validarRolComprador('comprador')).not.toThrow();
-      expect(() => service.validarRolComprador('COMPRADOR')).not.toThrow();
-      expect(() => service.validarRolComprador('organizador', 'Error custom')).toThrow(ForbiddenError);
-      expect(() => service.validarRolComprador('organizador', 'Error custom')).toThrow('Error custom');
-    });
-
-    it('calcularReputacionPromedio y _calcularPromedioReputacion deben calcular el promedio con 2 decimales o usar valor por defecto', () => {
+    it('calcularReputacionPromedio debe calcular el promedio con 2 decimales o usar valor por defecto', () => {
       const resenias = [{ puntuacion: 4 }, { puntuacion: 5 }, { puntuacion: 4 }];
       expect(service.calcularReputacionPromedio(resenias)).toBe(4.33);
-      expect(service._calcularPromedioReputacion(resenias)).toBe(4.33);
 
       expect(service.calcularReputacionPromedio([], 5)).toBe(5);
       expect(service.calcularReputacionPromedio(null, 0)).toBe(0);

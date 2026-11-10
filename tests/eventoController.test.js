@@ -84,8 +84,7 @@ describe('EventoController (Pruebas Unitarias)', () => {
       fecha: '2026-12-01',
       tiposEntrada: [],
       multimedia: undefined,
-      organizadorId: 'org-1',
-      userRole: 'organizador'
+      organizadorId: 'org-1'
     });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(nuevoEvento);
@@ -104,7 +103,6 @@ describe('EventoController (Pruebas Unitarias)', () => {
 
     expect(mockService.getCompras).toHaveBeenCalledWith('ev-1', {
       organizadorId: 'org-1',
-      userRole: 'organizador',
       usuarioActual: req.user
     });
     expect(res.status).toHaveBeenCalledWith(200);

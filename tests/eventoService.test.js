@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { EventoService } from '../backend/services/eventoService.js';
 import { Evento } from '../backend/models/evento.js';
 import { TipoEntrada } from '../backend/models/tipoEntrada.js';
@@ -106,6 +106,28 @@ describe('EventoService (Pruebas Unitarias)', () => {
       const porReputacion = await service.getAll({ orden: 'reputacion' });
       expect(porReputacion[0].id).toBe('1'); // mayor reputación primero
     });
+
+    it('debe ordenar por reputación resolviendo organizador cuando es un string ID', async () => {
+      const mockUsuarioRepo = {
+        findById: jest.fn(async (id) => {
+          if (id === 'org-alto') return { id: 'org-alto', nombre: 'Top Org', reputacion: 4.9 };
+          if (id === 'org-bajo') return { id: 'org-bajo', nombre: 'Low Org', reputacion: 2.1 };
+          return null;
+        })
+      };
+
+      service.usuarioRepository = mockUsuarioRepo;
+
+      const evA = new Evento({ id: 'ev-a', organizador: 'org-bajo' });
+      const evB = new Evento({ id: 'ev-b', organizador: 'org-alto' });
+
+      await eventoRepo.save(evA);
+      await eventoRepo.save(evB);
+
+      const ordenados = await service.getAll({ orden: 'reputacion' });
+      expect(ordenados[0].id).toBe('ev-b'); // org-alto (4.9) primero
+      expect(ordenados[1].id).toBe('ev-a'); // org-bajo (2.1) segundo
+    });
   });
 
   describe('Detalle de Evento (getById / obtenerEventoPorId)', () => {
@@ -146,16 +168,6 @@ describe('EventoService (Pruebas Unitarias)', () => {
       expect(nuevo.tiposEntrada[0].cupo).toBe(100);
     });
 
-    it('debe lanzar ForbiddenError (403) si el rol no es organizador', async () => {
-      await expect(service.create({
-        nombre: 'Evento',
-        categoriaId: 'cat-1',
-        fecha: new Date(),
-        tiposEntrada: [{ nombre: 'General', precio: 100, cupo: 10 }],
-        userRole: 'comprador'
-      })).rejects.toThrow(ForbiddenError);
-    });
-
     it('debe lanzar NotFoundError (404) si la categoría indicada no existe', async () => {
       await categoriaRepo.save(new Categoria({ id: 'cat-existente', nombre: 'Cultura' }));
 
@@ -163,8 +175,7 @@ describe('EventoService (Pruebas Unitarias)', () => {
         nombre: 'Evento',
         categoriaId: 'cat-inexistente',
         fecha: new Date(),
-        tiposEntrada: [{ nombre: 'General', precio: 100, cupo: 10 }],
-        userRole: 'organizador'
+        tiposEntrada: [{ nombre: 'General', precio: 100, cupo: 10 }]
       })).rejects.toThrow(NotFoundError);
     });
   });
@@ -199,8 +210,7 @@ describe('EventoService (Pruebas Unitarias)', () => {
       await compraRepo.save(compraCancelada);
 
       const resultado = await service.getCompras('ev-1', {
-        organizadorId: 'org-1',
-        userRole: 'organizador'
+        organizadorId: 'org-1'
       });
 
       expect(resultado.eventoId).toBe('ev-1');
@@ -219,8 +229,7 @@ describe('EventoService (Pruebas Unitarias)', () => {
       await eventoRepo.save(evento);
 
       await expect(service.getCompras('ev-1', {
-        organizadorId: 'org-impostor',
-        userRole: 'organizador'
+        organizadorId: 'org-impostor'
       })).rejects.toThrow(ForbiddenError);
     });
   });
@@ -232,13 +241,6 @@ describe('EventoService (Pruebas Unitarias)', () => {
       expect(service.extraerId({ id: 123 })).toBe('123');
       expect(service.extraerId(null)).toBe('');
       expect(service.extraerId(undefined)).toBe('');
-    });
-
-    it('validarRolOrganizador debe permitir rol organizador y rechazar cualquier otro', () => {
-      expect(() => service.validarRolOrganizador('organizador')).not.toThrow();
-      expect(() => service.validarRolOrganizador('ORGANIZADOR')).not.toThrow();
-      expect(() => service.validarRolOrganizador('comprador', 'Error custom')).toThrow(ForbiddenError);
-      expect(() => service.validarRolOrganizador('admin', 'Error custom')).toThrow('Error custom');
     });
 
     it('calcularPrecioMinimo debe obtener el precio mínimo entre los tipos de entrada', () => {

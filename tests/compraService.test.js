@@ -567,7 +567,7 @@ describe('CompraService (Pruebas Unitarias)', () => {
       expect(historial[0].estado).toBe(estadoCompra.UTILIZADA);
     });
 
-    it('debe lanzar ForbiddenError si el usuario no es el comprador o si no tiene rol comprador al cancelar', async () => {
+    it('debe lanzar ForbiddenError si el usuario no es el comprador al cancelar', async () => {
       const evento = new Evento({ id: 'ev-1', fecha: fechaEventoFuturo });
       await eventoRepo.save(evento);
 
@@ -582,13 +582,7 @@ describe('CompraService (Pruebas Unitarias)', () => {
       // Comprador ajeno
       await expect(service.cambiarEstado('compra-403', {
         estado: 'CANCELADA',
-        usuarioActual: { id: 'user-hacker', role: 'comprador' }
-      })).rejects.toThrow(ForbiddenError);
-
-      // Rol organizador intentando cancelar
-      await expect(service.cambiarEstado('compra-403', {
-        estado: 'CANCELADA',
-        usuarioActual: { id: 'user-1', role: 'organizador' }
+        usuarioActual: { id: 'user-hacker' }
       })).rejects.toThrow(ForbiddenError);
     });
 
@@ -611,14 +605,39 @@ describe('CompraService (Pruebas Unitarias)', () => {
       // Organizador ajeno
       await expect(service.cambiarEstado('compra-util-403', {
         estado: 'UTILIZADA',
-        usuarioActual: { id: 'org-impostor', role: 'organizador' }
+        usuarioActual: { id: 'org-impostor' }
       })).rejects.toThrow(ForbiddenError);
+    });
 
-      // Rol comprador intentando utilizar entrada
-      await expect(service.cambiarEstado('compra-util-403', {
-        estado: 'UTILIZADA',
-        usuarioActual: { id: 'org-real', role: 'comprador' }
-      })).rejects.toThrow(ForbiddenError);
+    it('debe registrar el motivo de cancelación tanto en la compra como en el cambio de estado', async () => {
+      const evento = new Evento({
+        id: 'ev-motivo',
+        nombre: 'Teatro',
+        organizador: 'org-1',
+        fecha: fechaEventoFuturo
+      });
+      await eventoRepo.save(evento);
+
+      const compra = new Compra({
+        id: 'compra-con-motivo',
+        evento,
+        comprador: 'user-1',
+        estado: estadoCompra.CONFIRMADA
+      });
+      await compraRepo.save(compra);
+
+      const cancelada = await service.cancelar('compra-con-motivo', {
+        motivo: 'Enfermedad y fuerza mayor',
+        quien: 'user-1'
+      });
+
+      expect(cancelada.estado).toBe(estadoCompra.CANCELADA);
+      expect(cancelada.motivo).toBe('Enfermedad y fuerza mayor');
+
+      const historial = await cambioEstadoRepo.findByCompraId('compra-con-motivo');
+      const cambioCancelacion = historial.find(h => h.estado === estadoCompra.CANCELADA);
+      expect(cambioCancelacion).toBeDefined();
+      expect(cambioCancelacion.motivo).toBe('Enfermedad y fuerza mayor');
     });
 
     it('debe lanzar ValidationError si el estado solicitado no es soportado', async () => {
