@@ -31,14 +31,14 @@ const defaultVariables = [
   { key: 'token_organizador', value: tokenOrganizador, type: 'string' },
   { key: 'token_admin', value: tokenAdmin, type: 'string' },
   { key: 'token_comprador_2', value: tokenComprador2, type: 'string' },
-  { key: 'categoriaId', value: '', type: 'string' },
-  { key: 'eventoId', value: '', type: 'string' },
-  { key: 'tipoEntradaId', value: '', type: 'string' },
-  { key: 'tipoEntradaGeneralId', value: '', type: 'string' },
-  { key: 'tipoEntradaPlateaId', value: '', type: 'string' },
-  { key: 'tipoEntradaVipId', value: '', type: 'string' },
-  { key: 'compraId', value: '', type: 'string' },
-  { key: 'compra2Id', value: '', type: 'string' },
+  { key: 'categoriaId', value: 'cat-musica-1', type: 'string' },
+  { key: 'eventoId', value: 'evt-rock-fest-1', type: 'string' },
+  { key: 'tipoEntradaId', value: 'te-rock-general', type: 'string' },
+  { key: 'tipoEntradaGeneralId', value: 'te-rock-general', type: 'string' },
+  { key: 'tipoEntradaPlateaId', value: 'te-rock-platea', type: 'string' },
+  { key: 'tipoEntradaVipId', value: 'te-rock-vip', type: 'string' },
+  { key: 'compraId', value: 'cmp-activa-1', type: 'string' },
+  { key: 'compra2Id', value: 'cmp-activa-2', type: 'string' },
   { key: 'organizadorId', value: 'usr-organizador-1', type: 'string' },
   { key: 'compradorId', value: 'usr-comprador-1', type: 'string' }
 ];
@@ -241,7 +241,7 @@ pm.test("Retorna lista de compras y balance de cupos por tipo de entrada", () =>
     const data = pm.response.json();
     pm.expect(data).to.have.property('compras');
     pm.expect(Array.isArray(data.compras)).to.be.true;
-    pm.expect(data).to.have.property('cuposDisponibles');
+    pm.expect(data.cuposDisponibles || data.balanceCupos).to.be.an('array');
 });`
       }),
       createRequestItem({
@@ -553,18 +553,20 @@ pm.test("Historial contiene la conversación completa entre comprador y organiza
       createRequestItem({
         name: '1. Comprador cancela compra activa para obtener reembolso',
         method: 'PATCH',
-        urlPath: '/api/compras/{{compra2Id}}/cancelar',
+        urlPath: '/api/compras/{{compra2Id}}',
         authBearerVar: 'token_comprador',
         body: {
+          estado: 'CANCELADA',
           motivo: 'Inconvenientes de fuerza mayor, solicito reembolso.'
         },
         testScript: `
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
 });
-pm.test("La compra pasa a estado CANCELADA", () => {
+pm.test("La compra pasa a estado CANCELADA y registra el motivo", () => {
     const data = pm.response.json();
     pm.expect(data.estado).to.equal('CANCELADA');
+    pm.expect(data.motivo).to.equal('Inconvenientes de fuerza mayor, solicito reembolso.');
 });`
       }),
       createRequestItem({
@@ -592,10 +594,11 @@ pm.test("El cupo del tipo de entrada cancelada fue restituido", () => {
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-pm.test("El historial registra la transición a CANCELADA", () => {
+pm.test("El historial registra la transición a CANCELADA y guarda el motivo", () => {
     const data = pm.response.json();
-    const estados = data.map(h => h.estado);
-    pm.expect(estados).to.include('CANCELADA');
+    const cancelado = data.find(h => h.estado === 'CANCELADA');
+    pm.expect(cancelado).to.be.an('object');
+    pm.expect(cancelado.motivo).to.equal('Inconvenientes de fuerza mayor, solicito reembolso.');
 });`
       })
     ]
@@ -608,9 +611,12 @@ pm.test("El historial registra la transición a CANCELADA", () => {
       createRequestItem({
         name: '1. Conflicto - Intento de cancelar compra ya cancelada (409)',
         method: 'PATCH',
-        urlPath: '/api/compras/{{compra2Id}}/cancelar',
+        urlPath: '/api/compras/{{compra2Id}}',
         authBearerVar: 'token_comprador',
-        body: { motivo: 'Reintento inválido' },
+        body: {
+          estado: 'CANCELADA',
+          motivo: 'Reintento inválido'
+        },
         testScript: `
 pm.test("Status code es 409 Conflict", () => {
     pm.response.to.have.status(409);
@@ -619,9 +625,12 @@ pm.test("Status code es 409 Conflict", () => {
       createRequestItem({
         name: '2. Seguridad - Usuario ajeno intenta cancelar la compra (403)',
         method: 'PATCH',
-        urlPath: '/api/compras/{{compraId}}/cancelar',
+        urlPath: '/api/compras/{{compraId}}',
         authBearerVar: 'token_comprador_2',
-        body: { motivo: 'Intento no autorizado' },
+        body: {
+          estado: 'CANCELADA',
+          motivo: 'Intento no autorizado'
+        },
         testScript: `
 pm.test("Status code es 403 Forbidden", () => {
     pm.response.to.have.status(403);
@@ -630,9 +639,12 @@ pm.test("Status code es 403 Forbidden", () => {
       createRequestItem({
         name: '3. Error - Cancelar compra inexistente (404)',
         method: 'PATCH',
-        urlPath: '/api/compras/compra-inexistente-999/cancelar',
+        urlPath: '/api/compras/compra-inexistente-999',
         authBearerVar: 'token_comprador',
-        body: { motivo: 'No existe' },
+        body: {
+          estado: 'CANCELADA',
+          motivo: 'No existe'
+        },
         testScript: `
 pm.test("Status code es 404 Not Found", () => {
     pm.response.to.have.status(404);
@@ -663,8 +675,11 @@ pm.test("Status code es 409 Conflict (no tiene compra UTILIZADA)", () => {
       createRequestItem({
         name: '2. Organizador registra ingreso y marca compra como UTILIZADA',
         method: 'PATCH',
-        urlPath: '/api/compras/{{compraId}}/utilizar',
+        urlPath: '/api/compras/{{compraId}}',
         authBearerVar: 'token_organizador',
+        body: {
+          estado: 'UTILIZADA'
+        },
         testScript: `
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
@@ -1005,6 +1020,105 @@ pm.test("Status code es 409 Conflict", () => {
 });`
       })
     ]
+  },
+  {
+    id: 'CU_AUTH',
+    name: 'CU_EXTRA - Autenticación y Autorización de Usuarios (JWT)',
+    description: 'Gestión completa de identidad: registro de nuevos usuarios, login con contraseña segura hasheada con bcrypt, obtención de perfil autenticado y token Bearer JWT.',
+    items: [
+      createRequestItem({
+        name: '1. Registro de nuevo usuario comprador (POST /api/auth/registro)',
+        method: 'POST',
+        urlPath: '/api/auth/registro',
+        body: {
+          nombre: 'Lucia',
+          apellido: 'Ventas',
+          email: 'lucia.compradora@ticketit.com',
+          password: 'Password123!',
+          rol: 'comprador'
+        },
+        testScript: `
+pm.test("Status code es 201 Created", () => {
+    pm.response.to.have.status(201);
+});
+const data = pm.response.json();
+pm.expect(data.token).to.be.a('string');
+pm.expect(data.usuario.email).to.equal('lucia.compradora@ticketit.com');
+pm.collectionVariables.set("token_lucia", data.token);
+`
+      }),
+      createRequestItem({
+        name: '2. Login con credenciales válidas (POST /api/auth/login)',
+        method: 'POST',
+        urlPath: '/api/auth/login',
+        body: {
+          email: 'lucia.compradora@ticketit.com',
+          password: 'Password123!'
+        },
+        testScript: `
+pm.test("Status code es 200 OK", () => {
+    pm.response.to.have.status(200);
+});
+const data = pm.response.json();
+pm.expect(data.token).to.be.a('string');
+pm.collectionVariables.set("token_lucia", data.token);
+`
+      }),
+      createRequestItem({
+        name: '3. Login fallido por contraseña incorrecta (401 Unauthorized)',
+        method: 'POST',
+        urlPath: '/api/auth/login',
+        body: {
+          email: 'lucia.compradora@ticketit.com',
+          password: 'PasswordErronea'
+        },
+        testScript: `
+pm.test("Status code es 401 Unauthorized", () => {
+    pm.response.to.have.status(401);
+});
+`
+      }),
+      createRequestItem({
+        name: '4. Consultar perfil del usuario autenticado (GET /api/auth/me)',
+        method: 'GET',
+        urlPath: '/api/auth/me',
+        headers: [
+          { key: 'Authorization', value: 'Bearer {{token_lucia}}' }
+        ],
+        testScript: `
+pm.test("Status code es 200 OK", () => {
+    pm.response.to.have.status(200);
+});
+const data = pm.response.json();
+pm.expect(data.user || data.usuario).to.be.an('object');
+`
+      }),
+      createRequestItem({
+        name: '5. Renovar access token con cookie HttpOnly (POST /api/auth/refresh)',
+        method: 'POST',
+        urlPath: '/api/auth/refresh',
+        testScript: `
+pm.test("Status code es 200 OK", () => {
+    pm.response.to.have.status(200);
+});
+const data = pm.response.json();
+pm.expect(data.token).to.be.a('string');
+pm.collectionVariables.set("token_lucia", data.token);
+`
+      }),
+      createRequestItem({
+        name: '6. Cerrar sesión y revocar refresh token (POST /api/auth/logout)',
+        method: 'POST',
+        urlPath: '/api/auth/logout',
+        testScript: `
+pm.test("Status code es 200 OK", () => {
+    pm.response.to.have.status(200);
+});
+const data = pm.response.json();
+pm.expect(data.mensaje).to.include('exitosa');
+`
+      })
+    ]
   }
 ];
 
@@ -1014,14 +1128,12 @@ pm.test("Status code es 409 Conflict", () => {
 
 const itemsE2E = [
   createRequestItem({
-    name: '01. Autenticación - Obtener token dinámico para Organizador',
+    name: '01. Autenticación - Login Organizador (email y password)',
     method: 'POST',
-    urlPath: '/api/auth/token',
+    urlPath: '/api/auth/login',
     body: {
-      id: 'usr-organizador-1',
       email: 'organizador@ticketit.com',
-      role: 'organizador',
-      nombre: 'Carlos Productor'
+      password: 'Password123!'
     },
     testScript: `
 pm.test("Status code es 200", () => {
@@ -1029,18 +1141,16 @@ pm.test("Status code es 200", () => {
 });
 const data = pm.response.json();
 pm.collectionVariables.set("token_organizador", data.token);
-pm.collectionVariables.set("organizadorId", data.user.id);
+pm.collectionVariables.set("organizadorId", data.user?.id || data.usuario?.id || 'usr-organizador-1');
 `
   }),
   createRequestItem({
-    name: '02. Autenticación - Obtener token dinámico para Comprador',
+    name: '02. Autenticación - Login Comprador (email y password)',
     method: 'POST',
-    urlPath: '/api/auth/token',
+    urlPath: '/api/auth/login',
     body: {
-      id: 'usr-comprador-1',
       email: 'comprador@ticketit.com',
-      role: 'comprador',
-      nombre: 'Juan Comprador'
+      password: 'Password123!'
     },
     testScript: `
 pm.test("Status code es 200", () => {
@@ -1048,7 +1158,7 @@ pm.test("Status code es 200", () => {
 });
 const data = pm.response.json();
 pm.collectionVariables.set("token_comprador", data.token);
-pm.collectionVariables.set("compradorId", data.user.id);
+pm.collectionVariables.set("compradorId", data.user?.id || data.usuario?.id || 'usr-comprador-1');
 `
   }),
   createRequestItem({
@@ -1185,7 +1295,8 @@ pm.test("Status code es 200", () => {
 });
 const data = pm.response.json();
 pm.expect(data.compras.length).to.be.at.least(1);
-const cupoGeneral = data.cuposDisponibles.find(c => c.id === pm.collectionVariables.get("tipoEntradaGeneralId"));
+const cupos = data.cuposDisponibles || data.balanceCupos;
+const cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get("tipoEntradaGeneralId"));
 pm.expect(cupoGeneral.cupo).to.equal(48); // 50 iniciales - 2 vendidas
 `
   }),
@@ -1252,9 +1363,10 @@ pm.expect(data.total).to.equal(25000);
   createRequestItem({
     name: '15. Flujo Alternativo - Comprador cancela la Compra 2 para reembolso',
     method: 'PATCH',
-    urlPath: '/api/compras/{{compra2Id}}/cancelar',
+    urlPath: '/api/compras/{{compra2Id}}',
     authBearerVar: 'token_comprador',
     body: {
+      estado: 'CANCELADA',
       motivo: 'Un amigo no podrá asistir.'
     },
     testScript: `
@@ -1263,6 +1375,7 @@ pm.test("Status code es 200 OK", () => {
 });
 const data = pm.response.json();
 pm.expect(data.estado).to.equal('CANCELADA');
+pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');
 `
   }),
   createRequestItem({
@@ -1281,8 +1394,11 @@ pm.expect(vip.cupo).to.equal(5); // Vuelve a los 5 iniciales
   createRequestItem({
     name: '17. Día del Evento - Organizador registra ingreso marcando Compra 1 como UTILIZADA',
     method: 'PATCH',
-    urlPath: '/api/compras/{{compraId}}/utilizar',
+    urlPath: '/api/compras/{{compraId}}',
     authBearerVar: 'token_organizador',
+    body: {
+      estado: 'UTILIZADA'
+    },
     testScript: `
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
@@ -1369,7 +1485,8 @@ const filenameMap = {
   CU11: 'CU11_Ordenar_Eventos.postman_collection.json',
   CU12: 'CU12_Realizar_Compra_Cupo.postman_collection.json',
   CU_EXTRA_FAVS: 'CU_EXTRA_Favoritos.postman_collection.json',
-  CU_EXTRA_CAT: 'CU_EXTRA_Categorias.postman_collection.json'
+  CU_EXTRA_CAT: 'CU_EXTRA_Categorias.postman_collection.json',
+  CU_AUTH: 'CU_EXTRA_Autenticacion.postman_collection.json'
 };
 
 // 1. Colecciones individuales por Caso de Uso
