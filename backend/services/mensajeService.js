@@ -1,102 +1,98 @@
 import { Mensaje } from '../models/mensaje.js';
 import { mensajeRepository as defaultMensajeRepository } from '../repositories/mensajeRepository.js';
 import { compraRepository as defaultCompraRepository } from '../repositories/compraRepository.js';
+import { extraerId } from '../utils/idUtils.js';
 import {
-  NotFoundError,
-  ValidationError,
-  ForbiddenError
+    NotFoundError,
+    ValidationError,
+    ForbiddenError
 } from '../errors/appError.js';
 
-/**
- * Service de Mensajes (Chat de Compras).
- * Responsabilidad: Orquestar el canal bidireccional entre comprador y organizador,
- * verificando pertenencia estricta a la orden de compra.
- */
 export class MensajeService {
-  constructor(
-    mensajeRepo = defaultMensajeRepository,
-    compraRepo = defaultCompraRepository
-  ) {
-    this.mensajeRepository = mensajeRepo || defaultMensajeRepository;
-    this.compraRepository = compraRepo || defaultCompraRepository;
-  }
-
-  validarParticipante(compra, usuarioActual) {
-    if (!usuarioActual) return;
-    const userId = String(usuarioActual.id || usuarioActual);
-    const compradorId = String(
-      compra.comprador?.id !== undefined ? compra.comprador.id : compra.comprador
-    );
-    const organizadorId = String(
-      compra.evento?.organizador?.id !== undefined
-        ? compra.evento.organizador.id
-        : compra.evento?.organizador || ''
-    );
-
-    if (userId !== compradorId && userId !== organizadorId) {
-      throw new ForbiddenError('Usuario ajeno a la compra.');
-    }
-  }
-
-  /**
-   * Caso de uso: Listar mensajes del chat ordenados cronológicamente
-   */
-  async obtenerMensajes(compraId, { usuarioActual } = {}) {
-    if (!compraId) {
-      throw new ValidationError('El ID de compra es obligatorio.');
+    constructor(
+        mensajeRepoOrOptions = defaultMensajeRepository,
+        compraRepo = defaultCompraRepository,
+        fechaActualProvider = () => new Date()
+    ) {
+        if (
+            mensajeRepoOrOptions &&
+            typeof mensajeRepoOrOptions === 'object' &&
+            ('mensajeRepository' in mensajeRepoOrOptions ||
+             'compraRepository' in mensajeRepoOrOptions ||
+             'fechaActualProvider' in mensajeRepoOrOptions)
+        ) {
+            this.mensajeRepository = mensajeRepoOrOptions.mensajeRepository || defaultMensajeRepository;
+            this.compraRepository = mensajeRepoOrOptions.compraRepository || defaultCompraRepository;
+            this.fechaActualProvider = typeof mensajeRepoOrOptions.fechaActualProvider === 'function'
+                ? mensajeRepoOrOptions.fechaActualProvider
+                : (() => new Date());
+        } else {
+            this.mensajeRepository = mensajeRepoOrOptions || defaultMensajeRepository;
+            this.compraRepository = compraRepo || defaultCompraRepository;
+            this.fechaActualProvider = typeof fechaActualProvider === 'function' ? fechaActualProvider : (() => new Date());
+        }
     }
 
-    const compra = await this.compraRepository.findById(compraId);
-    if (!compra) {
-      throw new NotFoundError('Compra no encontrada.');
-    }
+    obtenerFechaActual = () => new Date(this.fechaActualProvider());
 
-    this.validarParticipante(compra, usuarioActual);
+    buscarCompraOError = async (compraId) => {
+        if (!compraId) throw new ValidationError('El ID de compra es obligatorio.');
+        const compra = await this.compraRepository.findById(compraId);
+        if (!compra) throw new NotFoundError('Compra no encontrada.');
+        return compra;
+    };
 
-    // Obtener del repositorio de mensajes y combinar con compra.mensajes
-    const mensajesRepo = await this.mensajeRepository.findByCompraId(compraId);
-    if (mensajesRepo.length > 0) {
-      return mensajesRepo;
-    }
+    validarParticipante = (compra, usuarioActual) => {
+        if (!usuarioActual) return;
+        if (!compra.puedeAcceder(usuarioActual)) {
+            throw new ForbiddenError('Usuario ajeno a la compra.');
+        }
+    };
 
-    return (compra.mensajes || []).sort(
-      (a, b) => new Date(a.enviado) - new Date(b.enviado)
-    );
-  }
+    obtenerMensajes = async (compraId, { usuarioActual } = {}) => {
+        const compra = await this.buscarCompraOError(compraId);
+        this.validarParticipante(compra, usuarioActual);
 
-  /**
-   * Caso de uso: Enviar un mensaje en el chat de la compra
-   */
-  async enviarMensaje(compraId, { texto, usuarioActual, id } = {}) {
-    if (!texto || typeof texto !== 'string' || texto.trim().length === 0) {
-      throw new ValidationError('El mensaje no puede estar vacío.');
-    }
+        const mensajesRepo = await this.mensajeRepository.findByCompraId(compraId);
+        if (mensajesRepo.length > 0) {
+            return mensajesRepo;
+        }
 
-    const compra = await this.compraRepository.findById(compraId);
-    if (!compra) {
-      throw new NotFoundError('Compra no encontrada.');
-    }
+        return (compra.mensajes || []).sort(
+            (a, b) => new Date(a.enviado) - new Date(b.enviado)
+        );
+    };
 
-    this.validarParticipante(compra, usuarioActual);
+    enviarMensaje = async (compraId, { texto, usuarioActual, id } = {}) => {
+        if (!texto || typeof texto !== 'string' || texto.trim().length === 0) {
+            throw new ValidationError('El mensaje no puede estar vacío.');
+        }
 
-    const nuevoMensaje = new Mensaje({
-      id,
-      usuario: usuarioActual?.id || 'ANONIMO',
-      mensaje: texto.trim(),
-      enviado: new Date()
-    });
-    nuevoMensaje.compra = compraId;
+        const compra = await this.buscarCompraOError(compraId);
+        this.validarParticipante(compra, usuarioActual);
 
-    await this.mensajeRepository.save(nuevoMensaje);
+        const nuevoMensaje = new Mensaje({
+            id,
+            usuario: usuarioActual?.id || 'ANONIMO',
+            mensaje: texto.trim(),
+            enviado: this.obtenerFechaActual()
+        });
+        nuevoMensaje.compra = compraId;
 
-    if (!Array.isArray(compra.mensajes)) {
-      compra.mensajes = [];
-    }
-    compra.mensajes.push(nuevoMensaje);
-    await this.compraRepository.update(compra.id, compra);
+        await this.mensajeRepository.save(nuevoMensaje);
 
-    return nuevoMensaje;
-  }
+        if (typeof compra.agregarMensaje === 'function') {
+            compra.agregarMensaje(nuevoMensaje);
+        } else {
+            if (!Array.isArray(compra.mensajes)) {
+                compra.mensajes = [];
+            }
+            compra.mensajes.push(nuevoMensaje);
+        }
+        await this.compraRepository.update(compra.id, compra);
+
+        return nuevoMensaje;
+    };
 }
 
 export const mensajeService = new MensajeService();

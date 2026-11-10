@@ -16,7 +16,16 @@ export function validate(schema, target = 'body') {
             return next(new ValidationError(mensaje));
         }
 
-        req[target] = resultado.data;
+        try {
+            req[target] = resultado.data;
+        } catch {
+            Object.defineProperty(req, target, {
+                value: resultado.data,
+                writable: true,
+                enumerable: true,
+                configurable: true
+            });
+        }
         next();
     };
 }
