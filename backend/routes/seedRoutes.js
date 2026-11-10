@@ -1,13 +1,15 @@
 import { Router } from 'express';
 import { seedDatabase } from '../utils/seed.js';
+import { authMiddleware, requireRole } from '../middlewares/authMiddleware.js';
 
 const router = Router();
 
 /**
  * POST /api/seed
  * Reinicia y vuelve a sembrar la base de datos en memoria con datos representativos.
+ * Requiere autenticación y rol de administrador.
  */
-router.post('/', async (req, res, next) => {
+router.post('/', authMiddleware, requireRole('admin'), async (req, res, next) => {
   try {
     const summary = await seedDatabase({ clearExisting: true });
     return res.status(200).json({
@@ -22,8 +24,9 @@ router.post('/', async (req, res, next) => {
 /**
  * GET /api/seed
  * Consulta o sembrado no destructivo de verificación.
+ * Requiere autenticación y rol de administrador.
  */
-router.get('/', async (req, res, next) => {
+router.get('/', authMiddleware, requireRole('admin'), async (req, res, next) => {
   try {
     const summary = await seedDatabase({ clearExisting: false });
     return res.status(200).json({

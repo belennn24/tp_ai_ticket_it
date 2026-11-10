@@ -9,8 +9,7 @@ import { authRoutes } from './routes/authRoutes.js';
 import { seedRoutes } from './routes/seedRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { limiteGeneral, limiteAuth } from './middlewares/rateLimiting.js';
-
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'ticketit_jwt_secret_key_2026';
+import { esEntornoLocal } from './config/entorno.js';
 
 const app = express();
 
@@ -27,9 +26,12 @@ app.get('/api/health', (req, res) => {
 // Control de tasa (Rate Limiting)
 app.use('/api', limiteGeneral);
 app.use('/api/auth/login', limiteAuth);
-
+app.use('/api/auth/token', limiteAuth);
+app.use('/api/auth/registro', limiteAuth);
 // Rutas de desarrollo para reiniciar y verificar el Seed
-app.use('/api/seed', seedRoutes);
+if (esEntornoLocal()) {
+  app.use('/api/seed', seedRoutes);
+}
 
 // Rutas de autenticación y tokens
 app.use('/api/auth', authRoutes);

@@ -7,7 +7,8 @@ import { estadoCompra } from '../models/estadoCompra.js';
 import { CambioEstadoCompra } from '../models/cambioEstadoCompra.js';
 import { Mensaje } from '../models/mensaje.js';
 import { Resenia } from '../models/resenia.js';
-
+import bcryptjs from 'bcryptjs';
+import { esEntornoLocal } from '../config/entorno.js';
 import { usuarioRepository } from '../repositories/usuarioRepository.js';
 import { categoriaRepository } from '../repositories/categoriaRepository.js';
 import { eventoRepository } from '../repositories/eventoRepository.js';
@@ -79,9 +80,17 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     }
   ];
 
+  const passwordSeed = process.env.SEED_PASSWORD || (esEntornoLocal() ? 'Password123!' : null);
+  if (!passwordSeed) {
+    throw new Error('SEED_PASSWORD es obligatorio para sembrar datos fuera de desarrollo.');
+  }
+  const defaultPasswordHash = bcryptjs.hashSync(passwordSeed, 10);
   const usuarios = [];
   for (const u of usuariosData) {
-    const usuario = new Usuario(u);
+    const usuario = new Usuario({
+      ...u,
+      passwordHash: u.passwordHash || defaultPasswordHash
+    });
     await usuarioRepository.save(usuario);
     usuarios.push(usuario);
   }

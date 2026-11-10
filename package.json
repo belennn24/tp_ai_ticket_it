@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node backend/server.js",
-    "seed": "node backend/utils/seed.js",
+    "seed": "node --env-file-if-exists=.env backend/utils/seed.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "dev": "node --env-file-if-exists=.env backend/server.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/belennn24/tp_ai_ticket_it#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.3",
     "jsonwebtoken": "^9.0.3",

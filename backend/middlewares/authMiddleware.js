@@ -1,55 +1,40 @@
 import jwt from 'jsonwebtoken';
+import { getJwtSecret } from '../config/jwtConfig.js';
+import { UnauthorizedError, ForbiddenError } from '../errors/appError.js';
 
 export function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).send("No token provided");
+  const authHeader = req.headers?.authorization;
+  if (!authHeader) {
+    return next(new UnauthorizedError('No token provided'));
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer' || !parts[1]) {
+    return next(new UnauthorizedError('No token provided'));
+  }
+
+  const token = parts[1];
+
   try {
-    const secret = process.env.JWT_SECRET || 'ticketit_jwt_secret_key_2026';
-    const decoded = jwt.verify(token, secret);
+    const secret = getJwtSecret();
+    const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
     req.user = decoded;
-    next();
+    return next();
   } catch (err) {
-    return res.status(403).send("Invalid token");
+    return next(new UnauthorizedError('Invalid token'));
   }
 }
 
-
 export function requireRole(...roles) {
+  const rolesPermitidos = roles.map(r => String(r).toLowerCase().trim());
   return (req, res, next) => {
-    const userRole = req.user?.role || req.user?.rol;
-    if (
-      !userRole ||
-      (!roles.includes(userRole) &&
-        !roles.some(
-          r =>
-            typeof r === 'string' &&
-            typeof userRole === 'string' &&
-            r.toLowerCase() === userRole.toLowerCase()
-        ))
-    ) {
-      return res.status(403).send('Forbidden');
+    const userRol = req.user?.rol;
+    if (!userRol || !rolesPermitidos.includes(String(userRol).toLowerCase().trim())) {
+      return next(new ForbiddenError('Forbidden'));
     }
-    next();
+    return next();
   };
 }
 
-export function basicAuth(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith("Basic ")) {
-    return res.status(401).send("Auth required");
-  }
-  try {
-    const base64Credentials = auth.split(" ")[1];
-    const [username, password] = atob(base64Credentials).split(":");
-    // Validar usuario y contraseña (ejemplo simple)
-    if (username === "admin" && password === "1234") {
-      next();
-    } else {
-      res.status(403).send("Invalid credentials");
-    }
-  } catch (err) {
-    res.status(403).send("Invalid credentials");
-  }
-}
-
+export const requireAuth = authMiddleware;
 export default authMiddleware;
