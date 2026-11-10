@@ -13,8 +13,7 @@ export class ReseniaController {
         eventoId,
         puntuacion,
         detalle,
-        compradorId: req.user.id,
-        userRole: req.user.role || req.user.rol
+        compradorId: req.user.id
       });
       res.status(201).json(nuevaResenia);
     } catch (error) {

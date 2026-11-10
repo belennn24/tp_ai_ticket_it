@@ -42,8 +42,7 @@ export class EventoController {
         fecha,
         tiposEntrada,
         multimedia,
-        organizadorId: req.user.id,
-        userRole: req.user.role || req.user.rol
+        organizadorId: req.user.id
       });
       res.status(201).json(nuevoEvento);
     } catch (error) {
@@ -57,7 +56,6 @@ export class EventoController {
       // Seguridad: se pasa el organizador autenticado
       const resultado = await this.service.getCompras(id, {
         organizadorId: req.user.id,
-        userRole: req.user.role || req.user.rol,
         usuarioActual: req.user
       });
       res.status(200).json(resultado);

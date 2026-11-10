@@ -18,14 +18,9 @@ router.post(
   reseniaController.create
 );
 
-// GET /api/resenias/organizadores/:id y /organizadores/:id/resenias (Público)
+// GET /api/resenias/organizadores/:id (Público)
 router.get(
   '/organizadores/:id',
-  validate(organizadorIdParamSchema, 'params'),
-  reseniaController.getByOrganizadorId
-);
-router.get(
-  '/organizadores/:id/resenias',
   validate(organizadorIdParamSchema, 'params'),
   reseniaController.getByOrganizadorId
 );

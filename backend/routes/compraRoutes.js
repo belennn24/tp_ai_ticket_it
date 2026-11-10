@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { compraController } from '../controllers/compraController.js';
+import { mensajeController } from '../controllers/mensajeController.js';
 import { authMiddleware, requireRole } from '../middlewares/authMiddleware.js';
 import { validate } from '../middlewares/validate.js';
 import {
@@ -41,7 +42,7 @@ router.get(
   '/:id/mensajes',
   authMiddleware,
   requireRole('comprador', 'organizador'),
-  compraController.getMensajes
+  mensajeController.getMensajes
 );
 
 // POST /api/compras - Adquirir entradas (descuenta cupo y crea compra)
@@ -95,7 +96,7 @@ router.post(
   authMiddleware,
   requireRole('comprador', 'organizador'),
   validate(agregarMensajeSchema),
-  compraController.agregarMensaje
+  mensajeController.enviarMensaje
 );
 
 export { router as compraRoutes };

@@ -32,18 +32,6 @@ export class CompraController {
     }
   };
 
-  getByEventoId = async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const compras = await this.service.getByEventoId(id, {
-        usuarioActual: req.user
-      });
-      res.status(200).json(compras);
-    } catch (error) {
-      next(error);
-    }
-  };
-
   getHistorial = async (req, res, next) => {
     try {
       const { id } = req.params;
@@ -51,18 +39,6 @@ export class CompraController {
         usuarioActual: req.user
       });
       res.status(200).json(historial);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  getMensajes = async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const mensajes = await this.service.getMensajes(id, {
-        usuarioActual: req.user
-      });
-      res.status(200).json(mensajes);
     } catch (error) {
       next(error);
     }
@@ -140,8 +116,6 @@ export class CompraController {
       next(error);
     }
   };
-
-  enviarMensaje = this.agregarMensaje;
 }
 
 export const compraController = new CompraController();
