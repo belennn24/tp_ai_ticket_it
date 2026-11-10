@@ -27,8 +27,8 @@ describe('Rate Limiting Middleware', () => {
       const capasLimiteAuth = stack.filter(
         layer => layer.handle === limiteAuth
       );
-      // Debe estar presente tanto para /api/auth/login como para /api/auth/token
-      expect(capasLimiteAuth.length).toBeGreaterThanOrEqual(2);
+      // Debe estar presente para /api/auth/login, /api/auth/token, /api/auth/registro y /api/auth/refresh
+      expect(capasLimiteAuth.length).toBeGreaterThanOrEqual(4);
     });
   });
 

@@ -22,7 +22,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       usuarios: 5,
       categorias: 4,
       eventos: 4,
-      compras: 3,
+      compras: 4,
       mensajes: 2,
       resenias: 1
     });

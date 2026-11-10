@@ -33,3 +33,12 @@ export const limiteAuth = rateLimit({
     });
   }
 });
+
+export const limiteRefresh = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
+  handler: (req, res) => res.status(429).json({ status: 'fail', statusCode: 429, message: 'Demasiadas renovaciones de sesión.' })
+});

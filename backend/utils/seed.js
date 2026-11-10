@@ -16,6 +16,7 @@ import { compraRepository } from '../repositories/compraRepository.js';
 import { cambioEstadoCompraRepository } from '../repositories/cambioEstadoCompraRepository.js';
 import { mensajeRepository } from '../repositories/mensajeRepository.js';
 import { reseniaRepository } from '../repositories/reseniaRepository.js';
+import { refreshTokenRepository } from '../repositories/refreshTokenRepository.js';
 
 /**
  * Función encargada de sembrar la base de datos en memoria con datos representativos
@@ -34,6 +35,7 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     cambioEstadoCompraRepository.clear();
     mensajeRepository.clear();
     reseniaRepository.clear();
+    refreshTokenRepository.clear();
   }
 
   // 1. Usuarios representativos (Compradores, Organizadores, Admin)
@@ -295,7 +297,19 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     mensajes: []
   });
 
-  const compras = [compraActiva, compraUtilizadaJuan, compraUtilizadaMaria];
+  // Compra activa 2: Para pruebas de cancelación y reembolsos (CU07 / CU08)
+  const compraActiva2 = new Compra({
+    id: 'cmp-activa-2',
+    comprador: juanComprador,
+    evento: eventoRock,
+    tipoEntrada: teRockPlatea,
+    cantidad: 1,
+    total: 25000,
+    estado: estadoCompra.CONFIRMADA,
+    mensajes: []
+  });
+
+  const compras = [compraActiva, compraActiva2, compraUtilizadaJuan, compraUtilizadaMaria];
   for (const comp of compras) {
     await compraRepository.save(comp);
   }
@@ -308,6 +322,13 @@ export async function seedDatabase({ clearExisting = false } = {}) {
       estado: estadoCompra.CONFIRMADA,
       quien: juanComprador,
       fechaHora: new Date(ahora.getTime() - 3 * 24 * 60 * 60 * 1000)
+    }),
+    new CambioEstadoCompra({
+      id: 'trans-activa-2',
+      compra: compraActiva2,
+      estado: estadoCompra.CONFIRMADA,
+      quien: juanComprador,
+      fechaHora: new Date(ahora.getTime() - 2 * 24 * 60 * 60 * 1000)
     }),
     new CambioEstadoCompra({
       id: 'trans-utilizada-juan-1',

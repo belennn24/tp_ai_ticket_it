@@ -13,62 +13,62 @@
     },
     {
       "key": "token_comprador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDA2NjUwNn0.5yM5FU5KIlgboMNn_IEDaqF8_-5FYzUkF1iIhF3lZNQ",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDM0NTk0N30.g4sQlx6uY4pr6sjJqiWMOsPr8WmBwae-uKCcbLxD6Xc",
       "type": "string"
     },
     {
       "key": "token_organizador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQwNjY1MDZ9.M-VCGUw9bh2YuZUZ7o0mJuaIGNHv831eDscCq_oC_ew",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQzNDU5NDd9.qlzVc7J3jkes0R0cwp-S-fDiFJIJKtkvjQ830KveZyQ",
       "type": "string"
     },
     {
       "key": "token_admin",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQwNjY1MDZ9.hGOJH9zyGUVVShr9ujflxcWsi6kd2TSTKwL5cIDBo2g",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQzNDU5NDd9.daZMjB4sfxHpRdeqYEwnCBQbzot4mAK8gD4_ZhJq2cs",
       "type": "string"
     },
     {
       "key": "token_comprador_2",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQwNjY1MDZ9.cXf5dBHoqqUEtnjR_ypLy4BUxr0f6IKwAfoFFMqEdeM",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQzNDU5NDd9.JIUJhESfN7vSCAE2ltuVXO8bvFSiORNhBFoOfdreF2M",
       "type": "string"
     },
     {
       "key": "categoriaId",
-      "value": "",
+      "value": "cat-musica-1",
       "type": "string"
     },
     {
       "key": "eventoId",
-      "value": "",
+      "value": "evt-rock-fest-1",
       "type": "string"
     },
     {
       "key": "tipoEntradaId",
-      "value": "",
+      "value": "te-rock-general",
       "type": "string"
     },
     {
       "key": "tipoEntradaGeneralId",
-      "value": "",
+      "value": "te-rock-general",
       "type": "string"
     },
     {
       "key": "tipoEntradaPlateaId",
-      "value": "",
+      "value": "te-rock-platea",
       "type": "string"
     },
     {
       "key": "tipoEntradaVipId",
-      "value": "",
+      "value": "te-rock-vip",
       "type": "string"
     },
     {
       "key": "compraId",
-      "value": "",
+      "value": "cmp-activa-1",
       "type": "string"
     },
     {
       "key": "compra2Id",
-      "value": "",
+      "value": "cmp-activa-2",
       "type": "string"
     },
     {
@@ -84,7 +84,7 @@
   ],
   "item": [
     {
-      "name": "01. Autenticación - Obtener token dinámico para Organizador",
+      "name": "01. Autenticación - Login Organizador (email y password)",
       "request": {
         "method": "POST",
         "header": [
@@ -95,19 +95,19 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/auth/token",
+          "raw": "{{baseUrl}}/api/auth/login",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
             "auth",
-            "token"
+            "login"
           ]
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"id\": \"usr-organizador-1\",\n  \"email\": \"organizador@ticketit.com\",\n  \"role\": \"organizador\",\n  \"nombre\": \"Carlos Productor\"\n}",
+          "raw": "{\n  \"email\": \"organizador@ticketit.com\",\n  \"password\": \"Password123!\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -126,7 +126,7 @@
               "});",
               "const data = pm.response.json();",
               "pm.collectionVariables.set(\"token_organizador\", data.token);",
-              "pm.collectionVariables.set(\"organizadorId\", data.user.id);",
+              "pm.collectionVariables.set(\"organizadorId\", data.user?.id || data.usuario?.id || 'usr-organizador-1');",
               ""
             ],
             "type": "text/javascript"
@@ -135,7 +135,7 @@
       ]
     },
     {
-      "name": "02. Autenticación - Obtener token dinámico para Comprador",
+      "name": "02. Autenticación - Login Comprador (email y password)",
       "request": {
         "method": "POST",
         "header": [
@@ -146,19 +146,19 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/auth/token",
+          "raw": "{{baseUrl}}/api/auth/login",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
             "auth",
-            "token"
+            "login"
           ]
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"id\": \"usr-comprador-1\",\n  \"email\": \"comprador@ticketit.com\",\n  \"role\": \"comprador\",\n  \"nombre\": \"Juan Comprador\"\n}",
+          "raw": "{\n  \"email\": \"comprador@ticketit.com\",\n  \"password\": \"Password123!\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -177,7 +177,7 @@
               "});",
               "const data = pm.response.json();",
               "pm.collectionVariables.set(\"token_comprador\", data.token);",
-              "pm.collectionVariables.set(\"compradorId\", data.user.id);",
+              "pm.collectionVariables.set(\"compradorId\", data.user?.id || data.usuario?.id || 'usr-comprador-1');",
               ""
             ],
             "type": "text/javascript"
@@ -565,7 +565,8 @@
               "});",
               "const data = pm.response.json();",
               "pm.expect(data.compras.length).to.be.at.least(1);",
-              "const cupoGeneral = data.cuposDisponibles.find(c => c.id === pm.collectionVariables.get(\"tipoEntradaGeneralId\"));",
+              "const cupos = data.cuposDisponibles || data.balanceCupos;",
+              "const cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get(\"tipoEntradaGeneralId\"));",
               "pm.expect(cupoGeneral.cupo).to.equal(48); // 50 iniciales - 2 vendidas",
               ""
             ],
@@ -796,20 +797,19 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/compras/{{compra2Id}}/cancelar",
+          "raw": "{{baseUrl}}/api/compras/{{compra2Id}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
             "compras",
-            "{{compra2Id}}",
-            "cancelar"
+            "{{compra2Id}}"
           ]
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"motivo\": \"Un amigo no podrá asistir.\"\n}",
+          "raw": "{\n  \"estado\": \"CANCELADA\",\n  \"motivo\": \"Un amigo no podrá asistir.\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -828,6 +828,7 @@
               "});",
               "const data = pm.response.json();",
               "pm.expect(data.estado).to.equal('CANCELADA');",
+              "pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');",
               ""
             ],
             "type": "text/javascript"
@@ -880,19 +881,32 @@
             "key": "Authorization",
             "value": "Bearer {{token_organizador}}",
             "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/compras/{{compraId}}/utilizar",
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
             "compras",
-            "{{compraId}}",
-            "utilizar"
+            "{{compraId}}"
           ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"UTILIZADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
         }
       },
       "event": [

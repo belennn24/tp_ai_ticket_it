@@ -1,7 +1,9 @@
+import crypto from 'crypto';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Usuario } from '../models/usuario.js';
 import { usuarioRepository as defaultUsuarioRepo } from '../repositories/usuarioRepository.js';
+import { refreshTokenRepository as defaultRefreshTokenRepo } from '../repositories/refreshTokenRepository.js';
 import { getJwtSecret } from '../config/jwtConfig.js';
 import {
   BadRequestError,
@@ -14,14 +16,18 @@ export class AuthService {
   constructor(
     usuarioRepo = defaultUsuarioRepo,
     jwtSecret = getJwtSecret(),
-    tokenExpiresIn = '7d'
+    tokenExpiresIn = '15m',
+    refreshTokenRepo = defaultRefreshTokenRepo,
+    refreshTokenExpiresIn = '7d'
   ) {
     this.usuarioRepo = usuarioRepo || defaultUsuarioRepo;
     this.jwtSecret = jwtSecret || getJwtSecret();
     this.tokenExpiresIn = tokenExpiresIn;
+    this.refreshTokenRepo = refreshTokenRepo || defaultRefreshTokenRepo;
+    this.refreshTokenExpiresIn = refreshTokenExpiresIn;
   }
 
-  generarToken(usuario) {
+  generarAccessToken(usuario) {
     const rolNormalizado = String(usuario?.rol || 'comprador').toLowerCase().trim();
     const payload = {
       sub: String(usuario.id),
@@ -31,6 +37,21 @@ export class AuthService {
       nombre: usuario.nombre
     };
     return jwt.sign(payload, this.jwtSecret, { expiresIn: this.tokenExpiresIn });
+  }
+
+  generarRefreshToken(usuario) {
+    const payload = {
+      sub: String(usuario.id),
+      id: String(usuario.id),
+      email: usuario.email,
+      tipo: 'refresh',
+      jti: crypto.randomUUID()
+    };
+    return jwt.sign(payload, this.jwtSecret, { expiresIn: this.refreshTokenExpiresIn });
+  }
+
+  generarToken(usuario) {
+    return this.generarAccessToken(usuario);
   }
 
   formatearUsuario(usuario) {
@@ -44,6 +65,15 @@ export class AuthService {
       reputacion: Number(usuario.reputacion) || 0,
       favoritos: Array.isArray(usuario.favoritos) ? usuario.favoritos : []
     };
+  }
+
+  async registrarRefreshToken(token, usuarioId) {
+    await this.refreshTokenRepo.save({
+      id: token,
+      token,
+      usuarioId: String(usuarioId),
+      createdAt: new Date()
+    });
   }
 
   async registro({ nombre, apellido = '', email, password, contrasenia, rol = 'comprador' }) {
@@ -82,10 +112,13 @@ export class AuthService {
     });
 
     const guardado = await this.usuarioRepo.save(nuevoUsuario);
-    const token = this.generarToken(guardado);
+    const token = this.generarAccessToken(guardado);
+    const refreshToken = this.generarRefreshToken(guardado);
+    await this.registrarRefreshToken(refreshToken, guardado.id);
 
     return {
       token,
+      refreshToken,
       usuario: this.formatearUsuario(guardado)
     };
   }
@@ -111,11 +144,63 @@ export class AuthService {
       throw new UnauthorizedError('Credenciales inválidas.');
     }
 
-    const token = this.generarToken(usuario);
+    const token = this.generarAccessToken(usuario);
+    const refreshToken = this.generarRefreshToken(usuario);
+    await this.registrarRefreshToken(refreshToken, usuario.id);
+
     return {
       mensaje: 'Autenticación exitosa',
       token,
+      refreshToken,
       usuario: this.formatearUsuario(usuario)
+    };
+  }
+
+  async refresh(refreshToken) {
+    if (!refreshToken || typeof refreshToken !== 'string' || refreshToken.trim().length === 0) {
+      throw new UnauthorizedError('Token de actualización no proporcionado.');
+    }
+
+    const tokenGuardado = await this.refreshTokenRepo.findById(refreshToken);
+    if (!tokenGuardado) {
+      throw new UnauthorizedError('Token de actualización inválido o revocado.');
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, this.jwtSecret, { algorithms: ['HS256'] });
+    } catch (err) {
+      await this.refreshTokenRepo.delete(refreshToken);
+      throw new UnauthorizedError('Token de actualización expirado o inválido.');
+    }
+
+    const usuarioId = decoded.id || decoded.sub;
+    const usuario = await this.usuarioRepo.findById(usuarioId);
+    if (!usuario) {
+      await this.refreshTokenRepo.delete(refreshToken);
+      throw new UnauthorizedError('Usuario no encontrado.');
+    }
+
+    // Rotación: invalidar el token anterior y emitir un nuevo par
+    await this.refreshTokenRepo.delete(refreshToken);
+
+    const nuevoAccessToken = this.generarAccessToken(usuario);
+    const nuevoRefreshToken = this.generarRefreshToken(usuario);
+    await this.registrarRefreshToken(nuevoRefreshToken, usuario.id);
+
+    return {
+      token: nuevoAccessToken,
+      refreshToken: nuevoRefreshToken,
+      usuario: this.formatearUsuario(usuario)
+    };
+  }
+
+  async logout(refreshToken) {
+    if (refreshToken && typeof refreshToken === 'string') {
+      await this.refreshTokenRepo.delete(refreshToken);
+    }
+    return {
+      mensaje: 'Sesión cerrada exitosamente'
     };
   }
 

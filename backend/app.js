@@ -1,4 +1,5 @@
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { categoriaRoutes } from './routes/categoriaRoutes.js';
 import { eventoRoutes } from './routes/eventoRoutes.js';
 import { compraRoutes } from './routes/compraRoutes.js';
@@ -17,6 +18,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Endpoint de verificación del estado del servicio (exento de rate limiting)
 app.get('/api/health', (req, res) => {
@@ -28,6 +30,8 @@ app.use('/api', limiteGeneral);
 app.use('/api/auth/login', limiteAuth);
 app.use('/api/auth/token', limiteAuth);
 app.use('/api/auth/registro', limiteAuth);
+app.use('/api/auth/refresh', limiteAuth);
+
 // Rutas de desarrollo para reiniciar y verificar el Seed
 if (esEntornoLocal()) {
   app.use('/api/seed', seedRoutes);

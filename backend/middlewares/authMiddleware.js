@@ -18,6 +18,9 @@ export function authMiddleware(req, res, next) {
   try {
     const secret = getJwtSecret();
     const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
+    if (decoded.tipo === 'refresh') {
+      return next(new UnauthorizedError('Invalid token'));
+    }
     req.user = decoded;
     return next();
   } catch (err) {

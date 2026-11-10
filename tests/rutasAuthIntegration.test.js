@@ -128,6 +128,16 @@ describe('Rutas y Seguridad - Delegación de Permisos en Routers', () => {
       expect(handles).not.toContain(authMiddleware);
     });
 
+    it('POST /refresh debe ser pública (NO debe requerir authMiddleware)', () => {
+      const handles = obtenerMiddlewaresDeRuta(authRoutes, '/refresh', 'post');
+      expect(handles).not.toContain(authMiddleware);
+    });
+
+    it('POST /logout debe ser pública (NO debe requerir authMiddleware)', () => {
+      const handles = obtenerMiddlewaresDeRuta(authRoutes, '/logout', 'post');
+      expect(handles).not.toContain(authMiddleware);
+    });
+
     it('GET /me debe requerir authMiddleware', () => {
       const handles = obtenerMiddlewaresDeRuta(authRoutes, '/me', 'get');
       expect(handles).toContain(authMiddleware);

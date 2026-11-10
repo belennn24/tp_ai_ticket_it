@@ -191,6 +191,7 @@ export class EventoService {
         return {
             eventoId: evento.id,
             balanceCupos,
+            cuposDisponibles: balanceCupos,
             compras
         };
     };

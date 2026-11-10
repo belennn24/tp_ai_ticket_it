@@ -15,6 +15,12 @@ router.post('/login', validate(loginSchema), authController.login);
 // POST /api/auth/token - Alias compatible para integración con Postman y tests
 router.post('/token', validate(loginSchema), authController.login);
 
+// POST /api/auth/refresh - Renueva el access token rotando el refresh token HttpOnly
+router.post('/refresh', authController.refresh);
+
+// POST /api/auth/logout - Invalida el refresh token y limpia la cookie HttpOnly
+router.post('/logout', authController.logout);
+
 // GET /api/auth/me - Verifica el token Bearer y retorna el perfil del usuario autenticado
 router.get('/me', authMiddleware, authController.me);
 
