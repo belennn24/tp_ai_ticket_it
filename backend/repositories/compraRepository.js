@@ -1,62 +1,26 @@
-export class CompraRepository {
-  constructor(initialData = []) {
-    this.compras = new Map();
-    initialData.forEach(compra => this.save(compra));
-  }
+import { InMemoryRepository } from './inMemoryRepository.js';
+import { extraerId } from '../utils/idUtils.js';
 
-  async save(compra) {
-    const id = compra.id || compra._id || String(Date.now() + Math.random());
-    compra.id = id;
-    this.compras.set(String(id), compra);
-    return compra;
-  }
-
-  async findById(id) {
-    if (!id) return null;
-    return this.compras.get(String(id)) || null;
-  }
-
-  async findByCompradorId(compradorId) {
-    if (!compradorId) return [];
-    return Array.from(this.compras.values()).filter(c => {
-      const compId = c.comprador?.id !== undefined ? c.comprador.id : c.comprador;
-      return String(compId) === String(compradorId);
-    });
-  }
-
-  async findByEventoId(eventoId) {
-    if (!eventoId) return [];
-    return Array.from(this.compras.values()).filter(c => {
-      const evId = c.evento?.id !== undefined ? c.evento.id : c.evento;
-      return String(evId) === String(eventoId);
-    });
-  }
-
-  async findByCompradorYEvento(compradorId, eventoId) {
-    return Array.from(this.compras.values()).find(c => {
-      const compId = c.comprador?.id !== undefined ? c.comprador.id : c.comprador;
-      const evId = c.evento?.id !== undefined ? c.evento.id : c.evento;
-      return String(compId) === String(compradorId) && String(evId) === String(eventoId);
-    }) || null;
+export class CompraRepository extends InMemoryRepository {
+  get compras() {
+    return this.items;
   }
 
   async findAll(filtros = {}) {
-    let result = Array.from(this.compras.values());
+    let result = await super.findAll();
+
+    if (typeof filtros === 'function') {
+      return result.filter(filtros);
+    }
 
     if (filtros.compradorId || filtros.comprador) {
-      const compId = filtros.compradorId || filtros.comprador;
-      result = result.filter(c => {
-        const cId = c.comprador?.id !== undefined ? c.comprador.id : c.comprador;
-        return String(cId) === String(compId);
-      });
+      const compId = String(extraerId(filtros.compradorId || filtros.comprador));
+      result = result.filter(c => String(extraerId(c.comprador)) === compId);
     }
 
     if (filtros.eventoId || filtros.evento) {
-      const evId = filtros.eventoId || filtros.evento;
-      result = result.filter(c => {
-        const eId = c.evento?.id !== undefined ? c.evento.id : c.evento;
-        return String(eId) === String(evId);
-      });
+      const evId = String(extraerId(filtros.eventoId || filtros.evento));
+      result = result.filter(c => String(extraerId(c.evento)) === evId);
     }
 
     if (filtros.estado) {
@@ -66,22 +30,20 @@ export class CompraRepository {
     return result;
   }
 
-  async update(id, compraActualizada) {
-    if (!id || !this.compras.has(String(id))) {
-      return null;
-    }
-    compraActualizada.id = String(id);
-    this.compras.set(String(id), compraActualizada);
-    return compraActualizada;
+  async findByCompradorId(compradorId) {
+    if (!compradorId) return [];
+    return this.findAll({ compradorId });
   }
 
-  async delete(id) {
-    if (!id) return false;
-    return this.compras.delete(String(id));
+  async findByEventoId(eventoId) {
+    if (!eventoId) return [];
+    return this.findAll({ eventoId });
   }
 
-  clear() {
-    this.compras.clear();
+  async findByCompradorYEvento(compradorId, eventoId) {
+    if (!compradorId || !eventoId) return null;
+    const res = await this.findAll({ compradorId, eventoId });
+    return res[0] || null;
   }
 }
 

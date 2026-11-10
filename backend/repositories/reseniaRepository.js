@@ -1,53 +1,32 @@
-export class ReseniaRepository {
-  constructor(initialData = []) {
-    this.resenias = new Map();
-    initialData.forEach(r => this.save(r));
-  }
+import { InMemoryRepository } from './inMemoryRepository.js';
+import { extraerId } from '../utils/idUtils.js';
 
-  async save(resenia) {
-    const id = resenia.id || String(Date.now() + Math.random());
-    resenia.id = id;
-    this.resenias.set(String(id), resenia);
-    return resenia;
-  }
-
-  async findById(id) {
-    if (!id) return null;
-    return this.resenias.get(String(id)) || null;
-  }
-
-  async findAll() {
-    return Array.from(this.resenias.values());
+export class ReseniaRepository extends InMemoryRepository {
+  get resenias() {
+    return this.items;
   }
 
   async findByEventoId(eventoId) {
     if (!eventoId) return [];
-    return Array.from(this.resenias.values()).filter(r => {
-      const eId = r.evento?.id !== undefined ? r.evento.id : r.evento;
-      return String(eId) === String(eventoId);
-    });
+    const idBuscado = String(extraerId(eventoId));
+    const todos = await this.findAll();
+    return todos.filter(r => String(extraerId(r.evento)) === idBuscado);
   }
 
   async findByCompradorYEvento(compradorId, eventoId) {
-    return (
-      Array.from(this.resenias.values()).find(r => {
-        const cId = r.comprador?.id !== undefined ? r.comprador.id : r.comprador;
-        const eId = r.evento?.id !== undefined ? r.evento.id : r.evento;
-        return String(cId) === String(compradorId) && String(eId) === String(eventoId);
-      }) || null
-    );
+    const cId = String(extraerId(compradorId));
+    const eId = String(extraerId(eventoId));
+    const todos = await this.findAll();
+    return todos.find(r =>
+      String(extraerId(r.comprador)) === cId && String(extraerId(r.evento)) === eId
+    ) || null;
   }
 
   async findByOrganizadorId(organizadorId) {
     if (!organizadorId) return [];
-    return Array.from(this.resenias.values()).filter(r => {
-      const orgId = r.organizador?.id !== undefined ? r.organizador.id : r.organizador;
-      return String(orgId) === String(organizadorId);
-    });
-  }
-
-  clear() {
-    this.resenias.clear();
+    const idBuscado = String(extraerId(organizadorId));
+    const todos = await this.findAll();
+    return todos.filter(r => String(extraerId(r.organizador)) === idBuscado);
   }
 }
 

@@ -1,32 +1,21 @@
-export class CambioEstadoCompraRepository {
-  constructor(initialData = []) {
-    this.cambios = [];
-    initialData.forEach(item => this.save(item));
-  }
+import { InMemoryRepository } from './inMemoryRepository.js';
+import { extraerId } from '../utils/idUtils.js';
 
-  async save(cambioEstado) {
-    const id = cambioEstado.id || String(Date.now() + Math.random());
-    cambioEstado.id = id;
-    this.cambios.push(cambioEstado);
-    return cambioEstado;
+export class CambioEstadoCompraRepository extends InMemoryRepository {
+  get cambios() {
+    return Array.from(this.items.values());
   }
 
   async findByCompraId(compraId) {
     if (!compraId) return [];
-    return this.cambios
+    const idBuscado = String(extraerId(compraId));
+    const todos = await this.findAll();
+    return todos
       .filter(c => {
-        const cId = c.compra?.id !== undefined ? c.compra.id : c.compra;
-        return String(cId) === String(compraId);
+        const cId = String(extraerId(c.compra) || c.compraId || '');
+        return cId === idBuscado;
       })
       .sort((a, b) => new Date(a.fechaHora) - new Date(b.fechaHora));
-  }
-
-  async findAll() {
-    return [...this.cambios];
-  }
-
-  clear() {
-    this.cambios = [];
   }
 }
 

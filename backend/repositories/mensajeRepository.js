@@ -1,32 +1,18 @@
-export class MensajeRepository {
-  constructor(initialData = []) {
-    this.mensajes = [];
-    initialData.forEach(m => this.save(m));
-  }
+import { InMemoryRepository } from './inMemoryRepository.js';
+import { extraerId } from '../utils/idUtils.js';
 
-  async save(mensaje) {
-    const id = mensaje.id || String(Date.now() + Math.random());
-    mensaje.id = id;
-    this.mensajes.push(mensaje);
-    return mensaje;
+export class MensajeRepository extends InMemoryRepository {
+  get mensajes() {
+    return Array.from(this.items.values());
   }
 
   async findByCompraId(compraId) {
     if (!compraId) return [];
-    return this.mensajes
-      .filter(m => {
-        const cId = m.compra?.id !== undefined ? m.compra.id : m.compra;
-        return String(cId) === String(compraId);
-      })
-      .sort((a, b) => new Date(a.enviado) - new Date(b.enviado));
-  }
-
-  async findAll() {
-    return [...this.mensajes];
-  }
-
-  clear() {
-    this.mensajes = [];
+    const idBuscado = String(extraerId(compraId));
+    const todos = await this.findAll();
+    return todos
+      .filter(m => String(extraerId(m.compra)) === idBuscado)
+      .sort((a, b) => new Date(a.enviado || a.fechaHora) - new Date(b.enviado || b.fechaHora));
   }
 }
 
