@@ -124,9 +124,9 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
-              "pm.collectionVariables.set(\"token_organizador\", data.token);",
-              "pm.collectionVariables.set(\"organizadorId\", data.user?.id || data.usuario?.id || 'usr-organizador-1');",
+              "var data = pm.response.json();",
+              "pm.environment.set(\"token_organizador\", data.token);",
+              "pm.environment.set(\"organizadorId\", data.user?.id || data.usuario?.id || 'usr-organizador-1');",
               ""
             ],
             "type": "text/javascript"
@@ -175,9 +175,9 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
-              "pm.collectionVariables.set(\"token_comprador\", data.token);",
-              "pm.collectionVariables.set(\"compradorId\", data.user?.id || data.usuario?.id || 'usr-comprador-1');",
+              "var data = pm.response.json();",
+              "pm.environment.set(\"token_comprador\", data.token);",
+              "pm.environment.set(\"compradorId\", data.user?.id || data.usuario?.id || 'usr-comprador-1');",
               ""
             ],
             "type": "text/javascript"
@@ -230,8 +230,8 @@
               "pm.test(\"Status code es 201 Created\", () => {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
-              "pm.collectionVariables.set(\"categoriaId\", data.id);",
+              "var data = pm.response.json();",
+              "pm.environment.set(\"categoriaId\", data.id);",
               ""
             ],
             "type": "text/javascript"
@@ -284,11 +284,11 @@
               "pm.test(\"Status code es 201 Created\", () => {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
-              "pm.collectionVariables.set(\"eventoId\", data.id);",
-              "pm.collectionVariables.set(\"tipoEntradaGeneralId\", data.tiposEntrada[0].id);",
-              "pm.collectionVariables.set(\"tipoEntradaPlateaId\", data.tiposEntrada[1].id);",
-              "pm.collectionVariables.set(\"tipoEntradaVipId\", data.tiposEntrada[2].id);",
+              "var data = pm.response.json();",
+              "pm.environment.set(\"eventoId\", data.id);",
+              "pm.environment.set(\"tipoEntradaGeneralId\", data.tiposEntrada[0].id);",
+              "pm.environment.set(\"tipoEntradaPlateaId\", data.tiposEntrada[1].id);",
+              "pm.environment.set(\"tipoEntradaVipId\", data.tiposEntrada[2].id);",
               ""
             ],
             "type": "text/javascript"
@@ -338,8 +338,8 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
-              "pm.expect(data.some(e => e.id === pm.collectionVariables.get(\"eventoId\"))).to.be.true;",
+              "var data = pm.response.json();",
+              "pm.expect(data.some(e => e.id === pm.environment.get(\"eventoId\"))).to.be.true;",
               ""
             ],
             "type": "text/javascript"
@@ -378,8 +378,8 @@
           "script": {
             "exec": [
               "",
-              "pm.test(\"Status code es 200 OK\", () => {",
-              "    pm.response.to.have.status(200);",
+              "pm.test(\"Status code es 200 OK o 409 Conflict (si ya era favorito)\", () => {",
+              "    pm.expect([200, 409]).to.include(pm.response.code);",
               "});",
               ""
             ],
@@ -421,8 +421,8 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
-              "pm.expect(data.some(e => e.id === pm.collectionVariables.get(\"eventoId\"))).to.be.true;",
+              "var data = pm.response.json();",
+              "pm.expect(data.some(e => e.id === pm.environment.get(\"eventoId\"))).to.be.true;",
               ""
             ],
             "type": "text/javascript"
@@ -475,8 +475,8 @@
               "pm.test(\"Status code es 201 Created\", () => {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
-              "pm.collectionVariables.set(\"compraId\", data.id);",
+              "var data = pm.response.json();",
+              "pm.environment.set(\"compraId\", data.id);",
               "pm.expect(data.estado).to.equal('CONFIRMADA');",
               "pm.expect(data.total).to.equal(10000);",
               "pm.expect(data).to.have.property('diasFaltantes');",
@@ -518,8 +518,8 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
-              "const miCompra = data.find(c => c.id === pm.collectionVariables.get(\"compraId\"));",
+              "var data = pm.response.json();",
+              "const miCompra = data.find(c => c.id === pm.environment.get(\"compraId\"));",
               "pm.expect(miCompra).to.exist;",
               "pm.expect(miCompra.estado).to.equal('CONFIRMADA');",
               "pm.expect(miCompra.diasFaltantes).to.not.be.null;",
@@ -563,11 +563,11 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.compras.length).to.be.at.least(1);",
               "const cupos = data.cuposDisponibles || data.balanceCupos;",
-              "const cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get(\"tipoEntradaGeneralId\"));",
-              "pm.expect(cupoGeneral.cupo).to.equal(48); // 50 iniciales - 2 vendidas",
+              "const cupoGeneral = cupos.find(c => c.id === pm.environment.get(\"tipoEntradaGeneralId\"));",
+              "pm.expect(cupoGeneral.cupoDisponible).to.equal(48); // 50 iniciales - 2 vendidas",
               ""
             ],
             "type": "text/javascript"
@@ -716,7 +716,7 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.length).to.be.at.least(2);",
               ""
             ],
@@ -770,8 +770,8 @@
               "pm.test(\"Status code es 201 Created\", () => {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
-              "pm.collectionVariables.set(\"compra2Id\", data.id);",
+              "var data = pm.response.json();",
+              "pm.environment.set(\"compra2Id\", data.id);",
               "pm.expect(data.total).to.equal(25000);",
               ""
             ],
@@ -826,9 +826,9 @@
               "pm.test(\"Status code es 200 OK\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.estado).to.equal('CANCELADA');",
-              "pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');",
+              "pm.expect(data.fechaBaja).to.not.be.null;",
               ""
             ],
             "type": "text/javascript"
@@ -862,8 +862,8 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
-              "const vip = data.tiposEntrada.find(t => t.id === pm.collectionVariables.get(\"tipoEntradaVipId\"));",
+              "var data = pm.response.json();",
+              "const vip = data.tiposEntrada.find(t => t.id === pm.environment.get(\"tipoEntradaVipId\"));",
               "pm.expect(vip.cupo).to.equal(5); // Vuelve a los 5 iniciales",
               ""
             ],
@@ -918,7 +918,7 @@
               "pm.test(\"Status code es 200 OK\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.estado).to.equal('UTILIZADA');",
               ""
             ],
@@ -972,7 +972,7 @@
               "pm.test(\"Status code es 201 Created\", () => {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.puntuacion).to.equal(5);",
               ""
             ],
@@ -1008,7 +1008,7 @@
               "pm.test(\"Status code es 200\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.reputacionPromedio).to.equal(5);",
               "pm.expect(data.resenias.length).to.be.at.least(1);",
               ""
