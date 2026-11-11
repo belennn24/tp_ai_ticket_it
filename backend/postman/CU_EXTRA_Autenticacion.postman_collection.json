@@ -13,22 +13,22 @@
     },
     {
       "key": "token_comprador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDQyNjEyN30._WCwXd7uZnUTZbMLjdFsEKLxgMs_RvbFJwsJtfMKusY",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDQyODM2Mn0.qS-LiJDX2j8WZoSRHAijwH5R2v-CiqFn_YZ89OnIz3U",
       "type": "string"
     },
     {
       "key": "token_organizador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQ0MjYxMjd9.hxfDf06BG9Ug58OXCgKV55YvtYXujYvOxxKC3vdfoZU",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQ0MjgzNjJ9.OOjBzDKguotrc7bPCTjENACt1t9qmCOtEar98Z-rd8s",
       "type": "string"
     },
     {
       "key": "token_admin",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQ0MjYxMjd9.wvnJEY_vgPZ23Z2DAV-eBhnj1VtzvEJnJwT3wUOHR8o",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQ0MjgzNjJ9.YMBke0iGx1uhzjtRoratTRvv7jwN7zx9Mvazd3cL4zw",
       "type": "string"
     },
     {
       "key": "token_comprador_2",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQ0MjYxMjd9.oOOhwC4p0Ju0d9NgKOycsxzHh3zcvi62zHGs2DxHtf0",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQ0MjgzNjJ9.pWHkl269XrzKvGw_kyAdoRomEhxoDt85nLLSg3kRUSE",
       "type": "string"
     },
     {
@@ -124,7 +124,7 @@
               "pm.test(\"Status code es 201 Created\", () => {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.token).to.be.a('string');",
               "pm.expect(data.usuario.email).to.equal('lucia.compradora@ticketit.com');",
               "pm.collectionVariables.set(\"token_lucia\", data.token);",
@@ -176,7 +176,7 @@
               "pm.test(\"Status code es 200 OK\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.token).to.be.a('string');",
               "pm.collectionVariables.set(\"token_lucia\", data.token);",
               ""
@@ -265,7 +265,7 @@
               "pm.test(\"Status code es 200 OK\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.user || data.usuario).to.be.an('object');",
               ""
             ],
@@ -300,7 +300,7 @@
               "pm.test(\"Status code es 200 OK\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.token).to.be.a('string');",
               "pm.collectionVariables.set(\"token_lucia\", data.token);",
               ""
@@ -336,7 +336,7 @@
               "pm.test(\"Status code es 200 OK\", () => {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "var data = pm.response.json();",
               "pm.expect(data.mensaje).to.include('exitosa');",
               ""
             ],
