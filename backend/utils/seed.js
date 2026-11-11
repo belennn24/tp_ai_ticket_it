@@ -134,7 +134,9 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     nombre: 'Campo General',
     descripcion: 'Acceso general al predio del festival',
     precio: 15000,
-    cupo: 98 // Originalmente 100, 2 ya adquiridas en la compra activa
+    cupo: 98, // Disponibles: originalmente 100, 2 ya adquiridas en cmp-activa-1
+    cupoTotal: 100,
+    entradasVendidas: 2
   });
 
   const teRockPlatea = new TipoEntrada({
@@ -142,7 +144,9 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     nombre: 'Platea Numerada',
     descripcion: 'Ubicación preferencial con butaca numerada',
     precio: 25000,
-    cupo: 40
+    cupo: 40, // Disponibles: 1 ya adquirida en cmp-activa-2
+    cupoTotal: 41,
+    entradasVendidas: 1
   });
 
   const teRockVip = new TipoEntrada({
@@ -174,7 +178,9 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     nombre: 'Entrada General Histórica',
     descripcion: 'Entrada general al concierto clásico',
     precio: 8000,
-    cupo: 0 // Evento pasado agotado
+    cupo: 0, // Evento pasado agotado: 3 vendidas en cmp-utilizada-1 y cmp-utilizada-2
+    cupoTotal: 3,
+    entradasVendidas: 3
   });
 
   // Fechas relativas para pruebas temporales consistentes

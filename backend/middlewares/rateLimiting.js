@@ -1,9 +1,19 @@
 import rateLimit from 'express-rate-limit';
 
+// En desarrollo local los límites son más altos: la app mobile hace varias
+// peticiones por pantalla y una demo larga superaría los valores productivos.
+const esDesarrollo = () => process.env.NODE_ENV === 'development';
+
+export const LIMITE_GENERAL = 100;
+export const LIMITE_GENERAL_DESARROLLO = 1000;
+export const LIMITE_AUTH = 10;
+export const LIMITE_AUTH_DESARROLLO = 100;
+
 // Limitador general para la API
 export const limiteGeneral = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  limit: 100, // Máximo 100 peticiones por IP
+  // Máximo de peticiones por IP en la ventana
+  limit: () => (esDesarrollo() ? LIMITE_GENERAL_DESARROLLO : LIMITE_GENERAL),
   standardHeaders: 'draft-7', // Devuelve RateLimit-* headers
   legacyHeaders: false,
   skip: () => process.env.NODE_ENV === 'test', // No bloquear ejecuciones de Jest
@@ -20,7 +30,8 @@ export const limiteGeneral = rateLimit({
 // Limitador estricto para autenticación (anti fuerza bruta)
 export const limiteAuth = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10, // Máximo 10 intentos de login cada 15 min
+  // Máximo de intentos de autenticación por IP en la ventana
+  limit: () => (esDesarrollo() ? LIMITE_AUTH_DESARROLLO : LIMITE_AUTH),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skip: () => process.env.NODE_ENV === 'test',
