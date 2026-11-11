@@ -21,8 +21,26 @@ export class ValidationError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message = 'Petición inválida') {
+    super(message, 400);
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message = 'Conflicto con el recurso existente') {
     super(message, 409);
   }
-} 
+}
+
+export class UnauthorizedError extends AppError {
+  constructor(message = 'No autorizado') {
+    super(message, 401);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message = 'Acceso prohibido') {
+    super(message, 403);
+  }
+}

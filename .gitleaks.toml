@@ -1,0 +1,16 @@
+[extend]
+# Hereda las reglas por defecto de Gitleaks
+
+[allowlist]
+description = "Permitir tokens mockeados y fixtures de pruebas y colecciones Postman"
+paths = [
+  '''postman/''',
+  '''tests/''',
+  '''backend/config/jwtConfig\.js''',
+  '''backend/utils/seed\.js''',
+  '''backend/postman/'''
+]
+regexes = [
+  '''ticketit_jwt_secret_key_2026''',
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'''
+]

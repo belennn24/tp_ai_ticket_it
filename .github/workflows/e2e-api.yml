@@ -1,0 +1,77 @@
+name: API E2E Tests (Newman)
+
+on:
+  push:
+    branches: [ main, backend ]
+  pull_request:
+    branches: [ main, backend ]
+
+jobs:
+  api-tests:
+    name: Postman E2E Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start backend and run Postman E2E tests
+        env:
+          PORT: 3000
+          NODE_ENV: development
+          SEED_ON_START: "true"
+          JWT_SECRET: ticketit_jwt_secret_key_2026
+        run: |
+          # 1. Iniciar el servidor en segundo plano
+          npm start > server.log 2>&1 &
+          SERVER_PID=$!
+          echo "Servidor iniciado en segundo plano con PID: $SERVER_PID"
+
+          # 2. Esperar a que el servidor esté listo
+          READY=0
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:3000/api/categorias > /dev/null; then
+              echo "✅ Servidor levantado y respondiendo en http://127.0.0.1:3000"
+              READY=1
+              break
+            fi
+            if ! kill -0 $SERVER_PID 2>/dev/null; then
+              echo "❌ El servidor terminó inesperadamente. Logs:"
+              cat server.log
+              exit 1
+            fi
+            echo "Esperando a que el backend inicialice ($i/30)..."
+            sleep 1
+          done
+
+          if [ $READY -eq 0 ]; then
+            echo "❌ Timeout: El servidor no respondió a tiempo. Logs:"
+            cat server.log
+            exit 1
+          fi
+
+          # 3. Ejecutar la colección de Postman con Newman
+          npx newman run postman/AI_Ticket_It_Flujo_E2E.postman_collection.json \
+            -e postman/AI_Ticket_It_Local.postman_environment.json \
+            --reporters cli,json \
+            --reporter-json-export newman-report.json
+
+          # 4. Finalizar el proceso del servidor
+          kill $SERVER_PID 2>/dev/null || true
+
+      - name: Upload Newman Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: postman-e2e-report
+          path: newman-report.json
+          retention-days: 14

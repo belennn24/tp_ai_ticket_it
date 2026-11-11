@@ -1,0 +1,1074 @@
+{
+  "info": {
+    "_postman_id": "ticketit-flujo-e2e",
+    "name": "AI Ticket It - Flujo End to End (E2E)",
+    "description": "Recorrido transaccional integral de principio a fin: creación de categoría, publicación de evento, búsqueda por catálogo, favoritos, compras, control de cupos, chat bidireccional, cancelación de compra, uso en puerta, calificación y reputación.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDQyMzI4M30.hAPwo6ZypXCF8PK7MfpazG-HIgkQep8ybWIatT46_MY",
+      "type": "string"
+    },
+    {
+      "key": "token_organizador",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQ0MjMyODN9.dkjiTeHk46CB86OGn_wFT2oRkFKgAULtFNjoLMroKFs",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQ0MjMyODN9.ZVj9nDBGdbAR_8Y1mDu7-KvYwk_ZgdBxcYvgblAXWwI",
+      "type": "string"
+    },
+    {
+      "key": "token_comprador_2",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQ0MjMyODN9.Mk5JjvR8mGtudGsQCsSEWrfTSIA-DTjBXOdqrdig5vk",
+      "type": "string"
+    },
+    {
+      "key": "categoriaId",
+      "value": "cat-musica-1",
+      "type": "string"
+    },
+    {
+      "key": "eventoId",
+      "value": "evt-rock-fest-1",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaId",
+      "value": "te-rock-general",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaGeneralId",
+      "value": "te-rock-general",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaPlateaId",
+      "value": "te-rock-platea",
+      "type": "string"
+    },
+    {
+      "key": "tipoEntradaVipId",
+      "value": "te-rock-vip",
+      "type": "string"
+    },
+    {
+      "key": "compraId",
+      "value": "cmp-activa-1",
+      "type": "string"
+    },
+    {
+      "key": "compra2Id",
+      "value": "cmp-activa-2",
+      "type": "string"
+    },
+    {
+      "key": "organizadorId",
+      "value": "usr-organizador-1",
+      "type": "string"
+    },
+    {
+      "key": "compradorId",
+      "value": "usr-comprador-1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Autenticación - Login Organizador (email y password)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"organizador@ticketit.com\",\n  \"password\": \"Password123!\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set(\"token_organizador\", data.token);",
+              "pm.collectionVariables.set(\"organizadorId\", data.user?.id || data.usuario?.id || 'usr-organizador-1');",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Autenticación - Login Comprador (email y password)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"comprador@ticketit.com\",\n  \"password\": \"Password123!\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set(\"token_comprador\", data.token);",
+              "pm.collectionVariables.set(\"compradorId\", data.user?.id || data.usuario?.id || 'usr-comprador-1');",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Setup - Organizador crea Categoría del Espectáculo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_organizador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/categorias",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "categorias"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Recitales y Mega Eventos\",\n  \"descripcion\": \"Recitales musicales en vivo de grandes bandas\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set(\"categoriaId\", data.id);",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Publicación - Organizador publica Evento con 3 tipos de entrada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_organizador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/eventos",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "eventos"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Gran Recital E2E AI Ticket It\",\n  \"descripcion\": \"Edición especial de prueba End-to-End con toda la experiencia.\",\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"fecha\": \"2026-12-20T21:00:00.000Z\",\n  \"tiposEntrada\": [\n    {\n      \"nombre\": \"General Campo\",\n      \"descripcion\": \"Entrada para campo\",\n      \"precio\": 5000,\n      \"cupo\": 50\n    },\n    {\n      \"nombre\": \"Platea Numerada\",\n      \"descripcion\": \"Ubicación numerada con vista preferencial\",\n      \"precio\": 12000,\n      \"cupo\": 20\n    },\n    {\n      \"nombre\": \"VIP Front Stage\",\n      \"descripcion\": \"Acceso exclusivo frente al escenario\",\n      \"precio\": 25000,\n      \"cupo\": 5\n    }\n  ],\n  \"multimedia\": [\n    \"https://ticketit.com/flyer.png\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set(\"eventoId\", data.id);",
+              "pm.collectionVariables.set(\"tipoEntradaGeneralId\", data.tiposEntrada[0].id);",
+              "pm.collectionVariables.set(\"tipoEntradaPlateaId\", data.tiposEntrada[1].id);",
+              "pm.collectionVariables.set(\"tipoEntradaVipId\", data.tiposEntrada[2].id);",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Exploración - Comprador busca y filtra el evento en el catálogo",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/eventos?texto=Gran Recital&categoriaId={{categoriaId}}&orden=precio",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "eventos"
+          ],
+          "query": [
+            {
+              "key": "texto",
+              "value": "Gran Recital",
+              "description": ""
+            },
+            {
+              "key": "categoriaId",
+              "value": "{{categoriaId}}",
+              "description": ""
+            },
+            {
+              "key": "orden",
+              "value": "precio",
+              "description": ""
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.expect(data.some(e => e.id === pm.collectionVariables.get(\"eventoId\"))).to.be.true;",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Favoritos - Comprador guarda el evento en su lista de favoritos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/me/favoritos/{{eventoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "me",
+            "favoritos",
+            "{{eventoId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "07. Favoritos - Comprador verifica que el evento está en sus favoritos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/me/favoritos",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "me",
+            "favoritos"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.expect(data.some(e => e.id === pm.collectionVariables.get(\"eventoId\"))).to.be.true;",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "08. Compra 1 - Comprador adquiere 2 entradas Campo General",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"tipoEntradaId\": \"{{tipoEntradaGeneralId}}\",\n  \"cantidad\": 2\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set(\"compraId\", data.id);",
+              "pm.expect(data.estado).to.equal('CONFIRMADA');",
+              "pm.expect(data.total).to.equal(10000);",
+              "pm.expect(data).to.have.property('diasFaltantes');",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "09. Verificación Comprador - Visualiza sus compras y días faltantes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "const miCompra = data.find(c => c.id === pm.collectionVariables.get(\"compraId\"));",
+              "pm.expect(miCompra).to.exist;",
+              "pm.expect(miCompra.estado).to.equal('CONFIRMADA');",
+              "pm.expect(miCompra.diasFaltantes).to.not.be.null;",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Verificación Organizador - Monitorea compras del evento y balance de cupos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_organizador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/eventos/{{eventoId}}/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "eventos",
+            "{{eventoId}}",
+            "compras"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.expect(data.compras.length).to.be.at.least(1);",
+              "const cupos = data.cuposDisponibles || data.balanceCupos;",
+              "const cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get(\"tipoEntradaGeneralId\"));",
+              "pm.expect(cupoGeneral.cupo).to.equal(48); // 50 iniciales - 2 vendidas",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Interacción - Comprador envía mensaje en el chat de la compra",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}/mensajes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}",
+            "mensajes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"Hola! Quería consultar si el acceso cuenta con guardarropas habilitado.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "12. Interacción - Organizador responde la consulta en el chat",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_organizador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}/mensajes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}",
+            "mensajes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mensaje\": \"Hola Juan! Sí, contamos con guardarropas en el hall principal de acceso.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "13. Interacción - Comprador verifica el chat completo",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}/mensajes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}",
+            "mensajes"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.expect(data.length).to.be.at.least(2);",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "14. Flujo Alternativo - Comprador adquiere una segunda compra (VIP)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"tipoEntradaId\": \"{{tipoEntradaVipId}}\",\n  \"cantidad\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set(\"compra2Id\", data.id);",
+              "pm.expect(data.total).to.equal(25000);",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "15. Flujo Alternativo - Comprador cancela la Compra 2 para reembolso",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compra2Id}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compra2Id}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"CANCELADA\",\n  \"motivo\": \"Un amigo no podrá asistir.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.expect(data.estado).to.equal('CANCELADA');",
+              "pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "16. Validación de Negocio - Restitución de cupo tras cancelación",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/eventos/{{eventoId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "eventos",
+            "{{eventoId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "const vip = data.tiposEntrada.find(t => t.id === pm.collectionVariables.get(\"tipoEntradaVipId\"));",
+              "pm.expect(vip.cupo).to.equal(5); // Vuelve a los 5 iniciales",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "17. Día del Evento - Organizador registra ingreso marcando Compra 1 como UTILIZADA",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_organizador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"UTILIZADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.expect(data.estado).to.equal('UTILIZADA');",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "18. Post-Evento - Comprador califica su experiencia con 5 estrellas",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/resenias",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resenias"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"puntuacion\": 5,\n  \"detalle\": \"Increíble experiencia, puntualidad y sonido de máxima fidelidad.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 201 Created\", () => {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.expect(data.puntuacion).to.equal(5);",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "19. Reputación - Consultar opiniones y reputación actualizada del Organizador",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/organizadores/{{organizadorId}}/resenias",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "organizadores",
+            "{{organizadorId}}",
+            "resenias"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.expect(data.reputacionPromedio).to.equal(5);",
+              "pm.expect(data.resenias.length).to.be.at.least(1);",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "20. Cierre y Robustez - Intento de compra excediendo cupo disponible (409 Conflict)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_comprador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"tipoEntradaId\": \"{{tipoEntradaPlateaId}}\",\n  \"cantidad\": 1000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 409 Conflict\", () => {",
+              "    pm.response.to.have.status(409);",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}
