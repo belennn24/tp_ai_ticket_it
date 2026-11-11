@@ -13,22 +13,22 @@
     },
     {
       "key": "token_comprador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDQyMzI4M30.hAPwo6ZypXCF8PK7MfpazG-HIgkQep8ybWIatT46_MY",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDQyODM2Mn0.qS-LiJDX2j8WZoSRHAijwH5R2v-CiqFn_YZ89OnIz3U",
       "type": "string"
     },
     {
       "key": "token_organizador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQ0MjMyODN9.dkjiTeHk46CB86OGn_wFT2oRkFKgAULtFNjoLMroKFs",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQ0MjgzNjJ9.OOjBzDKguotrc7bPCTjENACt1t9qmCOtEar98Z-rd8s",
       "type": "string"
     },
     {
       "key": "token_admin",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQ0MjMyODN9.ZVj9nDBGdbAR_8Y1mDu7-KvYwk_ZgdBxcYvgblAXWwI",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQ0MjgzNjJ9.YMBke0iGx1uhzjtRoratTRvv7jwN7zx9Mvazd3cL4zw",
       "type": "string"
     },
     {
       "key": "token_comprador_2",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQ0MjMyODN9.Mk5JjvR8mGtudGsQCsSEWrfTSIA-DTjBXOdqrdig5vk",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQ0MjgzNjJ9.pWHkl269XrzKvGw_kyAdoRomEhxoDt85nLLSg3kRUSE",
       "type": "string"
     },
     {
@@ -125,8 +125,8 @@
               "    pm.response.to.have.status(200);",
               "});",
               "var data = pm.response.json();",
-              "pm.environment.set(\"token_organizador\", data.token);",
-              "pm.environment.set(\"organizadorId\", data.user?.id || data.usuario?.id || 'usr-organizador-1');",
+              "pm.collectionVariables.set(\"token_organizador\", data.token);",
+              "pm.collectionVariables.set(\"organizadorId\", data.user?.id || data.usuario?.id || 'usr-organizador-1');",
               ""
             ],
             "type": "text/javascript"
@@ -176,8 +176,8 @@
               "    pm.response.to.have.status(200);",
               "});",
               "var data = pm.response.json();",
-              "pm.environment.set(\"token_comprador\", data.token);",
-              "pm.environment.set(\"compradorId\", data.user?.id || data.usuario?.id || 'usr-comprador-1');",
+              "pm.collectionVariables.set(\"token_comprador\", data.token);",
+              "pm.collectionVariables.set(\"compradorId\", data.user?.id || data.usuario?.id || 'usr-comprador-1');",
               ""
             ],
             "type": "text/javascript"
@@ -231,7 +231,7 @@
               "    pm.response.to.have.status(201);",
               "});",
               "var data = pm.response.json();",
-              "pm.environment.set(\"categoriaId\", data.id);",
+              "pm.collectionVariables.set(\"categoriaId\", data.id);",
               ""
             ],
             "type": "text/javascript"
@@ -285,10 +285,10 @@
               "    pm.response.to.have.status(201);",
               "});",
               "var data = pm.response.json();",
-              "pm.environment.set(\"eventoId\", data.id);",
-              "pm.environment.set(\"tipoEntradaGeneralId\", data.tiposEntrada[0].id);",
-              "pm.environment.set(\"tipoEntradaPlateaId\", data.tiposEntrada[1].id);",
-              "pm.environment.set(\"tipoEntradaVipId\", data.tiposEntrada[2].id);",
+              "pm.collectionVariables.set(\"eventoId\", data.id);",
+              "pm.collectionVariables.set(\"tipoEntradaGeneralId\", data.tiposEntrada[0].id);",
+              "pm.collectionVariables.set(\"tipoEntradaPlateaId\", data.tiposEntrada[1].id);",
+              "pm.collectionVariables.set(\"tipoEntradaVipId\", data.tiposEntrada[2].id);",
               ""
             ],
             "type": "text/javascript"
@@ -339,7 +339,7 @@
               "    pm.response.to.have.status(200);",
               "});",
               "var data = pm.response.json();",
-              "pm.expect(data.some(e => e.id === pm.environment.get(\"eventoId\"))).to.be.true;",
+              "pm.expect(data.some(e => e.id === pm.collectionVariables.get(\"eventoId\"))).to.be.true;",
               ""
             ],
             "type": "text/javascript"
@@ -378,8 +378,8 @@
           "script": {
             "exec": [
               "",
-              "pm.test(\"Status code es 200 OK o 409 Conflict (si ya era favorito)\", () => {",
-              "    pm.expect([200, 409]).to.include(pm.response.code);",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
               "});",
               ""
             ],
@@ -422,7 +422,7 @@
               "    pm.response.to.have.status(200);",
               "});",
               "var data = pm.response.json();",
-              "pm.expect(data.some(e => e.id === pm.environment.get(\"eventoId\"))).to.be.true;",
+              "pm.expect(data.some(e => e.id === pm.collectionVariables.get(\"eventoId\"))).to.be.true;",
               ""
             ],
             "type": "text/javascript"
@@ -476,7 +476,7 @@
               "    pm.response.to.have.status(201);",
               "});",
               "var data = pm.response.json();",
-              "pm.environment.set(\"compraId\", data.id);",
+              "pm.collectionVariables.set(\"compraId\", data.id);",
               "pm.expect(data.estado).to.equal('CONFIRMADA');",
               "pm.expect(data.total).to.equal(10000);",
               "pm.expect(data).to.have.property('diasFaltantes');",
@@ -519,7 +519,7 @@
               "    pm.response.to.have.status(200);",
               "});",
               "var data = pm.response.json();",
-              "const miCompra = data.find(c => c.id === pm.environment.get(\"compraId\"));",
+              "var miCompra = data.find(c => c.id === pm.collectionVariables.get(\"compraId\"));",
               "pm.expect(miCompra).to.exist;",
               "pm.expect(miCompra.estado).to.equal('CONFIRMADA');",
               "pm.expect(miCompra.diasFaltantes).to.not.be.null;",
@@ -565,9 +565,9 @@
               "});",
               "var data = pm.response.json();",
               "pm.expect(data.compras.length).to.be.at.least(1);",
-              "const cupos = data.cuposDisponibles || data.balanceCupos;",
-              "const cupoGeneral = cupos.find(c => c.id === pm.environment.get(\"tipoEntradaGeneralId\"));",
-              "pm.expect(cupoGeneral.cupoDisponible).to.equal(48); // 50 iniciales - 2 vendidas",
+              "var cupos = data.cuposDisponibles || data.balanceCupos;",
+              "var cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get(\"tipoEntradaGeneralId\"));",
+              "pm.expect(cupoGeneral.cupo).to.equal(48); // 50 iniciales - 2 vendidas",
               ""
             ],
             "type": "text/javascript"
@@ -771,7 +771,7 @@
               "    pm.response.to.have.status(201);",
               "});",
               "var data = pm.response.json();",
-              "pm.environment.set(\"compra2Id\", data.id);",
+              "pm.collectionVariables.set(\"compra2Id\", data.id);",
               "pm.expect(data.total).to.equal(25000);",
               ""
             ],
@@ -828,7 +828,7 @@
               "});",
               "var data = pm.response.json();",
               "pm.expect(data.estado).to.equal('CANCELADA');",
-              "pm.expect(data.fechaBaja).to.not.be.null;",
+              "pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');",
               ""
             ],
             "type": "text/javascript"
@@ -863,7 +863,7 @@
               "    pm.response.to.have.status(200);",
               "});",
               "var data = pm.response.json();",
-              "const vip = data.tiposEntrada.find(t => t.id === pm.environment.get(\"tipoEntradaVipId\"));",
+              "var vip = data.tiposEntrada.find(t => t.id === pm.collectionVariables.get(\"tipoEntradaVipId\"));",
               "pm.expect(vip.cupo).to.equal(5); // Vuelve a los 5 iniciales",
               ""
             ],

@@ -1041,7 +1041,7 @@ pm.test("Status code es 409 Conflict", () => {
 pm.test("Status code es 201 Created", () => {
     pm.response.to.have.status(201);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.token).to.be.a('string');
 pm.expect(data.usuario.email).to.equal('lucia.compradora@ticketit.com');
 pm.collectionVariables.set("token_lucia", data.token);
@@ -1059,7 +1059,7 @@ pm.collectionVariables.set("token_lucia", data.token);
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.token).to.be.a('string');
 pm.collectionVariables.set("token_lucia", data.token);
 `
@@ -1089,7 +1089,7 @@ pm.test("Status code es 401 Unauthorized", () => {
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.user || data.usuario).to.be.an('object');
 `
       }),
@@ -1101,7 +1101,7 @@ pm.expect(data.user || data.usuario).to.be.an('object');
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.token).to.be.a('string');
 pm.collectionVariables.set("token_lucia", data.token);
 `
@@ -1114,7 +1114,7 @@ pm.collectionVariables.set("token_lucia", data.token);
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.mensaje).to.include('exitosa');
 `
       })
@@ -1139,7 +1139,7 @@ const itemsE2E = [
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.collectionVariables.set("token_organizador", data.token);
 pm.collectionVariables.set("organizadorId", data.user?.id || data.usuario?.id || 'usr-organizador-1');
 `
@@ -1156,7 +1156,7 @@ pm.collectionVariables.set("organizadorId", data.user?.id || data.usuario?.id ||
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.collectionVariables.set("token_comprador", data.token);
 pm.collectionVariables.set("compradorId", data.user?.id || data.usuario?.id || 'usr-comprador-1');
 `
@@ -1174,7 +1174,7 @@ pm.collectionVariables.set("compradorId", data.user?.id || data.usuario?.id || '
 pm.test("Status code es 201 Created", () => {
     pm.response.to.have.status(201);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.collectionVariables.set("categoriaId", data.id);
 `
   }),
@@ -1199,7 +1199,7 @@ pm.collectionVariables.set("categoriaId", data.id);
 pm.test("Status code es 201 Created", () => {
     pm.response.to.have.status(201);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.collectionVariables.set("eventoId", data.id);
 pm.collectionVariables.set("tipoEntradaGeneralId", data.tiposEntrada[0].id);
 pm.collectionVariables.set("tipoEntradaPlateaId", data.tiposEntrada[1].id);
@@ -1219,7 +1219,7 @@ pm.collectionVariables.set("tipoEntradaVipId", data.tiposEntrada[2].id);
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.some(e => e.id === pm.collectionVariables.get("eventoId"))).to.be.true;
 `
   }),
@@ -1243,7 +1243,7 @@ pm.test("Status code es 200 OK", () => {
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.some(e => e.id === pm.collectionVariables.get("eventoId"))).to.be.true;
 `
   }),
@@ -1261,7 +1261,7 @@ pm.expect(data.some(e => e.id === pm.collectionVariables.get("eventoId"))).to.be
 pm.test("Status code es 201 Created", () => {
     pm.response.to.have.status(201);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.collectionVariables.set("compraId", data.id);
 pm.expect(data.estado).to.equal('CONFIRMADA');
 pm.expect(data.total).to.equal(10000);
@@ -1277,8 +1277,8 @@ pm.expect(data).to.have.property('diasFaltantes');
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
-const miCompra = data.find(c => c.id === pm.collectionVariables.get("compraId"));
+var data = pm.response.json();
+var miCompra = data.find(c => c.id === pm.collectionVariables.get("compraId"));
 pm.expect(miCompra).to.exist;
 pm.expect(miCompra.estado).to.equal('CONFIRMADA');
 pm.expect(miCompra.diasFaltantes).to.not.be.null;
@@ -1293,10 +1293,10 @@ pm.expect(miCompra.diasFaltantes).to.not.be.null;
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.compras.length).to.be.at.least(1);
-const cupos = data.cuposDisponibles || data.balanceCupos;
-const cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get("tipoEntradaGeneralId"));
+var cupos = data.cuposDisponibles || data.balanceCupos;
+var cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get("tipoEntradaGeneralId"));
 pm.expect(cupoGeneral.cupo).to.equal(48); // 50 iniciales - 2 vendidas
 `
   }),
@@ -1337,7 +1337,7 @@ pm.test("Status code es 201 Created", () => {
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.length).to.be.at.least(2);
 `
   }),
@@ -1355,7 +1355,7 @@ pm.expect(data.length).to.be.at.least(2);
 pm.test("Status code es 201 Created", () => {
     pm.response.to.have.status(201);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.collectionVariables.set("compra2Id", data.id);
 pm.expect(data.total).to.equal(25000);
 `
@@ -1373,7 +1373,7 @@ pm.expect(data.total).to.equal(25000);
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.estado).to.equal('CANCELADA');
 pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');
 `
@@ -1386,8 +1386,8 @@ pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
-const vip = data.tiposEntrada.find(t => t.id === pm.collectionVariables.get("tipoEntradaVipId"));
+var data = pm.response.json();
+var vip = data.tiposEntrada.find(t => t.id === pm.collectionVariables.get("tipoEntradaVipId"));
 pm.expect(vip.cupo).to.equal(5); // Vuelve a los 5 iniciales
 `
   }),
@@ -1403,7 +1403,7 @@ pm.expect(vip.cupo).to.equal(5); // Vuelve a los 5 iniciales
 pm.test("Status code es 200 OK", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.estado).to.equal('UTILIZADA');
 `
   }),
@@ -1421,7 +1421,7 @@ pm.expect(data.estado).to.equal('UTILIZADA');
 pm.test("Status code es 201 Created", () => {
     pm.response.to.have.status(201);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.puntuacion).to.equal(5);
 `
   }),
@@ -1433,7 +1433,7 @@ pm.expect(data.puntuacion).to.equal(5);
 pm.test("Status code es 200", () => {
     pm.response.to.have.status(200);
 });
-const data = pm.response.json();
+var data = pm.response.json();
 pm.expect(data.reputacionPromedio).to.equal(5);
 pm.expect(data.resenias.length).to.be.at.least(1);
 `
