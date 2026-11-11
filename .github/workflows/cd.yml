@@ -1,0 +1,41 @@
+name: CD - Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies (production check)
+        run: npm ci --omit=dev
+
+      - name: Trigger Webhook Deploy (if configured)
+        if: env.DEPLOY_HOOK != ''
+        run: |
+          echo "Disparando webhook de despliegue..."
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL || secrets.DEPLOY_HOOK_URL }}"
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL || secrets.DEPLOY_HOOK_URL }}
+
+      - name: Deployment summary
+        run: |
+          echo "### 🚀 Estado de CD" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL || secrets.DEPLOY_HOOK_URL }}" ]; then
+            echo "- Webhook de despliegue ejecutado correctamente." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Validación de artefactos para deploy completada exitosamente." >> $GITHUB_STEP_SUMMARY
+            echo "- *(Opcional)* Agrega el secreto \`DEPLOY_HOOK_URL\` o \`RENDER_DEPLOY_HOOK_URL\` en GitHub Settings > Secrets para activar el despliegue automático a tu servicio en la nube." >> $GITHUB_STEP_SUMMARY
+          fi

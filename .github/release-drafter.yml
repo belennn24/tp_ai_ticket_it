@@ -1,0 +1,25 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '🚀 Nuevas Funcionalidades (Features)'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: '🐛 Correcciones de Errores (Fixes)'
+    labels:
+      - 'fix'
+      - 'bug'
+  - title: '🧰 Mantenimiento y Refactor'
+    labels:
+      - 'refactor'
+      - 'chore'
+      - 'maintenance'
+  - title: '📚 Documentación'
+    labels:
+      - 'documentation'
+      - 'docs'
+change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
+template: |
+  ## 📦 Cambios incluidos en esta versión
+
+  $CHANGES
