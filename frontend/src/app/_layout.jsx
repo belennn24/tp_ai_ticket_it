@@ -1,28 +1,56 @@
-import { PlusJakartaSans_400Regular } from '@expo-google-fonts/plus-jakarta-sans/400Regular';
-import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
-import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
-import { SpaceMono_400Regular } from '@expo-google-fonts/space-mono/400Regular';
-import { SpaceMono_700Bold } from '@expo-google-fonts/space-mono/700Bold';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { SesionProvider, useSesion } from '@/context/SesionContext';
+import { colores, fuentes, mapaFuentes } from '@/theme';
+
 // La pantalla de carga se mantiene visible hasta que las tipografías estén listas.
 SplashScreen.preventAutoHideAsync();
 
-const COLOR_FONDO = '#16102B';
+const opcionesDetalle = {
+  headerShown: true,
+  headerStyle: { backgroundColor: colores.fondo },
+  headerTintColor: colores.texto,
+  headerTitleStyle: { fontFamily: fuentes.bold },
+  headerShadowVisible: false,
+  headerBackButtonDisplayMode: 'minimal',
+};
+
+// Guardia de sesión: cada grupo de rutas solo existe si se cumple su condición.
+// Sin sesión solo se puede ver el login; con sesión, las pestañas del rol.
+function Navegacion() {
+  const { haySesion, rol } = useSesion();
+
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colores.fondo } }}>
+      <Stack.Protected guard={!haySesion} redirectTo="/">
+        <Stack.Screen name="login" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={haySesion} redirectTo="/login">
+        <Stack.Screen name="index" />
+        {/* Pantallas de detalle: se abren por encima de las pestañas, con encabezado y botón "atrás". */}
+        <Stack.Screen name="eventos/[id]" options={{ ...opcionesDetalle, title: 'Evento' }} />
+        <Stack.Screen name="compras/[id]/index" options={{ ...opcionesDetalle, title: 'Mi compra' }} />
+        <Stack.Screen name="compras/[id]/chat" options={{ ...opcionesDetalle, title: 'Chat' }} />
+      </Stack.Protected>
+
+      <Stack.Protected guard={rol === 'comprador'} redirectTo="/">
+        <Stack.Screen name="comprador" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={rol === 'organizador'} redirectTo="/">
+        <Stack.Screen name="organizador" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
-  const [fuentesCargadas, errorFuentes] = useFonts({
-    PlusJakartaSans_400Regular,
-    PlusJakartaSans_600SemiBold,
-    PlusJakartaSans_700Bold,
-    SpaceMono_400Regular,
-    SpaceMono_700Bold,
-  });
-
+  const [fuentesCargadas, errorFuentes] = useFonts(mapaFuentes);
   const listo = fuentesCargadas || Boolean(errorFuentes);
 
   useEffect(() => {
@@ -36,14 +64,9 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <SesionProvider>
       <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: COLOR_FONDO },
-        }}
-      />
-    </>
+      <Navegacion />
+    </SesionProvider>
   );
 }
