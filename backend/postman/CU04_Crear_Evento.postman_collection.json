@@ -13,22 +13,22 @@
     },
     {
       "key": "token_comprador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDcwMTE2M30.1oExTwNyP5NBj25iT9LqmGi1Qv3cIuU7Gid4vecs5lk",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NDcwMTE5N30.Y_yJc71zW3qfj1GY8A8Mkbk3R5eEv1a6nlgXFlgWeuU",
       "type": "string"
     },
     {
       "key": "token_organizador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQ3MDExNjN9.UL9c90lWDcM87g15ZIlVUoKWfpFcTRj1HFiELcvvLd0",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTQ3MDExOTd9.yNouHQplcRyDAlsvdgpaUlEke-pbtgQtrdoRl8_rKFo",
       "type": "string"
     },
     {
       "key": "token_admin",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQ3MDExNjN9.sA87rMxFgYcaGUNCceDJxLAi1ll70SpzRKNWRVkXUt8",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTQ3MDExOTd9.yQYnlbw9e1yC_heMbYFjaZYydVpqGIaQeFe3TX2ESv8",
       "type": "string"
     },
     {
       "key": "token_comprador_2",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQ3MDExNjN9.27dTsz236ghexy3tkJOeTC5QaM14eSK44GQ2PaQDeMg",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTQ3MDExOTd9.NbS2NS0XDRwLshyhbwel_1LJrsHr_m8NBCjJU-0LNg8",
       "type": "string"
     },
     {
