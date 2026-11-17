@@ -45,7 +45,7 @@ const estilos = StyleSheet.create({
   evento: {
     fontFamily: fuentes.regular,
     fontSize: tamanios.xs,
-    color: colores.secundario,
+    color: colores.primario,
   },
   detalle: {
     fontFamily: fuentes.regular,

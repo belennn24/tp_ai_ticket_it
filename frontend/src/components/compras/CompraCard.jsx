@@ -1,41 +1,47 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { EstadoBadge } from '@/components/ui';
+import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
+import { codigoCompra, formatearFecha, formatearPrecio, resumenAccesibleCompra, textoDiasFaltantes } from '@/utils/formato';
 
 import { CodigoBarras } from './CodigoBarras';
-import { EstadoBadge } from '@/components/ui';
-import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
-import { formatearFecha, formatearPrecio, textoDiasFaltantes } from '@/utils/formato';
+import { Perforacion } from './Perforacion';
 
-// Tarjeta de compra con aspecto de ticket: datos del evento arriba,
-// línea de corte en el medio y detalle de la entrada con código de barras abajo.
+// Ticket compacto para la lista de compras: datos del evento arriba, línea de
+// corte y detalle de la entrada con código abajo.
+// Los lectores de pantalla lo leen como un único botón con el resumen completo.
 export function CompraCard({ compra, onPress, mostrarCodigoBarras = true }) {
   // El backend calcula `diasFaltantes`; se muestra solo en compras confirmadas.
   const faltan = compra.estado === 'CONFIRMADA' ? textoDiasFaltantes(compra.diasFaltantes) : null;
-  const codigoTicket = compra.id ? `TCK-${String(compra.id).slice(-6).toUpperCase()}` : null;
+  const codigo = codigoCompra(compra);
+  const imagen = compra.evento?.multimedia?.[0];
 
   const contenido = (
-    <>
+    <LinearGradient colors={degrades.ticketLista} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={estilos.ticket}>
       <View style={estilos.seccion}>
         <View style={estilos.filaEstado}>
           <EstadoBadge estado={compra.estado} />
           {faltan ? <Text style={estilos.faltan}>{faltan}</Text> : null}
         </View>
-        <Text style={estilos.evento} numberOfLines={2}>
-          {compra.evento?.nombre}
-        </Text>
-        <Text style={estilos.fecha}>{formatearFecha(compra.evento?.fecha)}</Text>
+        <View style={estilos.filaEncabezado}>
+          <View style={estilos.infoEncabezado}>
+            <Text style={estilos.evento} numberOfLines={2}>
+              {compra.evento?.nombre}
+            </Text>
+            <Text style={estilos.fecha}>{formatearFecha(compra.evento?.fecha)}</Text>
+          </View>
+          {imagen ? <Image source={{ uri: imagen }} style={estilos.miniatura} resizeMode="cover" accessible={false} /> : null}
+        </View>
       </View>
 
-      <View style={estilos.corte}>
-        <View style={[estilos.muesca, estilos.muescaIzquierda]} />
-        <View style={estilos.lineaPunteada} />
-        <View style={[estilos.muesca, estilos.muescaDerecha]} />
-      </View>
+      <Perforacion />
 
       <View style={[estilos.seccion, estilos.seccionInferior]}>
         <View style={estilos.filaDetalle}>
           <View style={estilos.entrada}>
             <Text style={estilos.etiqueta}>ENTRADA</Text>
-            <Text style={estilos.valor} numberOfLines={1}>
+            <Text style={estilos.valor} numberOfLines={2}>
               {compra.cantidad} × {compra.tipoEntrada?.nombre}
             </Text>
           </View>
@@ -44,39 +50,41 @@ export function CompraCard({ compra, onPress, mostrarCodigoBarras = true }) {
             <Text style={estilos.monto}>{formatearPrecio(compra.total)}</Text>
           </View>
         </View>
-
-        {mostrarCodigoBarras ? (
-          <View style={estilos.zonaBarras}>
-            <CodigoBarras codigo={codigoTicket} altura={28} />
-          </View>
-        ) : null}
+        {mostrarCodigoBarras ? <CodigoBarras codigo={codigo} altura={28} /> : null}
       </View>
-    </>
+    </LinearGradient>
   );
 
+  const resumen = resumenAccesibleCompra(compra, { faltan });
+
   if (!onPress) {
-    return <View style={estilos.tarjeta}>{contenido}</View>;
+    return (
+      <View accessible accessibilityLabel={resumen} style={estilos.contenedor}>
+        {contenido}
+      </View>
+    );
   }
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Ver compra de ${compra.evento?.nombre}`}
+      accessibilityLabel={resumen}
+      accessibilityHint="Abre el detalle de la compra"
       onPress={onPress}
-      style={({ pressed }) => [estilos.tarjeta, pressed && estilos.presionada]}>
+      style={({ pressed }) => [estilos.contenedor, pressed && estilos.presionada]}>
       {contenido}
     </Pressable>
   );
 }
 
-const MUESCA = 20;
-
 const estilos = StyleSheet.create({
-  tarjeta: {
-    backgroundColor: colores.tarjeta,
-    borderColor: colores.borde,
-    borderWidth: 1,
+  contenedor: {
     borderRadius: radios.tarjeta,
+  },
+  ticket: {
+    borderRadius: radios.tarjeta,
+    borderWidth: 1,
+    borderColor: 'rgba(196, 181, 253, 0.25)',
     overflow: 'hidden',
   },
   presionada: {
@@ -86,16 +94,35 @@ const estilos = StyleSheet.create({
     padding: espacios.lg,
     gap: espacios.sm,
   },
+  seccionInferior: {
+    gap: espacios.md,
+  },
   filaEstado: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: espacios.sm,
+  },
+  filaEncabezado: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: espacios.md,
+  },
+  infoEncabezado: {
+    flex: 1,
+    gap: espacios.xs,
+  },
+  miniatura: {
+    width: 56,
+    height: 56,
+    borderRadius: radios.input,
+    backgroundColor: colores.violetaOscuro,
   },
   faltan: {
     fontFamily: fuentes.monoBold,
     fontSize: tamanios.sm,
-    color: colores.primario,
+    color: colores.dorado,
   },
   evento: {
     fontFamily: fuentes.bold,
@@ -105,32 +132,7 @@ const estilos = StyleSheet.create({
   fecha: {
     fontFamily: fuentes.mono,
     fontSize: tamanios.xs,
-    color: colores.secundario,
-  },
-  corte: {
-    height: MUESCA,
-    justifyContent: 'center',
-  },
-  lineaPunteada: {
-    marginHorizontal: MUESCA,
-    borderTopWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colores.borde,
-  },
-  muesca: {
-    position: 'absolute',
-    width: MUESCA,
-    height: MUESCA,
-    borderRadius: MUESCA / 2,
-    backgroundColor: colores.fondo,
-    borderWidth: 1,
-    borderColor: colores.borde,
-  },
-  muescaIzquierda: {
-    left: -MUESCA / 2,
-  },
-  muescaDerecha: {
-    right: -MUESCA / 2,
+    color: colores.textoTicket,
   },
   filaDetalle: {
     flexDirection: 'row',
@@ -149,7 +151,7 @@ const estilos = StyleSheet.create({
   etiqueta: {
     fontFamily: fuentes.semibold,
     fontSize: tamanios.xs,
-    color: colores.textoAtenuado,
+    color: colores.textoTicket,
     letterSpacing: 1,
   },
   valor: {
@@ -160,14 +162,6 @@ const estilos = StyleSheet.create({
   monto: {
     fontFamily: fuentes.monoBold,
     fontSize: tamanios.md,
-    color: colores.primario,
-  },
-  seccionInferior: {
-    gap: espacios.md,
-  },
-  zonaBarras: {
-    paddingTop: espacios.xs,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colores.borde,
+    color: colores.dorado,
   },
 });

@@ -6,7 +6,7 @@ import { colores, espacios, fuentes, tamanios } from '@/theme';
 
 // Formulario para calificar un evento: puntaje de 1 a 5 y comentario.
 // `onEnviar({ puntuacion, detalle })` debe devolver una promesa.
-export function FormularioResenia({ onEnviar }) {
+export function FormularioResenia({ onEnviar, onEnfocarComentario }) {
   const [puntuacion, setPuntuacion] = useState(0);
   const [detalle, setDetalle] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -39,9 +39,14 @@ export function FormularioResenia({ onEnviar }) {
         multiline
         maxLength={500}
         editable={!enviando}
+        onFocus={onEnfocarComentario}
         style={estilos.comentario}
       />
-      {error ? <Text style={estilos.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={estilos.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
       <Boton titulo="Enviar reseña" cargando={enviando} onPress={enviar} />
     </View>
   );
