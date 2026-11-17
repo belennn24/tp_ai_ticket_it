@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
+import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
 import { entradasDisponibles, formatearFecha, formatearPrecio, nombreCompleto, precioDesde, yaOcurrio } from '@/utils/formato';
 
 function etiquetaDisponibilidad(evento) {
@@ -10,62 +11,101 @@ function etiquetaDisponibilidad(evento) {
   return null;
 }
 
-// Tarjeta de evento para listados: imagen, fecha, organizador y precio "Desde".
+// Tarjeta de evento: imagen grande con el nombre encima. Un velo oscuro en
+// degradé garantiza el contraste del texto sea cual sea la foto.
 export function EventoCard({ evento, onPress }) {
   const imagen = evento.multimedia?.[0];
   const desde = precioDesde(evento);
   const disponibilidad = etiquetaDisponibilidad(evento);
   const reputacion = Number(evento.organizador?.reputacion) || 0;
+  const organizador = nombreCompleto(evento.organizador);
+
+  const descripcion = [
+    evento.nombre,
+    evento.categoria?.nombre,
+    formatearFecha(evento.fecha),
+    disponibilidad,
+    organizador ? `Organiza ${organizador}, puntaje ${reputacion.toFixed(1)} de 5` : null,
+    desde !== null ? `Desde ${formatearPrecio(desde)}` : null,
+  ]
+    .filter(Boolean)
+    .join('. ');
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Ver ${evento.nombre}`}
+      accessibilityLabel={descripcion}
+      accessibilityHint="Abre el detalle del evento"
       onPress={onPress}
       style={({ pressed }) => [estilos.tarjeta, pressed && estilos.presionada]}>
       <View style={estilos.portada}>
         {imagen ? (
-          <Image source={{ uri: imagen }} style={estilos.imagen} resizeMode="cover" />
+          <Image source={{ uri: imagen }} style={estilos.imagen} resizeMode="cover" accessible={false} />
         ) : (
-          <View style={[estilos.imagen, estilos.sinImagen]}>
-            <Ionicons name="musical-notes-outline" size={40} color={colores.textoAtenuado} />
-          </View>
+          <LinearGradient colors={degrades.ticket} style={[estilos.imagen, estilos.sinImagen]}>
+            <Ionicons name="musical-notes" size={48} color={colores.textoTicket} />
+          </LinearGradient>
         )}
-        {evento.categoria?.nombre ? (
-          <View style={[estilos.etiqueta, estilos.etiquetaCategoria]}>
-            <Text style={estilos.textoEtiqueta}>{evento.categoria.nombre}</Text>
-          </View>
-        ) : null}
-        {disponibilidad ? (
-          <View style={[estilos.etiqueta, estilos.etiquetaDisponibilidad]}>
-            <Text style={estilos.textoEtiqueta}>{disponibilidad}</Text>
-          </View>
-        ) : null}
-      </View>
 
-      <View style={estilos.cuerpo}>
-        <Text style={estilos.fecha}>{formatearFecha(evento.fecha)}</Text>
-        <Text style={estilos.nombre} numberOfLines={2}>
-          {evento.nombre}
-        </Text>
-
-        <View style={estilos.pie}>
-          <View style={estilos.organizador}>
-            <Text style={estilos.nombreOrganizador} numberOfLines={1}>
-              {nombreCompleto(evento.organizador)}
-            </Text>
-            <View style={estilos.reputacion}>
-              <Ionicons name="star" size={14} color={colores.primario} />
-              <Text style={estilos.textoReputacion}>{reputacion.toFixed(1)}</Text>
+        <View style={estilos.filaSuperior}>
+          {evento.categoria?.nombre ? (
+            <View style={estilos.pastilla}>
+              <Text style={estilos.textoPastilla}>{evento.categoria.nombre}</Text>
             </View>
-          </View>
-          {desde !== null ? (
-            <View style={estilos.precio}>
-              <Text style={estilos.desde}>Desde</Text>
-              <Text style={estilos.monto}>{formatearPrecio(desde)}</Text>
+          ) : (
+            <View />
+          )}
+          {disponibilidad ? (
+            <View style={[estilos.pastilla, estilos.pastillaAlerta]}>
+              <Text style={estilos.textoPastilla}>{disponibilidad}</Text>
+            </View>
+          ) : evento.multimedia?.length > 1 ? (
+            <View style={[estilos.pastilla, estilos.pastillaFotos]}>
+              <Ionicons name="images-outline" size={12} color="#FFFFFF" />
+              <Text style={estilos.textoPastilla}>{evento.multimedia.length}</Text>
             </View>
           ) : null}
         </View>
+
+        {/* El texto va siempre sobre velo al 85 %: aunque la letra se agrande, nunca queda sobre la foto sin oscurecer. */}
+        <View>
+          <LinearGradient colors={[degrades.veloFoto[0], colores.veloFoto]} style={estilos.transicionVelo} />
+          <View style={estilos.textoPortada}>
+            <Text style={estilos.nombre} numberOfLines={2}>
+              {evento.nombre}
+            </Text>
+            <View style={estilos.fila}>
+              <Ionicons name="calendar-outline" size={14} color={colores.acentoFecha} />
+              <Text style={estilos.fecha}>{formatearFecha(evento.fecha)}</Text>
+            </View>
+            {evento.ubicacion?.nombre ? (
+              <View style={estilos.fila}>
+                <Ionicons name="location-outline" size={14} color={colores.textoSecundario} />
+                <Text style={estilos.lugar} numberOfLines={1}>
+                  {evento.ubicacion.nombre}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </View>
+
+      <View style={estilos.pie}>
+        <View style={estilos.organizador}>
+          <Text style={estilos.nombreOrganizador} numberOfLines={1}>
+            {organizador}
+          </Text>
+          <View style={estilos.fila}>
+            <Ionicons name="star" size={14} color={colores.dorado} />
+            <Text style={estilos.textoReputacion}>{reputacion.toFixed(1)}</Text>
+          </View>
+        </View>
+        {desde !== null ? (
+          <View style={estilos.precio}>
+            <Text style={estilos.desde}>Desde</Text>
+            <Text style={estilos.monto}>{formatearPrecio(desde)}</Text>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -83,57 +123,83 @@ const estilos = StyleSheet.create({
     opacity: 0.85,
   },
   portada: {
-    height: 160,
+    minHeight: 200,
+    justifyContent: 'flex-end',
   },
   imagen: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: colores.fondoAlt,
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colores.violetaOscuro,
   },
   sinImagen: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  etiqueta: {
+  transicionVelo: {
+    height: 64,
+  },
+  filaSuperior: {
     position: 'absolute',
     top: espacios.md,
+    left: espacios.md,
+    right: espacios.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: espacios.sm,
+  },
+  pastilla: {
     paddingHorizontal: espacios.md,
     paddingVertical: espacios.xs,
     borderRadius: radios.pildora,
-    backgroundColor: 'rgba(22, 16, 43, 0.85)',
+    backgroundColor: colores.veloFoto,
   },
-  etiquetaCategoria: {
-    left: espacios.md,
+  pastillaAlerta: {
+    backgroundColor: colores.rojoInsignia,
   },
-  etiquetaDisponibilidad: {
-    right: espacios.md,
-    backgroundColor: colores.acento,
+  pastillaFotos: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  textoEtiqueta: {
+  textoPastilla: {
     fontFamily: fuentes.semibold,
     fontSize: tamanios.xs,
+    color: '#FFFFFF',
+  },
+  textoPortada: {
+    backgroundColor: colores.veloFoto,
+    paddingHorizontal: espacios.lg,
+    paddingBottom: espacios.md,
+    gap: espacios.xs,
+  },
+  nombre: {
+    fontFamily: fuentes.bold,
+    fontSize: tamanios.xl,
     color: colores.texto,
   },
-  cuerpo: {
-    padding: espacios.lg,
+  fila: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: espacios.xs,
   },
   fecha: {
     fontFamily: fuentes.mono,
     fontSize: tamanios.xs,
-    color: colores.secundario,
+    color: colores.acentoFecha,
   },
-  nombre: {
-    fontFamily: fuentes.bold,
-    fontSize: tamanios.lg,
-    color: colores.texto,
+  lugar: {
+    flex: 1,
+    fontFamily: fuentes.regular,
+    fontSize: tamanios.xs,
+    color: colores.textoSecundario,
   },
   pie: {
+    backgroundColor: colores.tarjeta,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: espacios.md,
-    marginTop: espacios.sm,
+    paddingHorizontal: espacios.lg,
+    paddingVertical: espacios.md,
   },
   organizador: {
     flex: 1,
@@ -144,11 +210,6 @@ const estilos = StyleSheet.create({
     fontSize: tamanios.sm,
     color: colores.textoSecundario,
   },
-  reputacion: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espacios.xs,
-  },
   textoReputacion: {
     fontFamily: fuentes.monoBold,
     fontSize: tamanios.sm,
@@ -156,6 +217,12 @@ const estilos = StyleSheet.create({
   },
   precio: {
     alignItems: 'flex-end',
+    paddingHorizontal: espacios.md,
+    paddingVertical: espacios.xs,
+    borderRadius: radios.boton,
+    borderWidth: 1,
+    borderColor: colores.insigniaBorde,
+    backgroundColor: colores.insigniaFondo,
   },
   desde: {
     fontFamily: fuentes.regular,
@@ -165,6 +232,6 @@ const estilos = StyleSheet.create({
   monto: {
     fontFamily: fuentes.monoBold,
     fontSize: tamanios.lg,
-    color: colores.primario,
+    color: colores.dorado,
   },
 });

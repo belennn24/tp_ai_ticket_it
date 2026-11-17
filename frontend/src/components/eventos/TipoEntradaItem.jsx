@@ -12,21 +12,20 @@ export function TipoEntradaItem({ tipo, seleccionado = false, deshabilitado = fa
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ selected: seleccionado, disabled: inactivo }}
+      accessibilityLabel={`${tipo.nombre}, ${formatearPrecio(tipo.precio)}, ${agotado ? 'agotado' : `${tipo.cupo} disponibles`}`}
+      accessibilityState={{ selected: seleccionado, checked: seleccionado, disabled: inactivo }}
       disabled={inactivo}
       onPress={onPress}
       style={[estilos.base, seleccionado && estilos.seleccionado, inactivo && estilos.inactivo]}>
       <Ionicons
         name={seleccionado ? 'radio-button-on' : 'radio-button-off'}
         size={22}
-        color={seleccionado ? colores.primario : colores.textoAtenuado}
+        color={seleccionado ? colores.primario : colores.textoSecundario}
       />
       <View style={estilos.info}>
         <Text style={estilos.nombre}>{tipo.nombre}</Text>
         {tipo.descripcion ? <Text style={estilos.descripcion}>{tipo.descripcion}</Text> : null}
-        <Text style={[estilos.cupo, agotado && estilos.cupoAgotado]}>
-          {agotado ? 'Agotado' : `${tipo.cupo} disponibles`}
-        </Text>
+        <Text style={[estilos.cupo, agotado && estilos.cupoAgotado]}>{agotado ? 'Agotado' : `${tipo.cupo} disponibles`}</Text>
       </View>
       <Text style={estilos.precio}>{formatearPrecio(tipo.precio)}</Text>
     </Pressable>
@@ -41,11 +40,14 @@ const estilos = StyleSheet.create({
     padding: espacios.lg,
     borderRadius: radios.boton,
     borderWidth: 1,
-    borderColor: colores.borde,
+    borderColor: colores.bordeControl,
     backgroundColor: colores.tarjeta,
   },
+  // Elegido: borde más grueso, fondo más claro y radio relleno (no solo color).
   seleccionado: {
     borderColor: colores.primario,
+    borderWidth: 2,
+    backgroundColor: colores.tarjetaAlta,
   },
   inactivo: {
     opacity: 0.5,
@@ -75,6 +77,6 @@ const estilos = StyleSheet.create({
   precio: {
     fontFamily: fuentes.monoBold,
     fontSize: tamanios.md,
-    color: colores.primario,
+    color: colores.dorado,
   },
 });

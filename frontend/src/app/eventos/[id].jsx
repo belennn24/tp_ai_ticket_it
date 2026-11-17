@@ -1,19 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { crearCompra } from '@/api/compras';
 import { obtenerEvento } from '@/api/eventos';
 import { obtenerReseniasDeOrganizador } from '@/api/resenias';
+import { TarjetaUbicacion } from '@/components/eventos/MapaUbicaciones';
+import { MapaSectores } from '@/components/eventos/MapaSectores';
 import { SelectorCantidad } from '@/components/eventos/SelectorCantidad';
 import { TipoEntradaItem } from '@/components/eventos/TipoEntradaItem';
 import { ReseniaItem } from '@/components/resenias/ReseniaItem';
 import { Boton, Cargando, EstadoVacio, Estrellas } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
 import { useConsulta } from '@/hooks/useConsulta';
-import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
+import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
 import { confirmar } from '@/utils/dialogos';
 import { formatearFecha, formatearPrecio, nombreCompleto, yaOcurrio } from '@/utils/formato';
 
@@ -21,15 +24,18 @@ export default function DetalleEvento() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { rol } = useSesion();
+  const { bottom } = useSafeAreaInsets();
+  const { width: anchoPantalla } = useWindowDimensions();
 
   const [tipoId, setTipoId] = useState(null);
+  const [fotoActiva, setFotoActiva] = useState(0);
 
   const consulta = useConsulta(() => obtenerEvento(id), id);
   const evento = consulta.datos;
   const organizadorId = evento?.organizador?.id;
   const resenias = useConsulta(
     () => (organizadorId ? obtenerReseniasDeOrganizador(organizadorId) : Promise.resolve(null)),
-    organizadorId ?? ''
+    organizadorId ?? '',
   );
 
   if (consulta.cargando && !evento) {
@@ -49,29 +55,102 @@ export default function DetalleEvento() {
   const finalizado = yaOcurrio(evento.fecha);
   const puedeComprar = rol === 'comprador' && !finalizado;
   const tipo = evento.tiposEntrada.find((t) => t.id === tipoId) ?? null;
-  const imagen = evento.multimedia?.[0];
+  const fotos = Array.isArray(evento.multimedia) ? evento.multimedia.filter(Boolean) : [];
+
+  const alDesplazarFotos = ({ nativeEvent }) => {
+    const ancho = nativeEvent.layoutMeasurement?.width || anchoPantalla;
+    if (!ancho) return;
+    const indice = Math.round(nativeEvent.contentOffset.x / ancho);
+    setFotoActiva(indice);
+  };
 
   return (
     <View style={estilos.contenedor}>
-      <ScrollView contentContainerStyle={estilos.contenido}>
-        {imagen ? (
-          <Image source={{ uri: imagen }} style={estilos.portada} resizeMode="cover" />
-        ) : (
-          <View style={[estilos.portada, estilos.sinImagen]}>
-            <Ionicons name="musical-notes-outline" size={48} color={colores.textoAtenuado} />
-          </View>
-        )}
+      <ScrollView contentContainerStyle={[estilos.contenido, { paddingBottom: espacios.xxl + bottom }]}>
+        {/* Portada decorativa con galería deslizable si el evento tiene varias fotos. */}
+        <View style={estilos.portada}>
+          {fotos.length > 0 ? (
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={alDesplazarFotos}>
+              {fotos.map((uri, indice) => (
+                <Image
+                  key={`${uri}-${indice}`}
+                  source={{ uri }}
+                  style={[estilos.imagenGaleria, { width: anchoPantalla }]}
+                  resizeMode="cover"
+                  accessible={false}
+                />
+              ))}
+            </ScrollView>
+          ) : (
+            <LinearGradient colors={degrades.ticket} style={[estilos.imagen, estilos.sinImagen]}>
+              <Ionicons name="musical-notes" size={56} color={colores.textoTicket} />
+            </LinearGradient>
+          )}
+          <LinearGradient colors={['rgba(15, 10, 36, 0)', colores.fondo]} style={estilos.fundido} pointerEvents="none" />
+          {fotos.length > 1 ? (
+            <View style={estilos.indicadorFotos} pointerEvents="none">
+              <View style={estilos.puntos}>
+                {fotos.map((_, indice) => (
+                  <View key={indice} style={[estilos.punto, indice === fotoActiva && estilos.puntoActivo]} />
+                ))}
+              </View>
+              <Text style={estilos.contadorFotos}>
+                {fotoActiva + 1} / {fotos.length}
+              </Text>
+            </View>
+          ) : null}
+        </View>
 
-        <View style={estilos.bloque}>
+        <View style={[estilos.bloque, estilos.encabezado]}>
           {evento.categoria?.nombre ? <Text style={estilos.categoria}>{evento.categoria.nombre.toUpperCase()}</Text> : null}
-          <Text style={estilos.nombre}>{evento.nombre}</Text>
-          <Text style={estilos.fecha}>{formatearFecha(evento.fecha)}</Text>
-          {finalizado ? <Text style={estilos.finalizado}>Este evento ya finalizó.</Text> : null}
+          <Text style={estilos.nombre} accessibilityRole="header">
+            {evento.nombre}
+          </Text>
+          <View style={estilos.pastillas}>
+            <View style={estilos.pastilla}>
+              <Ionicons name="calendar-outline" size={16} color={colores.acentoFecha} />
+              <Text style={estilos.textoPastilla}>{formatearFecha(evento.fecha)}</Text>
+            </View>
+            {evento.ubicacion?.nombre ? (
+              <View style={estilos.pastilla}>
+                <Ionicons name="location-outline" size={16} color={colores.primario} />
+                <Text style={estilos.textoPastilla}>{evento.ubicacion.nombre}</Text>
+              </View>
+            ) : null}
+            {finalizado ? (
+              <View style={[estilos.pastilla, estilos.pastillaAlerta]}>
+                <Ionicons name="alert-circle" size={16} color="#FFFFFF" />
+                <Text style={[estilos.textoPastilla, estilos.textoAlerta]}>Este evento ya finalizó</Text>
+              </View>
+            ) : null}
+          </View>
           {evento.descripcion ? <Text style={estilos.descripcion}>{evento.descripcion}</Text> : null}
         </View>
 
+        {evento.ubicacion ? (
+          <View style={estilos.bloque}>
+            <Text style={estilos.tituloSeccion} accessibilityRole="header">
+              Ubicación
+            </Text>
+            <TarjetaUbicacion ubicacion={evento.ubicacion} />
+          </View>
+        ) : null}
+
         <View style={estilos.bloque}>
-          <Text style={estilos.tituloSeccion}>Entradas</Text>
+          <Text style={estilos.tituloSeccion} accessibilityRole="header">
+            Entradas y sectores
+          </Text>
+          <MapaSectores
+            tiposEntrada={evento.tiposEntrada}
+            tipoUbicacion={evento.ubicacion?.tipo}
+            seleccionadoId={tipoId}
+            deshabilitado={!puedeComprar}
+            onSeleccionar={setTipoId}
+          />
           <View style={estilos.listaTipos} accessibilityRole="radiogroup">
             {evento.tiposEntrada.map((t) => (
               <TipoEntradaItem
@@ -86,7 +165,9 @@ export default function DetalleEvento() {
         </View>
 
         <View style={estilos.bloque}>
-          <Text style={estilos.tituloSeccion}>Organiza</Text>
+          <Text style={estilos.tituloSeccion} accessibilityRole="header">
+            Organiza
+          </Text>
           <View style={estilos.organizador}>
             <Text style={estilos.nombreOrganizador}>{nombreCompleto(evento.organizador)}</Text>
             <View style={estilos.reputacion}>
@@ -119,13 +200,15 @@ export default function DetalleEvento() {
           key={tipo.id}
           eventoId={evento.id}
           tipo={tipo}
-          onComprada={(compra) => router.replace(`/compras/${compra.id}`)}
+          onComprada={(compra) => router.replace({ pathname: '/compras/[id]', params: { id: compra.id, nueva: '1' } })}
           onError={consulta.recargar}
         />
       ) : null}
     </View>
   );
 }
+
+const MAX_ENTRADAS_POR_PERSONA = 5;
 
 // Barra inferior de compra. Solo se muestra con un tipo de entrada elegido,
 // por eso acá `tipo` nunca es nulo.
@@ -135,8 +218,9 @@ function BarraCompra({ eventoId, tipo, onComprada, onError }) {
   const [comprando, setComprando] = useState(false);
   const [error, setError] = useState(null);
 
-  // Si el cupo bajó desde la última consulta, la cantidad se ajusta al disponible.
-  const cantidadValida = Math.min(cantidad, Math.max(tipo.cupo, 1));
+  // El selector se limita tanto por el cupo disponible como por el máximo por persona.
+  const maximoPermitido = Math.min(tipo.cupo, MAX_ENTRADAS_POR_PERSONA);
+  const cantidadValida = Math.min(cantidad, Math.max(maximoPermitido, 1));
   const total = tipo.precio * cantidadValida;
 
   const comprar = async () => {
@@ -162,9 +246,13 @@ function BarraCompra({ eventoId, tipo, onComprada, onError }) {
 
   return (
     <View style={[estilos.barraCompra, { paddingBottom: bottom + espacios.md }]}>
-      {error ? <Text style={estilos.error}>{error}</Text> : null}
+      {error ? (
+        <Text style={estilos.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {error}
+        </Text>
+      ) : null}
       <View style={estilos.filaCompra}>
-        <SelectorCantidad cantidad={cantidadValida} maximo={tipo.cupo} onCambiar={setCantidad} />
+        <SelectorCantidad cantidad={cantidadValida} maximo={maximoPermitido} onCambiar={setCantidad} />
         <View style={estilos.total}>
           <Text style={estilos.etiquetaTotal}>TOTAL</Text>
           <Text style={estilos.montoTotal}>{formatearPrecio(total)}</Text>
@@ -185,9 +273,88 @@ const estilos = StyleSheet.create({
     gap: espacios.xl,
   },
   portada: {
-    width: '100%',
-    height: 220,
-    backgroundColor: colores.fondoAlt,
+    height: 260,
+  },
+  imagen: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colores.violetaOscuro,
+  },
+  imagenGaleria: {
+    height: 260,
+    backgroundColor: colores.violetaOscuro,
+  },
+  indicadorFotos: {
+    position: 'absolute',
+    left: espacios.xl,
+    right: espacios.xl,
+    bottom: espacios.xxl + espacios.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  puntos: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  punto: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+  },
+  puntoActivo: {
+    width: 18,
+    backgroundColor: '#FFFFFF',
+  },
+  contadorFotos: {
+    fontFamily: fuentes.mono,
+    fontSize: tamanios.xs,
+    color: '#FFFFFF',
+    backgroundColor: colores.veloFoto,
+    paddingHorizontal: espacios.sm,
+    paddingVertical: 2,
+    borderRadius: radios.pildora,
+  },
+  fundido: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 120,
+  },
+  encabezado: {
+    marginTop: -espacios.xxl,
+  },
+  pastillas: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: espacios.sm,
+    marginTop: espacios.xs,
+  },
+  pastilla: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espacios.xs,
+    paddingHorizontal: espacios.md,
+    paddingVertical: espacios.sm,
+    borderRadius: radios.pildora,
+    borderWidth: 1,
+    borderColor: colores.insigniaBorde,
+    backgroundColor: colores.tarjeta,
+  },
+  pastillaAlerta: {
+    backgroundColor: colores.rojoInsignia,
+    borderColor: colores.rojoInsignia,
+  },
+  textoPastilla: {
+    fontFamily: fuentes.mono,
+    fontSize: tamanios.sm,
+    color: colores.texto,
+  },
+  textoAlerta: {
+    fontFamily: fuentes.semibold,
+    color: '#FFFFFF',
   },
   sinImagen: {
     alignItems: 'center',
@@ -200,23 +367,13 @@ const estilos = StyleSheet.create({
   categoria: {
     fontFamily: fuentes.semibold,
     fontSize: tamanios.xs,
-    color: colores.secundario,
+    color: colores.primario,
     letterSpacing: 1,
   },
   nombre: {
     fontFamily: fuentes.bold,
-    fontSize: tamanios.xl,
+    fontSize: tamanios.xxl - 4,
     color: colores.texto,
-  },
-  fecha: {
-    fontFamily: fuentes.mono,
-    fontSize: tamanios.sm,
-    color: colores.primario,
-  },
-  finalizado: {
-    fontFamily: fuentes.semibold,
-    fontSize: tamanios.sm,
-    color: colores.error,
   },
   descripcion: {
     fontFamily: fuentes.regular,
@@ -295,7 +452,7 @@ const estilos = StyleSheet.create({
   montoTotal: {
     fontFamily: fuentes.monoBold,
     fontSize: tamanios.xl,
-    color: colores.primario,
+    color: colores.dorado,
   },
   error: {
     fontFamily: fuentes.semibold,

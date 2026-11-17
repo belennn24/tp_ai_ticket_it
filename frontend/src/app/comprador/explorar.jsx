@@ -1,14 +1,16 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { listarCategorias } from '@/api/categorias';
 import { buscarEventos } from '@/api/eventos';
 import { EventoCard } from '@/components/eventos/EventoCard';
 import { FilaChips } from '@/components/eventos/FilaChips';
+import { MapaUbicaciones } from '@/components/eventos/MapaUbicaciones';
 import { Boton, Cargando, EstadoVacio, Input, Pantalla } from '@/components/ui';
 import { useConsulta } from '@/hooks/useConsulta';
-import { colores, espacios, fuentes, tamanios } from '@/theme';
+import { ALTO_TACTIL, colores, espacios, fuentes, radios, tamanios } from '@/theme';
 
 const TODAS = 'todas';
 const ORDENES = [
@@ -24,6 +26,7 @@ export default function Explorar() {
   const [textoBuscado, setTextoBuscado] = useState('');
   const [categoriaId, setCategoriaId] = useState(TODAS);
   const [orden, setOrden] = useState('fecha');
+  const [vista, setVista] = useState('lista');
 
   // Espera a que se deje de escribir antes de consultar al backend.
   useEffect(() => {
@@ -63,6 +66,14 @@ export default function Explorar() {
         />
       );
     }
+    if (vista === 'mapa') {
+      return (
+        <MapaUbicaciones
+          eventos={eventos.datos ?? []}
+          onSeleccionarEvento={(evento) => router.push(`/eventos/${evento.id}`)}
+        />
+      );
+    }
     return (
       <FlatList
         data={eventos.datos ?? []}
@@ -89,20 +100,37 @@ export default function Explorar() {
   return (
     <Pantalla titulo="Explorar">
       <View style={estilos.filtros}>
-        <View style={estilos.buscador}>
-          <Input
-            value={texto}
-            onChangeText={setTexto}
-            placeholder="Buscar eventos"
-            accessibilityLabel="Buscar eventos"
-            autoCorrect={false}
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-          />
+        <View style={estilos.filaBuscador}>
+          <View style={estilos.buscador}>
+            <Input
+              value={texto}
+              onChangeText={setTexto}
+              placeholder="Buscar eventos"
+              accessibilityLabel="Buscar eventos"
+              autoCorrect={false}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={vista === 'mapa' ? 'Ver lista de eventos' : 'Ver mapa de ubicaciones'}
+            onPress={() => setVista((v) => (v === 'mapa' ? 'lista' : 'mapa'))}
+            style={[estilos.botonVista, vista === 'mapa' && estilos.botonVistaActiva]}>
+            <Ionicons
+              name={vista === 'mapa' ? 'list-outline' : 'map-outline'}
+              size={22}
+              color={vista === 'mapa' ? colores.sobrePrimario : colores.texto}
+            />
+          </Pressable>
         </View>
         <FilaChips opciones={opcionesCategoria} seleccionado={categoriaId} onSeleccionar={setCategoriaId} />
-        <Text style={estilos.tituloOrden}>ORDENAR POR</Text>
-        <FilaChips opciones={ORDENES} seleccionado={orden} onSeleccionar={setOrden} />
+        {vista === 'lista' ? (
+          <>
+            <Text style={estilos.tituloOrden}>ORDENAR POR</Text>
+            <FilaChips opciones={ORDENES} seleccionado={orden} onSeleccionar={setOrden} />
+          </>
+        ) : null}
       </View>
       {renderContenido()}
     </Pantalla>
@@ -118,8 +146,28 @@ const estilos = StyleSheet.create({
     gap: espacios.md,
     paddingBottom: espacios.md,
   },
-  buscador: {
+  filaBuscador: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espacios.sm,
     paddingHorizontal: espacios.xl,
+  },
+  buscador: {
+    flex: 1,
+  },
+  botonVista: {
+    width: ALTO_TACTIL,
+    height: ALTO_TACTIL,
+    borderRadius: radios.input,
+    borderWidth: 1,
+    borderColor: colores.bordeControl,
+    backgroundColor: colores.tarjeta,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  botonVistaActiva: {
+    backgroundColor: colores.primario,
+    borderColor: colores.primario,
   },
   tituloOrden: {
     paddingHorizontal: espacios.xl,

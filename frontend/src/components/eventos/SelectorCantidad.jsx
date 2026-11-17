@@ -18,7 +18,10 @@ export function SelectorCantidad({ cantidad, maximo, onCambiar }) {
         style={[estilos.boton, !puedeRestar && estilos.inactivo]}>
         <Ionicons name="remove" size={22} color={colores.texto} />
       </Pressable>
-      <Text style={estilos.cantidad} accessibilityLabel={`Cantidad: ${cantidad}`}>
+      <Text
+        style={estilos.cantidad}
+        accessibilityLabel={`Cantidad: ${cantidad}, máximo ${maximo}`}
+        accessibilityLiveRegion="polite">
         {cantidad}
       </Text>
       <Pressable
@@ -40,11 +43,11 @@ const estilos = StyleSheet.create({
     gap: espacios.lg,
   },
   boton: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: radios.input,
     borderWidth: 1,
-    borderColor: colores.borde,
+    borderColor: colores.bordeControl,
     backgroundColor: colores.tarjeta,
     alignItems: 'center',
     justifyContent: 'center',
