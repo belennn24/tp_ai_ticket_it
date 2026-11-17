@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
 import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
 import { formatearFechaCorta, nombreCompleto } from '@/utils/formato';
@@ -7,12 +8,60 @@ const NOMBRE_ROL = { comprador: 'Comprador', organizador: 'Organizador' };
 
 // Mensaje del chat de una compra. Los propios van a la derecha.
 // `autor` es el usuario que lo escribió (comprador u organizador de la compra).
-export function BurbujaMensaje({ mensaje, autor, esPropio }) {
+// Si `animar` es true, la burbuja entra con una animación suave de aparición y deslizamiento.
+export function BurbujaMensaje({ mensaje, autor, esPropio, animar = false }) {
   const nombre = nombreCompleto(autor) || 'Usuario';
   const rol = NOMBRE_ROL[autor?.rol];
 
+  const [opacidad] = useState(() => new Animated.Value(animar ? 0 : 1));
+  const [entrada] = useState(() => new Animated.Value(animar ? 0 : 1));
+
+  useEffect(() => {
+    if (!animar) return;
+    const animacion = Animated.parallel([
+      Animated.timing(opacidad, {
+        toValue: 1,
+        duration: 180,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(entrada, {
+        toValue: 1,
+        friction: 7,
+        tension: 90,
+        useNativeDriver: true,
+      }),
+    ]);
+    animacion.start();
+    return () => animacion.stop();
+  }, [animar, opacidad, entrada]);
+
+  const estiloAnimado = {
+    opacity: opacidad,
+    transform: [
+      {
+        translateY: entrada.interpolate({
+          inputRange: [0, 1],
+          outputRange: [14, 0],
+        }),
+      },
+      {
+        translateX: entrada.interpolate({
+          inputRange: [0, 1],
+          outputRange: [esPropio ? 16 : -16, 0],
+        }),
+      },
+      {
+        scale: entrada.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.92, 1],
+        }),
+      },
+    ],
+  };
+
   return (
-    <View style={[estilos.fila, esPropio ? estilos.filaPropia : estilos.filaAjena]}>
+    <Animated.View style={[estilos.fila, esPropio ? estilos.filaPropia : estilos.filaAjena, estiloAnimado]}>
       <View style={[estilos.burbuja, esPropio ? estilos.propia : estilos.ajena]}>
         {!esPropio ? (
           <Text style={estilos.autor}>
@@ -23,7 +72,7 @@ export function BurbujaMensaje({ mensaje, autor, esPropio }) {
         <Text style={[estilos.texto, esPropio && estilos.textoPropio]}>{mensaje.mensaje}</Text>
         <Text style={[estilos.hora, esPropio && estilos.horaPropia]}>{formatearFechaCorta(mensaje.fechaHora)}</Text>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -45,7 +94,7 @@ const estilos = StyleSheet.create({
     gap: 2,
   },
   propia: {
-    backgroundColor: colores.secundario,
+    backgroundColor: '#6D28D9',
     borderBottomRightRadius: 4,
   },
   ajena: {
@@ -65,7 +114,7 @@ const estilos = StyleSheet.create({
     color: colores.texto,
   },
   textoPropio: {
-    color: colores.sobrePrimario,
+    color: colores.sobreVioleta,
   },
   hora: {
     alignSelf: 'flex-end',
@@ -74,6 +123,6 @@ const estilos = StyleSheet.create({
     color: colores.textoAtenuado,
   },
   horaPropia: {
-    color: 'rgba(22, 16, 43, 0.65)',
+    color: 'rgba(255, 255, 255, 0.8)',
   },
 });
