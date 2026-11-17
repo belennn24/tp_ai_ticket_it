@@ -34,6 +34,13 @@ export const crearEventoSchema = z.object({
     message: 'Debe especificar los tipos de entrada como un arreglo.'
   }).min(1, 'Debe incluir al menos un tipo de entrada.'),
   multimedia: z.array(z.string().trim()).optional().default([]),
+  ubicacion: z.object({
+    nombre: z.string().trim().min(1),
+    tipo: z.string().trim().min(1).optional().default('lugar'),
+    direccion: z.string().trim().optional().default(''),
+    latitud: z.number(),
+    longitud: z.number()
+  }).optional().nullable(),
   organizadorId: z.union([
     z.string().trim().min(1),
     z.number().int().positive()

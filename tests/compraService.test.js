@@ -683,4 +683,65 @@ describe('CompraService (Pruebas Unitarias)', () => {
         .rejects.toThrow(NotFoundError);
     });
   });
+
+  describe('Límite de 5 entradas por persona (create)', () => {
+    it('debe rechazar una compra de más de 5 entradas', async () => {
+      await expect(service.create({
+        eventoId: 'ev-1',
+        tipoEntradaId: 'te-1',
+        cantidad: 6,
+        compradorId: 'usr-1'
+      })).rejects.toThrow(ValidationError);
+    });
+
+    it('debe rechazar si la suma de compras activas previas y la nueva supera 5 entradas para el mismo evento', async () => {
+      const evento = new Evento({
+        id: 'ev-limite',
+        nombre: 'Concierto',
+        fecha: new Date('2027-01-01T20:00:00Z'),
+        tiposEntrada: [new TipoEntrada({ id: 'te-1', nombre: 'General', precio: 1000, cupo: 20 })]
+      });
+      await eventoRepo.save(evento);
+
+      await service.create({
+        eventoId: 'ev-limite',
+        tipoEntradaId: 'te-1',
+        cantidad: 3,
+        compradorId: 'usr-limite'
+      });
+
+      await expect(service.create({
+        eventoId: 'ev-limite',
+        tipoEntradaId: 'te-1',
+        cantidad: 3,
+        compradorId: 'usr-limite'
+      })).rejects.toThrow(ConflictError);
+    });
+
+    it('debe permitir comprar hasta 5 entradas si una compra previa fue cancelada', async () => {
+      const evento = new Evento({
+        id: 'ev-cancel-limite',
+        nombre: 'Festival',
+        fecha: new Date('2027-01-01T20:00:00Z'),
+        tiposEntrada: [new TipoEntrada({ id: 'te-1', nombre: 'General', precio: 1000, cupo: 20 })]
+      });
+      await eventoRepo.save(evento);
+
+      const previa = await service.create({
+        eventoId: 'ev-cancel-limite',
+        tipoEntradaId: 'te-1',
+        cantidad: 4,
+        compradorId: 'usr-cancel'
+      });
+      await service.cancelar(previa.id, { usuarioActual: { id: 'usr-cancel', rol: 'comprador' } });
+
+      const nueva = await service.create({
+        eventoId: 'ev-cancel-limite',
+        tipoEntradaId: 'te-1',
+        cantidad: 5,
+        compradorId: 'usr-cancel'
+      });
+      expect(nueva.cantidad).toBe(5);
+    });
+  });
 });

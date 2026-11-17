@@ -147,6 +147,7 @@ export class EventoService {
         fecha,
         tiposEntrada = [],
         multimedia = [],
+        ubicacion = null,
         organizadorId,
         ...resto
     } = {}) => {
@@ -172,6 +173,7 @@ export class EventoService {
             fecha: new Date(fecha),
             tiposEntrada: tiposEntradaInstancias,
             multimedia: Array.isArray(multimedia) ? multimedia : [],
+            ubicacion: ubicacion || null,
             organizador: organizadorId
         });
 

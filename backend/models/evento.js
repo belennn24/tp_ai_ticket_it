@@ -12,6 +12,7 @@ export class Evento {
         fecha = null,
         tiposEntrada = [],
         multimedia = [],
+        ubicacion = null,
         organizador = null
     } = {}) {
         this.validar({ nombre, fecha });
@@ -23,6 +24,7 @@ export class Evento {
         this.fecha = fecha ? new Date(fecha) : null;
         this.tiposEntrada = Array.isArray(tiposEntrada) ? tiposEntrada : [];
         this.multimedia = Array.isArray(multimedia) ? multimedia : [];
+        this.ubicacion = ubicacion || null;
         this.organizador = organizador;
 
         // Estados iniciales y trazabilidad
@@ -42,7 +44,7 @@ export class Evento {
         }
     }
 
-    modificar({ nombre, descripcion, categoria, fecha, tiposEntrada, multimedia } = {}) {
+    modificar({ nombre, descripcion, categoria, fecha, tiposEntrada, multimedia, ubicacion } = {}) {
         const nuevoNombre = nombre ?? this.nombre;
         const nuevaFecha = fecha !== undefined ? new Date(fecha) : this.fecha;
 
@@ -56,6 +58,9 @@ export class Evento {
         }
         if (Array.isArray(multimedia)) {
             this.multimedia = multimedia;
+        }
+        if (ubicacion !== undefined) {
+            this.ubicacion = ubicacion;
         }
         this.fechaModificacion = new Date();
     }

@@ -88,6 +88,21 @@ describe('CompraValidation (Declarativo)', () => {
             expect(result.error.issues[0].message).toContain('entero');
         });
 
+        test('permite hasta 5 entradas y falla si supera 5', () => {
+            const resultCinco = crearCompraSchema.safeParse({
+                ...validCompraData,
+                cantidad: 5
+            });
+            expect(resultCinco.success).toBe(true);
+
+            const resultSeis = crearCompraSchema.safeParse({
+                ...validCompraData,
+                cantidad: 6
+            });
+            expect(resultSeis.success).toBe(false);
+            expect(resultSeis.error.issues[0].message).toContain('5 entradas por persona');
+        });
+
         test('falla si el total es un número negativo', () => {
             const result = crearCompraSchema.safeParse({
                 ...validCompraData,

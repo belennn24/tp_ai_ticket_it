@@ -14,6 +14,7 @@ import {
   ConflictError,
   ForbiddenError
 } from '../errors/appError.js';
+import { MAX_ENTRADAS_POR_PERSONA } from '../validations/compraValidation.js';
 
 export class CompraService {
   constructor({
@@ -214,14 +215,33 @@ create = async ({
   }
 
   const cantidadNum = Number(cantidad);
-  if (isNaN(cantidadNum) || cantidadNum <= 0) {
+  if (!Number.isInteger(cantidadNum) || cantidadNum <= 0) {
     throw new ValidationError('La cantidad de entradas debe ser un número entero positivo.');
+  }
+  if (cantidadNum > MAX_ENTRADAS_POR_PERSONA) {
+    throw new ValidationError(`Solo se pueden comprar hasta ${MAX_ENTRADAS_POR_PERSONA} entradas por persona.`);
   }
 
   const evento = await this.eventoRepository.findById(eventoId);
   if (!evento) throw new NotFoundError('El evento solicitado no existe.');
   if (evento.yaOcurrio(this.obtenerFechaActual())) {
     throw new ConflictError('No se pueden comprar entradas para un evento que ya ocurrió.');
+  }
+
+  if (compradorId && typeof this.compraRepository?.findAll === 'function') {
+    const comprasPrevias = await this.compraRepository.findAll({ compradorId, eventoId });
+    const entradasYaCompradas = (comprasPrevias || [])
+      .filter(c => c.estado !== estadoCompra.CANCELADA)
+      .reduce((sum, c) => sum + Number(c.cantidad || 0), 0);
+
+    if (entradasYaCompradas + cantidadNum > MAX_ENTRADAS_POR_PERSONA) {
+      const restantes = Math.max(0, MAX_ENTRADAS_POR_PERSONA - entradasYaCompradas);
+      throw new ConflictError(
+        restantes > 0
+          ? `Solo se permiten hasta ${MAX_ENTRADAS_POR_PERSONA} entradas por persona para este evento (podés comprar ${restantes} más).`
+          : `Ya alcanzaste el límite de ${MAX_ENTRADAS_POR_PERSONA} entradas por persona para este evento.`
+      );
+    }
   }
   const tipoEntrada = evento.obtenerTipoEntrada(tipoEntradaId);
   const nuevaCompra = new Compra({
