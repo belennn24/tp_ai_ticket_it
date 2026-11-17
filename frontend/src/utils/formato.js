@@ -56,3 +56,23 @@ export function nombreCompleto(usuario) {
 export function idDe(entidad) {
   return entidad && typeof entidad === 'object' ? entidad.id : entidad;
 }
+
+// Código corto y legible de una compra, derivado de su id real (no es un dato inventado).
+export function codigoCompra(compra) {
+  return compra?.id ? `TCK-${String(compra.id).slice(-6).toUpperCase()}` : null;
+}
+
+// Descripción completa de una compra para lectores de pantalla, que leen el
+// ticket como un único elemento en lugar de saltar por cada texto suelto.
+export function resumenAccesibleCompra(compra, { faltan } = {}) {
+  const partes = [
+    `Entrada para ${compra?.evento?.nombre ?? 'evento'}`,
+    formatearFecha(compra?.evento?.fecha),
+    `Estado: ${compra?.estado ? compra.estado.toLowerCase() : 'sin estado'}`,
+    faltan,
+    `${compra?.cantidad} ${compra?.cantidad === 1 ? 'entrada' : 'entradas'} ${compra?.tipoEntrada?.nombre ?? ''}`.trim(),
+    `Total ${formatearPrecio(compra?.total)}`,
+    codigoCompra(compra) ? `Código ${codigoCompra(compra).split('').join(' ')}` : null,
+  ];
+  return partes.filter(Boolean).join('. ');
+}

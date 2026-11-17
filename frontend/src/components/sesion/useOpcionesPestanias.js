@@ -2,7 +2,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colores, fuentes, tamanios } from '@/theme';
 
-const ALTO_BARRA = 62;
+const ALTO_BARRA = 66;
 
 // Estilo común de la barra de pestañas inferior para ambos roles.
 // El alto se calcula a mano para que entren el ícono y la etiqueta de 12 px,

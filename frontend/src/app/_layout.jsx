@@ -12,7 +12,7 @@ SplashScreen.preventAutoHideAsync();
 
 const opcionesDetalle = {
   headerShown: true,
-  headerStyle: { backgroundColor: colores.fondo },
+  headerStyle: { backgroundColor: colores.encabezado },
   headerTintColor: colores.texto,
   headerTitleStyle: { fontFamily: fuentes.bold },
   headerShadowVisible: false,

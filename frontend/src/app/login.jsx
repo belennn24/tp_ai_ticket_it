@@ -1,10 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Boton, Input } from '@/components/ui';
+import { Boton, FondoConBrillo, Input } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
-import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
+import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
 
 // Usuarios que carga el seed del backend. La contraseña no se guarda en el
 // código: si EXPO_PUBLIC_SEED_PASSWORD está definida en .env.local, los botones
@@ -52,73 +54,82 @@ export default function Login() {
   const ocupado = enCurso !== null;
 
   return (
-    <SafeAreaView style={estilos.contenedor}>
-      <KeyboardAvoidingView style={estilos.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled">
-          <View style={estilos.encabezado}>
-            <Text style={estilos.marca}>AI Ticket It</Text>
-            <Text style={estilos.bajada}>Tus entradas, en un solo lugar.</Text>
-          </View>
+    <FondoConBrillo>
+      <SafeAreaView style={estilos.contenedor}>
+        <KeyboardAvoidingView style={estilos.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView contentContainerStyle={estilos.contenido} keyboardShouldPersistTaps="handled">
+            <View style={estilos.encabezado}>
+              <LinearGradient colors={degrades.primario} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={estilos.logo}>
+                <Ionicons name="ticket" size={32} color={colores.sobreVioleta} />
+              </LinearGradient>
+              <Text style={estilos.marca} accessibilityRole="header">
+                AI Ticket It
+              </Text>
+              <Text style={estilos.bajada}>Tus entradas, en un solo lugar.</Text>
+            </View>
 
-          <View style={estilos.tarjeta}>
-            {sesionVencida ? <Text style={estilos.aviso}>Tu sesión venció. Volvé a ingresar.</Text> : null}
+            <View style={estilos.tarjeta}>
+              {sesionVencida ? <Text style={estilos.aviso}>Tu sesión venció. Volvé a ingresar.</Text> : null}
 
-            <Input
-              etiqueta="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="nombre@ejemplo.com"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              textContentType="emailAddress"
-              returnKeyType="next"
-              editable={!ocupado}
-              onSubmitEditing={() => campoPassword.current?.focus()}
-            />
-            <Input
-              ref={campoPassword}
-              etiqueta="Contraseña"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Tu contraseña"
-              secureTextEntry
-              textContentType="password"
-              returnKeyType="go"
-              editable={!ocupado}
-              onSubmitEditing={() => ingresar(email, password, 'formulario')}
-            />
-
-            {error ? <Text style={estilos.error}>{error}</Text> : null}
-
-            <Boton
-              titulo="Ingresar"
-              variante="degradeVioleta"
-              cargando={enCurso === 'formulario'}
-              deshabilitado={ocupado}
-              onPress={() => ingresar(email, password, 'formulario')}
-            />
-          </View>
-
-          <View style={estilos.demo}>
-            <Text style={estilos.tituloDemo}>ACCESO RÁPIDO (DEMO)</Text>
-            {USUARIOS_DEMO.map((usuarioDemo) => (
-              <Boton
-                key={usuarioDemo.rol}
-                titulo={usuarioDemo.etiqueta}
-                variante="secundario"
-                cargando={enCurso === usuarioDemo.rol}
-                deshabilitado={ocupado}
-                onPress={() => accesoRapido(usuarioDemo)}
+              <Input
+                etiqueta="Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="nombre@ejemplo.com"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                returnKeyType="next"
+                editable={!ocupado}
+                onSubmitEditing={() => campoPassword.current?.focus()}
               />
-            ))}
-            {!PASSWORD_DEMO ? (
-              <Text style={estilos.ayudaDemo}>Completan el email; la contraseña la escribís vos.</Text>
-            ) : null}
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              <Input
+                ref={campoPassword}
+                etiqueta="Contraseña"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Tu contraseña"
+                secureTextEntry
+                textContentType="password"
+                returnKeyType="go"
+                editable={!ocupado}
+                onSubmitEditing={() => ingresar(email, password, 'formulario')}
+              />
+
+              {error ? (
+                <Text style={estilos.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
+                  {error}
+                </Text>
+              ) : null}
+
+              <Boton
+                titulo="Ingresar"
+                variante="degradeVioleta"
+                cargando={enCurso === 'formulario'}
+                deshabilitado={ocupado}
+                onPress={() => ingresar(email, password, 'formulario')}
+              />
+            </View>
+
+            <View style={estilos.demo}>
+              <Text style={estilos.tituloDemo}>ACCESO RÁPIDO (DEMO)</Text>
+              {USUARIOS_DEMO.map((usuarioDemo) => (
+                <Boton
+                  key={usuarioDemo.rol}
+                  titulo={usuarioDemo.etiqueta}
+                  variante="secundario"
+                  cargando={enCurso === usuarioDemo.rol}
+                  deshabilitado={ocupado}
+                  onPress={() => accesoRapido(usuarioDemo)}
+                />
+              ))}
+              {!PASSWORD_DEMO ? <Text style={estilos.ayudaDemo}>Completan el email; la contraseña la escribís vos.</Text> : null}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </FondoConBrillo>
   );
 }
 
@@ -128,7 +139,14 @@ const estilos = StyleSheet.create({
   },
   contenedor: {
     flex: 1,
-    backgroundColor: colores.fondo,
+  },
+  logo: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: espacios.sm,
   },
   contenido: {
     flexGrow: 1,
@@ -142,7 +160,7 @@ const estilos = StyleSheet.create({
   marca: {
     fontFamily: fuentes.bold,
     fontSize: tamanios.xxl,
-    color: colores.primario,
+    color: colores.texto,
   },
   bajada: {
     fontFamily: fuentes.regular,
@@ -150,7 +168,7 @@ const estilos = StyleSheet.create({
     color: colores.textoSecundario,
   },
   tarjeta: {
-    backgroundColor: colores.tarjeta,
+    backgroundColor: 'rgba(30, 21, 69, 0.85)',
     borderColor: colores.borde,
     borderWidth: 1,
     borderRadius: radios.tarjeta,

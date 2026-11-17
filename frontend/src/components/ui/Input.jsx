@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -26,7 +27,14 @@ export function Input({ etiqueta, error, style, ref, ...propsTextInput }) {
         }}
         style={[estilos.campo, enfocado && estilos.campoEnfocado, error && estilos.campoConError, style]}
       />
-      {error ? <Text style={estilos.error}>{error}</Text> : null}
+      {error ? (
+        <View style={estilos.filaError} accessibilityLiveRegion="polite">
+          <Ionicons name="alert-circle" size={16} color={colores.error} />
+          <Text style={estilos.error} accessibilityRole="alert">
+            {error}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -44,18 +52,26 @@ const estilos = StyleSheet.create({
     minHeight: ALTO_TACTIL,
     borderRadius: radios.input,
     borderWidth: 1,
-    borderColor: colores.borde,
+    borderColor: colores.bordeControl,
     backgroundColor: colores.fondoAlt,
     paddingHorizontal: espacios.lg,
     fontFamily: fuentes.regular,
     fontSize: tamanios.md,
     color: colores.texto,
   },
+  // El foco se marca con borde más grueso además del cambio de color.
   campoEnfocado: {
     borderColor: colores.primario,
+    borderWidth: 2,
   },
   campoConError: {
     borderColor: colores.error,
+    borderWidth: 2,
+  },
+  filaError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espacios.xs,
   },
   error: {
     fontFamily: fuentes.regular,

@@ -41,3 +41,13 @@ Docs: https://docs.expo.dev/eas/index.md
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
 - React Compiler is enabled (`experiments.reactCompiler` in `app.json`). It reads the properties a callback uses while rendering, so a callback that does `algo.id` crashes the screen when `algo` is `null`, even if the callback never runs. Render such code only when the value exists: move it to a child component that receives the value as a non-null prop (see `BarraCompra` in `src/app/eventos/[id].jsx`).
+
+## Visual design and accessibility
+
+- Colors live in `src/theme/colors.js` (`colores`, `degrades`, `estadosCompra`). Never hard-code a new color for text: every text/background pair in the palette was measured to meet WCAG AA (4.5:1 for text, 3:1 for control borders). If you add or change a color, measure its contrast against every surface it can sit on, including both ends of any gradient.
+- Text over photos always sits on `colores.veloFoto` (85 % dark veil) or on a solid surface, never directly on the image.
+- Selected or active states must not rely on color alone: chips show a checkmark, radio items show a filled radio and thicker border, tabs show a filled icon and a pill.
+- Touch targets are at least 44 px (`ALTO_TACTIL` is 48).
+- Decorative elements (glow, barcode bars, ticket perforation, avatar) are hidden from screen readers. Tickets and cards expose one `accessibilityLabel` with the full summary.
+- Error messages use `accessibilityRole="alert"` and `accessibilityLiveRegion="polite"`.
+

@@ -5,7 +5,9 @@ import { useCallback, useRef, useState } from 'react';
 // - Se ejecuta al entrar a la pantalla y cada vez que vuelve a estar en foco,
 //   así los datos se actualizan al regresar (por ejemplo, después de comprar).
 // - `clave` identifica la consulta: cuando cambia (otro filtro, otro id) se vuelve a pedir.
-// - `recargar()` es para "deslizar para actualizar".
+// - `recargar()` es para "deslizar para actualizar" (muestra el indicador de carga).
+// - `refrescar()` vuelve a pedir en silencio, sin indicador; lo usa el sondeo periódico.
+//   Devuelve true si la consulta salió bien y false si falló.
 export function useConsulta(consulta, clave = '') {
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
@@ -26,9 +28,11 @@ export function useConsulta(consulta, clave = '') {
       setDatos(resultado);
       setError(null);
       yaCargo.current = true;
+      return true;
     } catch (e) {
-      if (pedido !== ultimoPedido.current) return;
+      if (pedido !== ultimoPedido.current) return false;
       setError(e.message);
+      return false;
     } finally {
       if (pedido === ultimoPedido.current) {
         setCargando(false);
@@ -43,7 +47,7 @@ export function useConsulta(consulta, clave = '') {
       ejecutar();
       // `clave` no se usa adentro: está para volver a pedir cuando cambia.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ejecutar, clave])
+    }, [ejecutar, clave]),
   );
 
   const recargar = useCallback(() => {
@@ -51,5 +55,7 @@ export function useConsulta(consulta, clave = '') {
     return ejecutar();
   }, [ejecutar]);
 
-  return { datos, error, cargando, recargando, recargar };
+  const refrescar = useCallback(() => ejecutar(), [ejecutar]);
+
+  return { datos, error, cargando, recargando, recargar, refrescar };
 }

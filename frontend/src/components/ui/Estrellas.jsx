@@ -19,7 +19,7 @@ export function Estrellas({ valor = 0, tamanio = 18, onCambiar }) {
       accessibilityRole={onCambiar ? 'adjustable' : 'image'}
       accessibilityLabel={`Puntaje: ${valor} de 5`}>
       {POSICIONES.map((posicion) => {
-        const icono = <Ionicons name={nombreIcono(posicion, valor)} size={tamanio} color={colores.primario} />;
+        const icono = <Ionicons name={nombreIcono(posicion, valor)} size={tamanio} color={colores.dorado} />;
         if (!onCambiar) {
           return <View key={posicion}>{icono}</View>;
         }
