@@ -101,11 +101,8 @@ export class ReseniaService {
         }
 
         if (this.usuarioRepository) {
-            const usuarios = await this.usuarioRepository.findAll();
-            if (usuarios.length > 0) {
-                const existe = await this.usuarioRepository.findById(organizadorId);
-                if (!existe) throw new NotFoundError('El organizador solicitado no existe.');
-            }
+            const existe = await this.usuarioRepository.findById(organizadorId);
+            if (!existe) throw new NotFoundError('El organizador solicitado no existe.');
         }
 
         const resenias = await this.reseniaRepository.findByOrganizadorId(organizadorId);

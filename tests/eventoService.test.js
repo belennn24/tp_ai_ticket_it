@@ -3,27 +3,32 @@ import { EventoService } from '../backend/services/eventoService.js';
 import { Evento } from '../backend/models/evento.js';
 import { TipoEntrada } from '../backend/models/tipoEntrada.js';
 import { Categoria } from '../backend/models/categoria.js';
+import { Usuario } from '../backend/models/usuario.js';
 import { Compra } from '../backend/models/compra.js';
 import { EventoRepository } from '../backend/repositories/eventoRepository.js';
 import { CategoriaRepository } from '../backend/repositories/categoriaRepository.js';
 import { CompraRepository } from '../backend/repositories/compraRepository.js';
+import { UsuarioRepository } from '../backend/repositories/usuarioRepository.js';
 import { NotFoundError, ForbiddenError, ValidationError } from '../backend/errors/appError.js';
 
 describe('EventoService (Pruebas Unitarias)', () => {
   let eventoRepo;
   let categoriaRepo;
   let compraRepo;
+  let usuarioRepo;
   let service;
 
   beforeEach(() => {
     eventoRepo = new EventoRepository();
     categoriaRepo = new CategoriaRepository();
     compraRepo = new CompraRepository();
+    usuarioRepo = new UsuarioRepository();
 
     service = new EventoService({
       eventoRepository: eventoRepo,
       categoriaRepository: categoriaRepo,
-      compraRepository: compraRepo
+      compraRepository: compraRepo,
+      usuarioRepository: usuarioRepo
     });
   });
 
@@ -146,8 +151,9 @@ describe('EventoService (Pruebas Unitarias)', () => {
   });
 
   describe('Creación de Eventos (create / crearEvento)', () => {
-    it('debe crear un evento exitosamente con sus tipos de entrada instanciados', async () => {
+    it('debe crear un evento exitosamente con sus tipos de entrada instanciados y referencias como objetos', async () => {
       await categoriaRepo.save(new Categoria({ id: 'cat-musica', nombre: 'Música' }));
+      await usuarioRepo.save(new Usuario({ id: 'org-1', nombre: 'Carlos Productor', rol: 'organizador' }));
 
       const nuevo = await service.create({
         nombre: 'Festival de Verano',
@@ -164,16 +170,34 @@ describe('EventoService (Pruebas Unitarias)', () => {
       expect(nuevo).toBeDefined();
       expect(nuevo.id).toBeDefined();
       expect(nuevo.nombre).toBe('Festival de Verano');
+      expect(nuevo.categoria).toBeInstanceOf(Categoria);
+      expect(nuevo.categoria.id).toBe('cat-musica');
+      expect(nuevo.organizador).toBeInstanceOf(Usuario);
+      expect(nuevo.organizador.id).toBe('org-1');
       expect(nuevo.tiposEntrada[0]).toBeInstanceOf(TipoEntrada);
       expect(nuevo.tiposEntrada[0].cupo).toBe(100);
     });
 
     it('debe lanzar NotFoundError (404) si la categoría indicada no existe', async () => {
       await categoriaRepo.save(new Categoria({ id: 'cat-existente', nombre: 'Cultura' }));
+      await usuarioRepo.save(new Usuario({ id: 'org-1', nombre: 'Carlos', rol: 'organizador' }));
 
       await expect(service.create({
         nombre: 'Evento',
         categoriaId: 'cat-inexistente',
+        organizadorId: 'org-1',
+        fecha: new Date(),
+        tiposEntrada: [{ nombre: 'General', precio: 100, cupo: 10 }]
+      })).rejects.toThrow(NotFoundError);
+    });
+
+    it('debe lanzar NotFoundError (404) si el organizador no existe', async () => {
+      await categoriaRepo.save(new Categoria({ id: 'cat-musica', nombre: 'Música' }));
+
+      await expect(service.create({
+        nombre: 'Evento',
+        categoriaId: 'cat-musica',
+        organizadorId: 'org-fantasma',
         fecha: new Date(),
         tiposEntrada: [{ nombre: 'General', precio: 100, cupo: 10 }]
       })).rejects.toThrow(NotFoundError);

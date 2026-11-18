@@ -544,6 +544,7 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     mensaje: '¿A qué hora habilitan el acceso para Campo General?',
     enviado: new Date(ahora.getTime() - 2 * 60 * 60 * 1000)
   });
+  msg1.compra = 'cmp-activa-1';
 
   const msg2 = new Mensaje({
     id: 'msg-seed-2',
@@ -551,6 +552,7 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     mensaje: 'Hola Juan! Las puertas abren a las 18:00 hs, dos horas antes del inicio del show principal.',
     enviado: new Date(ahora.getTime() - 1 * 60 * 60 * 1000)
   });
+  msg2.compra = 'cmp-activa-1';
 
   await mensajeRepository.save(msg1);
   await mensajeRepository.save(msg2);

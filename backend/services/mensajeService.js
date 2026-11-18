@@ -38,12 +38,7 @@ export class MensajeService {
         const compra = await this.buscarCompraOError(compraId);
         this.validarParticipante(compra, usuarioActual);
 
-        const mensajesRepo = await this.mensajeRepository.findByCompraId(compraId);
-        if (mensajesRepo.length > 0) {
-            return mensajesRepo;
-        }
-
-        return (compra.mensajes || []).sort(
+        return [...(compra.mensajes || [])].sort(
             (a, b) => new Date(a.enviado) - new Date(b.enviado)
         );
     };

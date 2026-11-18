@@ -137,30 +137,25 @@ export class EventoService {
         organizadorId,
         ...resto
     } = {}) => {
-        if (this.categoriaRepository && categoriaId) {
-            const categoriasRegistradas = await this.categoriaRepository.findAll();
-            if (categoriasRegistradas.length > 0) {
-                const categoria = await this.categoriaRepository.findById(categoriaId);
-                if (!categoria) throw new NotFoundError('La categoría seleccionada no existe.');
-            }
-        }
-
-        const tiposEntradaInstancias = this.armarTiposEntrada(tiposEntrada);
+        const categoria = await this.categoriaRepository.findById(categoriaId);
+        if (!categoria) throw new NotFoundError('La categoría seleccionada no existe.');
 
         if (!organizadorId) {
             throw new ValidationError('El organizadorId es obligatorio.');
         }
+        const organizador = await this.usuarioRepository.findById(organizadorId);
+        if (!organizador) throw new NotFoundError('El organizador no existe.');
 
         const nuevoEvento = new Evento({
             id: resto.id,
             nombre,
             descripcion,
-            categoria: categoriaId,
+            categoria,
             fecha: new Date(fecha),
-            tiposEntrada: tiposEntradaInstancias,
+            tiposEntrada: this.armarTiposEntrada(tiposEntrada),
             multimedia: Array.isArray(multimedia) ? multimedia : [],
             ubicacion: ubicacion || null,
-            organizador: organizadorId
+            organizador
         });
 
         return await this.eventoRepository.save(nuevoEvento);
