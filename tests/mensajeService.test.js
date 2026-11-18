@@ -14,7 +14,7 @@ describe('MensajeService (Pruebas Unitarias)', () => {
   beforeEach(() => {
     mensajeRepo = new MensajeRepository();
     compraRepo = new CompraRepository();
-    service = new MensajeService(mensajeRepo, compraRepo);
+    service = new MensajeService({ mensajeRepository: mensajeRepo, compraRepository: compraRepo });
   });
 
   describe('Chat de la compra', () => {

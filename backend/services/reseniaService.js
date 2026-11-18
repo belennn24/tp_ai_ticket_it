@@ -14,30 +14,16 @@ import {
 } from '../errors/appError.js';
 
 export class ReseniaService {
-    constructor(
-        reseniaRepoOrOptions = defaultReseniaRepository,
-        compraRepo = defaultCompraRepository,
-        eventoRepo = defaultEventoRepository,
-        usuarioRepo = defaultUsuarioRepository
-    ) {
-        if (
-            reseniaRepoOrOptions &&
-            typeof reseniaRepoOrOptions === 'object' &&
-            ('reseniaRepository' in reseniaRepoOrOptions ||
-                'compraRepository' in reseniaRepoOrOptions ||
-                'eventoRepository' in reseniaRepoOrOptions ||
-                'usuarioRepository' in reseniaRepoOrOptions)
-        ) {
-            this.reseniaRepository = reseniaRepoOrOptions.reseniaRepository || defaultReseniaRepository;
-            this.compraRepository = reseniaRepoOrOptions.compraRepository || defaultCompraRepository;
-            this.eventoRepository = reseniaRepoOrOptions.eventoRepository || defaultEventoRepository;
-            this.usuarioRepository = reseniaRepoOrOptions.usuarioRepository || defaultUsuarioRepository;
-        } else {
-            this.reseniaRepository = reseniaRepoOrOptions || defaultReseniaRepository;
-            this.compraRepository = compraRepo || defaultCompraRepository;
-            this.eventoRepository = eventoRepo || defaultEventoRepository;
-            this.usuarioRepository = usuarioRepo || defaultUsuarioRepository;
-        }
+    constructor({
+        reseniaRepository = defaultReseniaRepository,
+        compraRepository = defaultCompraRepository,
+        eventoRepository = defaultEventoRepository,
+        usuarioRepository = defaultUsuarioRepository
+    } = {}) {
+        this.reseniaRepository = reseniaRepository;
+        this.compraRepository = compraRepository;
+        this.eventoRepository = eventoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     extraerId = extraerId;

@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { Compra } from "../models/compra.js";
 
 export const idSchema = z.union([
     z.string().trim().min(1, 'El ID no puede estar vacío.'),
     z.number().int().positive('El ID debe ser un número válido.')
 ], { message: 'El ID es obligatorio y debe ser válido.' });
 
-export const MAX_ENTRADAS_POR_PERSONA = 5;
+export const MAX_ENTRADAS_POR_PERSONA = Compra.MAX_POR_PERSONA;
 
 export const cantidadSchema = z.coerce.number({ message: 'La cantidad debe ser un número válido.' })
     .int('La cantidad debe ser un número entero.')

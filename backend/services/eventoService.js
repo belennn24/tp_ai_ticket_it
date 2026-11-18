@@ -12,30 +12,16 @@ import {
 } from '../errors/appError.js';
 
 export class EventoService {
-    constructor(
-        eventoRepoOrOptions = defaultEventoRepository,
-        categoriaRepo = defaultCategoriaRepository,
-        compraRepo = defaultCompraRepository,
-        usuarioRepo = defaultUsuarioRepository
-    ) {
-        if (
-            eventoRepoOrOptions &&
-            typeof eventoRepoOrOptions === 'object' &&
-            ('eventoRepository' in eventoRepoOrOptions ||
-                'categoriaRepository' in eventoRepoOrOptions ||
-                'compraRepository' in eventoRepoOrOptions ||
-                'usuarioRepository' in eventoRepoOrOptions)
-        ) {
-            this.eventoRepository = eventoRepoOrOptions.eventoRepository || defaultEventoRepository;
-            this.categoriaRepository = eventoRepoOrOptions.categoriaRepository || defaultCategoriaRepository;
-            this.compraRepository = eventoRepoOrOptions.compraRepository || defaultCompraRepository;
-            this.usuarioRepository = eventoRepoOrOptions.usuarioRepository || defaultUsuarioRepository;
-        } else {
-            this.eventoRepository = eventoRepoOrOptions || defaultEventoRepository;
-            this.categoriaRepository = categoriaRepo || defaultCategoriaRepository;
-            this.compraRepository = compraRepo || defaultCompraRepository;
-            this.usuarioRepository = usuarioRepo || defaultUsuarioRepository;
-        }
+    constructor({
+        eventoRepository = defaultEventoRepository,
+        categoriaRepository = defaultCategoriaRepository,
+        compraRepository = defaultCompraRepository,
+        usuarioRepository = defaultUsuarioRepository
+    } = {}) {
+        this.eventoRepository = eventoRepository;
+        this.categoriaRepository = categoriaRepository;
+        this.compraRepository = compraRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     extraerId = extraerId;
