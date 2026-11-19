@@ -9,28 +9,14 @@ import {
 } from '../errors/appError.js';
 
 export class MensajeService {
-    constructor(
-        mensajeRepoOrOptions = defaultMensajeRepository,
-        compraRepo = defaultCompraRepository,
+    constructor({
+        mensajeRepository = defaultMensajeRepository,
+        compraRepository = defaultCompraRepository,
         fechaActualProvider = () => new Date()
-    ) {
-        if (
-            mensajeRepoOrOptions &&
-            typeof mensajeRepoOrOptions === 'object' &&
-            ('mensajeRepository' in mensajeRepoOrOptions ||
-             'compraRepository' in mensajeRepoOrOptions ||
-             'fechaActualProvider' in mensajeRepoOrOptions)
-        ) {
-            this.mensajeRepository = mensajeRepoOrOptions.mensajeRepository || defaultMensajeRepository;
-            this.compraRepository = mensajeRepoOrOptions.compraRepository || defaultCompraRepository;
-            this.fechaActualProvider = typeof mensajeRepoOrOptions.fechaActualProvider === 'function'
-                ? mensajeRepoOrOptions.fechaActualProvider
-                : (() => new Date());
-        } else {
-            this.mensajeRepository = mensajeRepoOrOptions || defaultMensajeRepository;
-            this.compraRepository = compraRepo || defaultCompraRepository;
-            this.fechaActualProvider = typeof fechaActualProvider === 'function' ? fechaActualProvider : (() => new Date());
-        }
+    } = {}) {
+        this.mensajeRepository = mensajeRepository;
+        this.compraRepository = compraRepository;
+        this.fechaActualProvider = typeof fechaActualProvider === 'function' ? fechaActualProvider : (() => new Date());
     }
 
     obtenerFechaActual = () => new Date(this.fechaActualProvider());
@@ -43,7 +29,6 @@ export class MensajeService {
     };
 
     validarParticipante = (compra, usuarioActual) => {
-        if (!usuarioActual) return;
         if (!compra.puedeAcceder(usuarioActual)) {
             throw new ForbiddenError('Usuario ajeno a la compra.');
         }
@@ -53,12 +38,7 @@ export class MensajeService {
         const compra = await this.buscarCompraOError(compraId);
         this.validarParticipante(compra, usuarioActual);
 
-        const mensajesRepo = await this.mensajeRepository.findByCompraId(compraId);
-        if (mensajesRepo.length > 0) {
-            return mensajesRepo;
-        }
-
-        return (compra.mensajes || []).sort(
+        return [...(compra.mensajes || [])].sort(
             (a, b) => new Date(a.enviado) - new Date(b.enviado)
         );
     };

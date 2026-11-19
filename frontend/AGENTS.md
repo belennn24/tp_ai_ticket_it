@@ -1,0 +1,53 @@
+This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+
+## Expo has changed — do not trust your training data
+
+Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+
+1. Read the major version of the `expo` package in `package.json`.
+2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
+3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+
+## Commands
+
+Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+
+```bash
+npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
+npx expo start              # start the dev server
+npx expo lint               # lint
+npx expo-doctor             # diagnose dependency and config issues
+npx expo install --fix      # fix incompatible package versions
+```
+
+Run lint before declaring any task done.
+
+This project uses JavaScript (`.js` / `.jsx`), not TypeScript.
+
+## Navigation & Routing
+
+- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.jsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
+- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
+- Docs: https://docs.expo.dev/router/introduction.md
+
+## Building with EAS
+
+Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
+Docs: https://docs.expo.dev/eas/index.md
+
+## Rules
+
+- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
+- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
+- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+- React Compiler is enabled (`experiments.reactCompiler` in `app.json`). It reads the properties a callback uses while rendering, so a callback that does `algo.id` crashes the screen when `algo` is `null`, even if the callback never runs. Render such code only when the value exists: move it to a child component that receives the value as a non-null prop (see `BarraCompra` in `src/app/eventos/[id].jsx`).
+
+## Visual design and accessibility
+
+- Colors live in `src/theme/colors.js` (`colores`, `degrades`, `estadosCompra`). Never hard-code a new color for text: every text/background pair in the palette was measured to meet WCAG AA (4.5:1 for text, 3:1 for control borders). If you add or change a color, measure its contrast against every surface it can sit on, including both ends of any gradient.
+- Text over photos always sits on `colores.veloFoto` (85 % dark veil) or on a solid surface, never directly on the image.
+- Selected or active states must not rely on color alone: chips show a checkmark, radio items show a filled radio and thicker border, tabs show a filled icon and a pill.
+- Touch targets are at least 44 px (`ALTO_TACTIL` is 48).
+- Decorative elements (glow, barcode bars, ticket perforation, avatar) are hidden from screen readers. Tickets and cards expose one `accessibilityLabel` with the full summary.
+- Error messages use `accessibilityRole="alert"` and `accessibilityLiveRegion="polite"`.
+

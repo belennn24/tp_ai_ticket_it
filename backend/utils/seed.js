@@ -134,7 +134,9 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     nombre: 'Campo General',
     descripcion: 'Acceso general al predio del festival',
     precio: 15000,
-    cupo: 98 // Originalmente 100, 2 ya adquiridas en la compra activa
+    cupo: 98, // Disponibles: originalmente 100, 2 ya adquiridas en cmp-activa-1
+    cupoTotal: 100,
+    entradasVendidas: 2
   });
 
   const teRockPlatea = new TipoEntrada({
@@ -142,7 +144,9 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     nombre: 'Platea Numerada',
     descripcion: 'Ubicación preferencial con butaca numerada',
     precio: 25000,
-    cupo: 40
+    cupo: 40, // Disponibles: 1 ya adquirida en cmp-activa-2
+    cupoTotal: 41,
+    entradasVendidas: 1
   });
 
   const teRockVip = new TipoEntrada({
@@ -174,14 +178,126 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     nombre: 'Entrada General Histórica',
     descripcion: 'Entrada general al concierto clásico',
     precio: 8000,
-    cupo: 0 // Evento pasado agotado
+    cupo: 0, // Evento pasado agotado: 3 vendidas en cmp-utilizada-1 y cmp-utilizada-2
+    cupoTotal: 3,
+    entradasVendidas: 3
+  });
+
+  const teBtsCampo = new TipoEntrada({
+    id: 'te-bts-campo',
+    nombre: 'Campo Delantero ARMY',
+    descripcion: 'Acceso preferencial de pie frente al escenario principal',
+    precio: 95000,
+    cupo: 200
+  });
+
+  const teBtsPlatea = new TipoEntrada({
+    id: 'te-bts-platea',
+    nombre: 'Platea Preferencial',
+    descripcion: 'Butaca numerada con vista panorámica del estadio',
+    precio: 72000,
+    cupo: 120
+  });
+
+  const teBtsVip = new TipoEntrada({
+    id: 'te-bts-vip',
+    nombre: 'VIP Soundcheck Experience',
+    descripcion: 'Acceso a prueba de sonido, credencial conmemorativa y sector exclusivo',
+    precio: 160000,
+    cupo: 25
+  });
+
+  const tePitbullCampo = new TipoEntrada({
+    id: 'te-pitbull-campo',
+    nombre: 'Campo General',
+    descripcion: 'Acceso general al show Party After Dark',
+    precio: 42000,
+    cupo: 300
+  });
+
+  const tePitbullVip = new TipoEntrada({
+    id: 'te-pitbull-vip',
+    nombre: 'VIP Mr. Worldwide',
+    descripcion: 'Sector preferencial cercano al escenario con barra libre',
+    precio: 85000,
+    cupo: 40
+  });
+
+  const teFestivalGeneral = new TipoEntrada({
+    id: 'te-festival-general',
+    nombre: 'Abono 3 Días General',
+    descripcion: 'Acceso a los 3 días del festival en todos los escenarios',
+    precio: 110000,
+    cupo: 500
+  });
+
+  const teFestivalComfort = new TipoEntrada({
+    id: 'te-festival-comfort',
+    nombre: 'Abono 3 Días Comfort',
+    descripcion: 'Acceso general más zonas de descanso, baños exclusivos y fast lane',
+    precio: 185000,
+    cupo: 80
+  });
+
+  const teNerdearlaComunidad = new TipoEntrada({
+    id: 'te-nerdearla-comunidad',
+    nombre: 'Entrada Comunidad IT',
+    descripcion: 'Acceso presencial a todas las charlas de infraestructura, DevOps y datos',
+    precio: 8500,
+    cupo: 400
+  });
+
+  const teNerdearlaWorkshop = new TipoEntrada({
+    id: 'te-nerdearla-workshop',
+    nombre: 'Pase Workshop + Networking',
+    descripcion: 'Incluye talleres prácticos de Kubernetes, observabilidad y espacio de networking',
+    precio: 24000,
+    cupo: 60
+  });
+
+  const teEkoGeneral = new TipoEntrada({
+    id: 'te-eko-general',
+    nombre: 'Pase General Conferencia',
+    descripcion: 'Acceso a charlas principales, villages de hacking y demostraciones en vivo',
+    precio: 32000,
+    cupo: 250
+  });
+
+  const teEkoTraining = new TipoEntrada({
+    id: 'te-eko-training',
+    nombre: 'Pase Trainings + CTF',
+    descripcion: 'Acceso completo a entrenamientos intensivos de ciberseguridad y Capture The Flag',
+    precio: 68000,
+    cupo: 45
+  });
+
+  const teReactEarly = new TipoEntrada({
+    id: 'te-react-early',
+    nombre: 'Entrada Early Bird',
+    descripcion: 'Acceso a todas las charlas de React, React Native y arquitectura frontend',
+    precio: 14000,
+    cupo: 180
+  });
+
+  const teReactFull = new TipoEntrada({
+    id: 'te-react-full',
+    nombre: 'Entrada Full + Grabaciones',
+    descripcion: 'Acceso presencial completo, almuerzo y grabaciones on-demand',
+    precio: 22000,
+    cupo: 100
   });
 
   // Fechas relativas para pruebas temporales consistentes
   const ahora = new Date();
-  const fechaFutura30Dias = new Date(ahora.getTime() + 30 * 24 * 60 * 60 * 1000);
   const fechaFutura5Dias = new Date(ahora.getTime() + 5 * 24 * 60 * 60 * 1000);
+  const fechaFutura14Dias = new Date(ahora.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const fechaFutura20Dias = new Date(ahora.getTime() + 20 * 24 * 60 * 60 * 1000);
+  const fechaFutura25Dias = new Date(ahora.getTime() + 25 * 24 * 60 * 60 * 1000);
+  const fechaFutura30Dias = new Date(ahora.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const fechaFutura38Dias = new Date(ahora.getTime() + 38 * 24 * 60 * 60 * 1000);
+  const fechaFutura45Dias = new Date(ahora.getTime() + 45 * 24 * 60 * 60 * 1000);
   const fechaFutura60Dias = new Date(ahora.getTime() + 60 * 24 * 60 * 60 * 1000);
+  const fechaFutura75Dias = new Date(ahora.getTime() + 75 * 24 * 60 * 60 * 1000);
   const fechaPasada15Dias = new Date(ahora.getTime() - 15 * 24 * 60 * 60 * 1000);
 
   // 4. Eventos
@@ -192,7 +308,18 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     categoria: categorias[0], // Música
     fecha: fechaFutura30Dias,
     tiposEntrada: [teRockGeneral, teRockPlatea, teRockVip],
-    multimedia: ['https://images.unsplash.com/photo-1470225620780-dba8ba36b745'],
+    multimedia: [
+      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745',
+      'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee',
+      'https://images.unsplash.com/photo-1506157786151-b8491531f063'
+    ],
+    ubicacion: {
+      nombre: 'Estadio José Amalfitani',
+      tipo: 'estadio',
+      direccion: 'Av. Juan B. Justo 9200, CABA',
+      latitud: -34.6354,
+      longitud: -58.5207
+    },
     organizador: usuarios[0] // Carlos Productor
   });
 
@@ -203,7 +330,17 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     categoria: categorias[0], // Música
     fecha: fechaFutura5Dias,
     tiposEntrada: [teJazzMesa],
-    multimedia: ['https://images.unsplash.com/photo-1511192336575-5a79af67a629'],
+    multimedia: [
+      'https://images.unsplash.com/photo-1511192336575-5a79af67a629',
+      'https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f'
+    ],
+    ubicacion: {
+      nombre: 'Club de Jazz San Telmo',
+      tipo: 'club',
+      direccion: 'Estados Unidos 2483, CABA',
+      latitud: -34.6197,
+      longitud: -58.3991
+    },
     organizador: usuarios[0] // Carlos Productor
   });
 
@@ -214,7 +351,17 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     categoria: categorias[3], // Conferencias
     fecha: fechaFutura60Dias,
     tiposEntrada: [teTechPase],
-    multimedia: ['https://images.unsplash.com/photo-1540575467063-178a50c2df87'],
+    multimedia: [
+      'https://images.unsplash.com/photo-1540575467063-178a50c2df87',
+      'https://images.unsplash.com/photo-1591115765373-5207764f72e7'
+    ],
+    ubicacion: {
+      nombre: 'Centro de Convenciones Buenos Aires',
+      tipo: 'centro_convenciones',
+      direccion: 'Av. Pres. Figueroa Alcorta 2099, CABA',
+      latitud: -34.5844,
+      longitud: -58.3909
+    },
     organizador: usuarios[1] // Ana Festivales
   });
 
@@ -225,11 +372,160 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     categoria: categorias[0], // Música
     fecha: fechaPasada15Dias,
     tiposEntrada: [teClasicoGeneral],
-    multimedia: [],
+    multimedia: [
+      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819',
+      'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec'
+    ],
+    ubicacion: {
+      nombre: 'Teatro Ópera Orbis',
+      tipo: 'teatro',
+      direccion: 'Av. Corrientes 860, CABA',
+      latitud: -34.6037,
+      longitud: -58.3791
+    },
     organizador: usuarios[0] // Carlos Productor
   });
 
-  const eventos = [eventoRock, eventoJazz, eventoTech, eventoClasicoPasado];
+  const eventoBts = new Evento({
+    id: 'evt-bts-tour-5',
+    nombre: 'BTS World Tour: Buenos Aires',
+    descripcion: 'El regreso esperado de BTS con producción completa de estadio, coreografías y repertorio completo.',
+    categoria: categorias[0], // Música y Recitales
+    fecha: fechaFutura45Dias,
+    tiposEntrada: [teBtsCampo, teBtsPlatea, teBtsVip],
+    multimedia: [
+      'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4',
+      'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14',
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f'
+    ],
+    ubicacion: {
+      nombre: 'Estadio Mâs Monumental',
+      tipo: 'estadio',
+      direccion: 'Av. Pres. Figueroa Alcorta 7597, CABA',
+      latitud: -34.5453,
+      longitud: -58.4498
+    },
+    organizador: usuarios[1] // Ana Festivales
+  });
+
+  const eventoPitbull = new Evento({
+    id: 'evt-pitbull-live-6',
+    nombre: 'Pitbull — Party After Dark Tour',
+    descripcion: 'Mr. Worldwide llega en vivo con todos sus éxitos internacionales en una noche a puro ritmo.',
+    categoria: categorias[0], // Música y Recitales
+    fecha: fechaFutura20Dias,
+    tiposEntrada: [tePitbullCampo, tePitbullVip],
+    multimedia: [
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30',
+      'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7'
+    ],
+    ubicacion: {
+      nombre: 'Movistar Arena',
+      tipo: 'arena',
+      direccion: 'Humboldt 450, Villa Crespo, CABA',
+      latitud: -34.5944,
+      longitud: -58.4477
+    },
+    organizador: usuarios[0] // Carlos Productor
+  });
+
+  const eventoFestival = new Evento({
+    id: 'evt-primavera-fest-7',
+    nombre: 'Primavera Sound & Indie Festival',
+    descripcion: 'Tres jornadas con más de 40 artistas internacionales y locales, escenarios al aire libre y gastronomía.',
+    categoria: categorias[0], // Música y Recitales
+    fecha: fechaFutura75Dias,
+    tiposEntrada: [teFestivalGeneral, teFestivalComfort],
+    multimedia: [
+      'https://images.unsplash.com/photo-1459749411175-04bf5292ceea',
+      'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3',
+      'https://images.unsplash.com/photo-1506157786151-b8491531f063'
+    ],
+    ubicacion: {
+      nombre: 'Parque de los Niños (Predio Costanera)',
+      tipo: 'predio',
+      direccion: 'Av. Cantilo y Av. General Paz, CABA',
+      latitud: -34.5322,
+      longitud: -58.4581
+    },
+    organizador: usuarios[1] // Ana Festivales
+  });
+
+  const eventoNerdearla = new Evento({
+    id: 'evt-nerdearla-it-8',
+    nombre: 'Nerdearla 2026: DevOps, Cloud & Sistemas',
+    descripcion: 'Charlas técnicas, talleres prácticos y espacios de comunidad sobre ingeniería de software, SRE y datos.',
+    categoria: categorias[3], // Conferencias y Charlas
+    fecha: fechaFutura14Dias,
+    tiposEntrada: [teNerdearlaComunidad, teNerdearlaWorkshop],
+    multimedia: [
+      'https://images.unsplash.com/photo-1505373877841-8d25f7d46678',
+      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4'
+    ],
+    ubicacion: {
+      nombre: 'Ciudad Cultural Konex',
+      tipo: 'centro_cultural',
+      direccion: 'Sarmiento 3131, Abasto, CABA',
+      latitud: -34.6064,
+      longitud: -58.4106
+    },
+    organizador: usuarios[1] // Ana Festivales
+  });
+
+  const eventoEkoparty = new Evento({
+    id: 'evt-ekoparty-sec-9',
+    nombre: 'Ekoparty Security Conference',
+    descripcion: 'La conferencia líder de ciberseguridad en Latinoamérica: charlas de investigación, AppSec y desafíos CTF.',
+    categoria: categorias[3], // Conferencias y Charlas
+    fecha: fechaFutura38Dias,
+    tiposEntrada: [teEkoGeneral, teEkoTraining],
+    multimedia: [
+      'https://images.unsplash.com/photo-1550751827-4bd374c3f58b',
+      'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5'
+    ],
+    ubicacion: {
+      nombre: 'Centro Costa Salguero',
+      tipo: 'centro_convenciones',
+      direccion: 'Av. Costanera Rafael Obligado 1221, CABA',
+      latitud: -34.5656,
+      longitud: -58.3976
+    },
+    organizador: usuarios[0] // Carlos Productor
+  });
+
+  const eventoReactConf = new Evento({
+    id: 'evt-react-conf-10',
+    nombre: 'React & Mobile Conf Latam',
+    descripcion: 'Conferencia enfocada en desarrollo frontend, React Native, Expo, rendimiento web y diseño de interfaces.',
+    categoria: categorias[3], // Conferencias y Charlas
+    fecha: fechaFutura25Dias,
+    tiposEntrada: [teReactEarly, teReactFull],
+    multimedia: [
+      'https://images.unsplash.com/photo-1515187029135-18ee286d815b',
+      'https://images.unsplash.com/photo-1531482615713-2afd69097998'
+    ],
+    ubicacion: {
+      nombre: 'Teatro Gran Rex',
+      tipo: 'teatro',
+      direccion: 'Av. Corrientes 857, CABA',
+      latitud: -34.6034,
+      longitud: -58.3788
+    },
+    organizador: usuarios[1] // Ana Festivales
+  });
+
+  const eventos = [
+    eventoRock,
+    eventoJazz,
+    eventoTech,
+    eventoClasicoPasado,
+    eventoBts,
+    eventoPitbull,
+    eventoFestival,
+    eventoNerdearla,
+    eventoEkoparty,
+    eventoReactConf
+  ];
   for (const ev of eventos) {
     await eventoRepository.save(ev);
   }
@@ -248,6 +544,7 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     mensaje: '¿A qué hora habilitan el acceso para Campo General?',
     enviado: new Date(ahora.getTime() - 2 * 60 * 60 * 1000)
   });
+  msg1.compra = 'cmp-activa-1';
 
   const msg2 = new Mensaje({
     id: 'msg-seed-2',
@@ -255,6 +552,7 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     mensaje: 'Hola Juan! Las puertas abren a las 18:00 hs, dos horas antes del inicio del show principal.',
     enviado: new Date(ahora.getTime() - 1 * 60 * 60 * 1000)
   });
+  msg2.compra = 'cmp-activa-1';
 
   await mensajeRepository.save(msg1);
   await mensajeRepository.save(msg2);

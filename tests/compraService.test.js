@@ -177,20 +177,21 @@ describe('CompraService (Pruebas Unitarias)', () => {
       });
       const compra = new Compra({
         id: 'compra-10',
+        comprador: 'user-1',
         evento,
         estado: estadoCompra.CONFIRMADA
       });
       await compraRepo.save(compra);
 
-      const encontrada = await service.getById('compra-10');
+      const encontrada = await service.getById('compra-10', { usuarioActual: 'user-1' });
       expect(encontrada.id).toBe('compra-10');
       expect(encontrada.diasFaltantes).toBe(5);
 
-      await expect(service.getById('inexistente')).rejects.toThrow(NotFoundError);
+      await expect(service.getById('inexistente', { usuarioActual: 'user-1' })).rejects.toThrow(NotFoundError);
     });
 
     it('getHistorial debe retornar la lista cronológica de transiciones de estado', async () => {
-      const compra = new Compra({ id: 'compra-1' });
+      const compra = new Compra({ id: 'compra-1', comprador: 'user-1' });
       await compraRepo.save(compra);
 
       await cambioEstadoRepo.save(new CambioEstadoCompra({
@@ -204,23 +205,23 @@ describe('CompraService (Pruebas Unitarias)', () => {
         fechaHora: new Date('2026-11-02T15:00:00Z')
       }));
 
-      const historial = await service.getHistorial('compra-1');
+      const historial = await service.getHistorial('compra-1', { usuarioActual: 'user-1' });
       expect(historial).toHaveLength(2);
       expect(historial[0].estado).toBe(estadoCompra.CONFIRMADA);
       expect(historial[1].estado).toBe(estadoCompra.UTILIZADA);
     });
 
     it('getHistorial debe lanzar NotFoundError si la compra no existe', async () => {
-      await expect(service.getHistorial('no-existe')).rejects.toThrow(NotFoundError);
+      await expect(service.getHistorial('no-existe', { usuarioActual: 'user-1' })).rejects.toThrow(NotFoundError);
     });
   });
 
-  describe('Método auxiliar de validación de existencia (validarExistenciaCompra)', () => {
+  describe('Búsqueda de compra por ID (buscarCompraOError)', () => {
     it('debe retornar la compra cuando existe por su id', async () => {
       const compra = new Compra({ id: 'compra-existente', comprador: 'user-1' });
       await compraRepo.save(compra);
 
-      const encontrada = await service.validarExistenciaCompra('compra-existente');
+      const encontrada = await service.buscarCompraOError('compra-existente');
       expect(encontrada).toBeDefined();
       expect(encontrada.id).toBe('compra-existente');
     });
@@ -229,94 +230,16 @@ describe('CompraService (Pruebas Unitarias)', () => {
       const compra = new Compra({ id: 'compra-obj-id', comprador: 'user-1' });
       await compraRepo.save(compra);
 
-      const encontrada = await service.validarExistenciaCompra({ id: 'compra-obj-id' });
+      const encontrada = await service.buscarCompraOError({ id: 'compra-obj-id' });
       expect(encontrada).toBeDefined();
       expect(encontrada.id).toBe('compra-obj-id');
     });
 
     it('debe lanzar NotFoundError con mensaje "Compra no encontrada." si no existe', async () => {
-      await expect(service.validarExistenciaCompra('id-inexistente'))
+      await expect(service.buscarCompraOError('id-inexistente'))
         .rejects.toThrow(NotFoundError);
-      await expect(service.validarExistenciaCompra('id-inexistente'))
+      await expect(service.buscarCompraOError('id-inexistente'))
         .rejects.toThrow('Compra no encontrada.');
-    });
-
-    it('debe ser invocado por los demás métodos del servicio (getById, getHistorial, cancelar, utilizar, getMensajes, agregarMensaje)', async () => {
-      const spy = jest.spyOn(service, 'validarExistenciaCompra');
-
-      const compra = new Compra({
-        id: 'compra-metodos',
-        comprador: 'user-1',
-        evento: { organizador: 'org-1' },
-        estado: estadoCompra.CONFIRMADA
-      });
-      await compraRepo.save(compra);
-
-      await service.getById('compra-metodos');
-      expect(spy).toHaveBeenCalledWith('compra-metodos');
-
-      await service.getHistorial('compra-metodos');
-      expect(spy).toHaveBeenCalledWith('compra-metodos');
-
-      await service.getMensajes('compra-metodos');
-      expect(spy).toHaveBeenCalledWith('compra-metodos');
-
-      spy.mockRestore();
-    });
-  });
-
-  describe('Método auxiliar de registro de auditoría (registrarCambioEstado)', () => {
-    it('debe crear y persistir un CambioEstadoCompra con datos correctos', async () => {
-      const cambio = await service.registrarCambioEstado(
-        'compra-123',
-        estadoCompra.CONFIRMADA,
-        'user-abc'
-      );
-
-      expect(cambio).toBeDefined();
-      expect(cambio.id).toBeDefined();
-      expect(cambio.compra).toBe('compra-123');
-      expect(cambio.estado).toBe(estadoCompra.CONFIRMADA);
-      expect(cambio.quien).toBe('user-abc');
-      expect(cambio.fechaHora).toEqual(fechaFija);
-
-      const persistidos = await cambioEstadoRepo.findByCompraId('compra-123');
-      expect(persistidos).toHaveLength(1);
-      expect(persistidos[0].id).toBe(cambio.id);
-    });
-
-    it('debe soportar recibir un objeto compra o con propiedades descriptivas', async () => {
-      const compra = new Compra({ id: 'compra-obj-456' });
-      const cambio = await service.registrarCambioEstado(
-        compra,
-        estadoCompra.CANCELADA,
-        'admin-xyz'
-      );
-
-      expect(cambio.compra).toBe('compra-obj-456');
-      expect(cambio.estado).toBe(estadoCompra.CANCELADA);
-      expect(cambio.quien).toBe('admin-xyz');
-    });
-
-    it('debe ser invocado por create, cancelar y utilizar', async () => {
-      const spy = jest.spyOn(service, 'registrarCambioEstado');
-
-      const tipoEntrada = new TipoEntrada({ id: 't-1', precio: 50, cupo: 10 });
-      const evento = new Evento({ id: 'ev-reg', fecha: fechaEventoFuturo, tiposEntrada: [tipoEntrada], organizador: 'org-1' });
-      await eventoRepo.save(evento);
-
-      const nuevaCompra = await service.create({
-        eventoId: 'ev-reg',
-        tipoEntradaId: 't-1',
-        cantidad: 1,
-        compradorId: 'comp-1'
-      });
-      expect(spy).toHaveBeenCalledWith(nuevaCompra.id, estadoCompra.CONFIRMADA, 'comp-1');
-
-      await service.cancelar(nuevaCompra.id, { quien: 'comp-1' });
-      expect(spy).toHaveBeenCalledWith(nuevaCompra.id, estadoCompra.CANCELADA, 'comp-1');
-
-      spy.mockRestore();
     });
   });
 
@@ -327,59 +250,6 @@ describe('CompraService (Pruebas Unitarias)', () => {
       expect(service.extraerId({ id: 789 })).toBe('789');
       expect(service.extraerId(null)).toBe('');
       expect(service.extraerId(undefined)).toBe('');
-    });
-
-    it('validarEventoNoFinalizado debe lanzar ConflictError si el evento ya expiró', async () => {
-      const eventoExpirado = new Evento({ id: 'ev-old', fecha: fechaEventoPasado });
-      await eventoRepo.save(eventoExpirado);
-
-      await expect(
-        service.validarEventoNoFinalizado(eventoExpirado, 'El evento ya finalizó.')
-      ).rejects.toThrow(ConflictError);
-    });
-
-    it('validarEventoNoFinalizado no debe lanzar error si el evento es futuro', async () => {
-      const eventoFuturo = new Evento({ id: 'ev-ok', fecha: fechaEventoFuturo });
-      await eventoRepo.save(eventoFuturo);
-
-      await expect(
-        service.validarEventoNoFinalizado(eventoFuturo)
-      ).resolves.not.toThrow();
-    });
-
-    it('actualizarEstadoYAuditar debe actualizar estado, auditar en CambioEstadoCompra y resetear diasFaltantes', async () => {
-      const compra = new Compra({ id: 'compra-act', estado: estadoCompra.CONFIRMADA });
-      await compraRepo.save(compra);
-
-      const actualizada = await service.actualizarEstadoYAuditar(
-        compra,
-        estadoCompra.UTILIZADA,
-        'organizador-1'
-      );
-
-      expect(actualizada.estado).toBe(estadoCompra.UTILIZADA);
-      expect(actualizada.diasFaltantes).toBeNull();
-
-      const historial = await cambioEstadoRepo.findByCompraId('compra-act');
-      expect(historial).toHaveLength(1);
-      expect(historial[0].estado).toBe(estadoCompra.UTILIZADA);
-      expect(historial[0].quien).toBe('organizador-1');
-    });
-
-    it('restituirCupo debe reintegrar la cantidad de entradas al cupo del evento y del tipo de entrada', async () => {
-      const tipoEntrada = new TipoEntrada({ id: 't-cupo', precio: 100, cupo: 4 });
-      const evento = new Evento({ id: 'ev-cupo', tiposEntrada: [tipoEntrada] });
-      await eventoRepo.save(evento);
-
-      const compra = new Compra({
-        id: 'c-restituir',
-        evento,
-        tipoEntrada,
-        cantidad: 3
-      });
-
-      await service.restituirCupo(compra);
-      expect(tipoEntrada.cupo).toBe(7);
     });
   });
 
@@ -406,7 +276,7 @@ describe('CompraService (Pruebas Unitarias)', () => {
       });
       await compraRepo.save(compra);
 
-      const cancelada = await service.cancelar('compra-1', { motivo: 'Problemas de agenda' });
+      const cancelada = await service.cancelar('compra-1', { motivo: 'Problemas de agenda', usuarioActual: 'user-1' });
 
       expect(cancelada.estado).toBe(estadoCompra.CANCELADA);
       expect(tipoEntrada.cupo).toBe(8); // 5 + 3 restituidos
@@ -419,14 +289,14 @@ describe('CompraService (Pruebas Unitarias)', () => {
 
     it('debe lanzar ConflictError si la compra ya fue cancelada o utilizada', async () => {
       const evento = new Evento({ fecha: fechaEventoFuturo });
-      const compraCancelada = new Compra({ id: 'c-canc', evento, estado: estadoCompra.CANCELADA });
-      const compraUtilizada = new Compra({ id: 'c-util', evento, estado: estadoCompra.UTILIZADA });
+      const compraCancelada = new Compra({ id: 'c-canc', comprador: 'user-1', evento, estado: estadoCompra.CANCELADA });
+      const compraUtilizada = new Compra({ id: 'c-util', comprador: 'user-1', evento, estado: estadoCompra.UTILIZADA });
 
       await compraRepo.save(compraCancelada);
       await compraRepo.save(compraUtilizada);
 
-      await expect(service.cancelar('c-canc')).rejects.toThrow(ConflictError);
-      await expect(service.cancelar('c-util')).rejects.toThrow(ConflictError);
+      await expect(service.cancelar('c-canc', { usuarioActual: 'user-1' })).rejects.toThrow(ConflictError);
+      await expect(service.cancelar('c-util', { usuarioActual: 'user-1' })).rejects.toThrow(ConflictError);
     });
 
     it('debe lanzar ConflictError si el evento ya expiró/finalizó', async () => {
@@ -438,16 +308,17 @@ describe('CompraService (Pruebas Unitarias)', () => {
 
       const compra = new Compra({
         id: 'c-pasada',
+        comprador: 'user-1',
         evento: eventoPasado,
         estado: estadoCompra.CONFIRMADA
       });
       await compraRepo.save(compra);
 
-      await expect(service.cancelar('c-pasada')).rejects.toThrow(ConflictError);
+      await expect(service.cancelar('c-pasada', { usuarioActual: 'user-1' })).rejects.toThrow(ConflictError);
     });
 
     it('debe lanzar NotFoundError si la compra a cancelar no existe', async () => {
-      await expect(service.cancelar('inexistente')).rejects.toThrow(NotFoundError);
+      await expect(service.cancelar('inexistente', { usuarioActual: 'user-1' })).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -455,18 +326,20 @@ describe('CompraService (Pruebas Unitarias)', () => {
     it('debe marcar como UTILIZADA una compra CONFIRMADA para evento no finalizado', async () => {
       const evento = new Evento({
         id: 'ev-1',
+        organizador: 'org-1',
         fecha: fechaEventoFuturo
       });
       await eventoRepo.save(evento);
 
       const compra = new Compra({
         id: 'compra-1',
+        comprador: 'user-1',
         evento,
         estado: estadoCompra.CONFIRMADA
       });
       await compraRepo.save(compra);
 
-      const utilizada = await service.utilizar('compra-1');
+      const utilizada = await service.utilizar('compra-1', { usuarioActual: 'org-1' });
 
       expect(utilizada.estado).toBe(estadoCompra.UTILIZADA);
       expect(utilizada.diasFaltantes).toBeNull();
@@ -474,11 +347,11 @@ describe('CompraService (Pruebas Unitarias)', () => {
       const historial = await cambioEstadoRepo.findByCompraId('compra-1');
       expect(historial).toHaveLength(1);
       expect(historial[0].estado).toBe(estadoCompra.UTILIZADA);
-      expect(historial[0].quien).toBe('ORGANIZADOR');
+      expect(historial[0].quien).toBe('org-1');
     });
 
     it('debe lanzar ConflictError si la compra no está en estado CONFIRMADA', async () => {
-      const evento = new Evento({ fecha: fechaEventoFuturo });
+      const evento = new Evento({ fecha: fechaEventoFuturo, organizador: 'org-1' });
       const compra = new Compra({
         id: 'c-1',
         evento,
@@ -486,12 +359,13 @@ describe('CompraService (Pruebas Unitarias)', () => {
       });
       await compraRepo.save(compra);
 
-      await expect(service.utilizar('c-1')).rejects.toThrow(ConflictError);
+      await expect(service.utilizar('c-1', { usuarioActual: 'org-1' })).rejects.toThrow(ConflictError);
     });
 
     it('debe lanzar ConflictError si el evento ya finalizó', async () => {
       const eventoPasado = new Evento({
         id: 'ev-pasado',
+        organizador: 'org-1',
         fecha: fechaEventoPasado
       });
       await eventoRepo.save(eventoPasado);
@@ -503,11 +377,11 @@ describe('CompraService (Pruebas Unitarias)', () => {
       });
       await compraRepo.save(compra);
 
-      await expect(service.utilizar('c-expirada')).rejects.toThrow(ConflictError);
+      await expect(service.utilizar('c-expirada', { usuarioActual: 'org-1' })).rejects.toThrow(ConflictError);
     });
 
     it('debe lanzar NotFoundError si la compra a utilizar no existe', async () => {
-      await expect(service.utilizar('inexistente')).rejects.toThrow(NotFoundError);
+      await expect(service.utilizar('inexistente', { usuarioActual: 'org-1' })).rejects.toThrow(NotFoundError);
     });
   });
 
@@ -628,7 +502,7 @@ describe('CompraService (Pruebas Unitarias)', () => {
 
       const cancelada = await service.cancelar('compra-con-motivo', {
         motivo: 'Enfermedad y fuerza mayor',
-        quien: 'user-1'
+        usuarioActual: 'user-1'
       });
 
       expect(cancelada.estado).toBe(estadoCompra.CANCELADA);
@@ -647,40 +521,64 @@ describe('CompraService (Pruebas Unitarias)', () => {
     });
   });
 
-  describe('Mensajería / Chat de la compra', () => {
-    it('debe agregar y listar mensajes de la compra', async () => {
-      const compra = new Compra({
-        id: 'compra-chat',
-        comprador: 'user-1',
-        mensajes: []
-      });
-      await compraRepo.save(compra);
-
-      const mensaje = await service.agregarMensaje('compra-chat', {
-        mensaje: '¿Dónde es el acceso?',
-        usuarioId: 'user-1'
-      });
-
-      expect(mensaje.mensaje).toBe('¿Dónde es el acceso?');
-      expect(mensaje.usuario).toBe('user-1');
-
-      const mensajes = await service.getMensajes('compra-chat');
-      expect(mensajes).toHaveLength(1);
-      expect(mensajes[0].mensaje).toBe('¿Dónde es el acceso?');
+  describe('Límite de 5 entradas por persona (create)', () => {
+    it('debe rechazar una compra de más de 5 entradas', async () => {
+      await expect(service.create({
+        eventoId: 'ev-1',
+        tipoEntradaId: 'te-1',
+        cantidad: 6,
+        compradorId: 'usr-1'
+      })).rejects.toThrow(ValidationError);
     });
 
-    it('debe lanzar ValidationError si el mensaje está vacío', async () => {
-      const compra = new Compra({ id: 'c-1' });
-      await compraRepo.save(compra);
+    it('debe rechazar si la suma de compras activas previas y la nueva supera 5 entradas para el mismo evento', async () => {
+      const evento = new Evento({
+        id: 'ev-limite',
+        nombre: 'Concierto',
+        fecha: new Date('2027-01-01T20:00:00Z'),
+        tiposEntrada: [new TipoEntrada({ id: 'te-1', nombre: 'General', precio: 1000, cupo: 20 })]
+      });
+      await eventoRepo.save(evento);
 
-      await expect(service.agregarMensaje('c-1', { mensaje: '   ' }))
-        .rejects.toThrow(ValidationError);
+      await service.create({
+        eventoId: 'ev-limite',
+        tipoEntradaId: 'te-1',
+        cantidad: 3,
+        compradorId: 'usr-limite'
+      });
+
+      await expect(service.create({
+        eventoId: 'ev-limite',
+        tipoEntradaId: 'te-1',
+        cantidad: 3,
+        compradorId: 'usr-limite'
+      })).rejects.toThrow(ConflictError);
     });
 
-    it('debe lanzar NotFoundError si la compra para mensajes no existe', async () => {
-      await expect(service.getMensajes('inexistente')).rejects.toThrow(NotFoundError);
-      await expect(service.agregarMensaje('inexistente', { mensaje: 'Hola' }))
-        .rejects.toThrow(NotFoundError);
+    it('debe permitir comprar hasta 5 entradas si una compra previa fue cancelada', async () => {
+      const evento = new Evento({
+        id: 'ev-cancel-limite',
+        nombre: 'Festival',
+        fecha: new Date('2027-01-01T20:00:00Z'),
+        tiposEntrada: [new TipoEntrada({ id: 'te-1', nombre: 'General', precio: 1000, cupo: 20 })]
+      });
+      await eventoRepo.save(evento);
+
+      const previa = await service.create({
+        eventoId: 'ev-cancel-limite',
+        tipoEntradaId: 'te-1',
+        cantidad: 4,
+        compradorId: 'usr-cancel'
+      });
+      await service.cancelar(previa.id, { usuarioActual: { id: 'usr-cancel', rol: 'comprador' } });
+
+      const nueva = await service.create({
+        eventoId: 'ev-cancel-limite',
+        tipoEntradaId: 'te-1',
+        cantidad: 5,
+        compradorId: 'usr-cancel'
+      });
+      expect(nueva.cantidad).toBe(5);
     });
   });
 });

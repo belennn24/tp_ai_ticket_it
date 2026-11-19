@@ -134,59 +134,39 @@ export class Compra {
         return cambio;
     }
 
-    restituirCupoAlEvento() {
-        if (this._cupoRestituido) return;
-        if (this.evento && this.tipoEntrada) {
-            const tipoId = extraerId(this.tipoEntrada);
-            if (typeof this.evento.restituirCupo === 'function') {
-                this.evento.restituirCupo(tipoId, this.cantidad);
-                this._cupoRestituido = true;
-            } else if (typeof this.tipoEntrada.restituirCupo === 'function') {
-                this.tipoEntrada.restituirCupo(this.cantidad);
-                this._cupoRestituido = true;
-            }
-        }
-    }
+    static MAX_POR_PERSONA = 5;
 
     confirmar(quien = null, fechaReferencia = new Date()) {
         return this.actualizarEstado(estadoCompra.CONFIRMADA, quien, fechaReferencia);
     }
 
-    #cupoRestituido = false;                    // campo privado real
+    #cupoRestituido = false;
+
     cancelar({ quien = null, fechaReferencia = new Date(), motivo = null } = {}) {
         if (typeof this.evento?.yaOcurrio === 'function' && this.evento.yaOcurrio(fechaReferencia)) {
             throw new ConflictError('No se pueden cancelar compras de eventos finalizados.');
         }
         const cambio = this.actualizarEstado(estadoCompra.CANCELADA, quien, fechaReferencia, motivo);
-        if (!this.#cupoRestituido) {
-            if (this.evento && typeof this.evento.restituirCupo === 'function') {
-                this.evento.restituirCupo(extraerId(this.tipoEntrada), this.cantidad);
-            } else if (this.tipoEntrada && typeof this.tipoEntrada.restituirCupo === 'function') {
-                this.tipoEntrada.restituirCupo(this.cantidad);
-            }
-            this.#cupoRestituido = true;
-        }
+        this.#devolverCupo();
         return cambio;
     }
 
-    utilizar(opciones = {}) {
-        let quien = null;
-        let fechaReferencia = new Date();
-
-        if (typeof opciones === 'string') {
-            quien = opciones;
-        } else if (opciones instanceof Date) {
-            fechaReferencia = opciones;
-        } else if (opciones && typeof opciones === 'object') {
-            quien = opciones.quien ?? null;
-            fechaReferencia = opciones.fechaReferencia ? new Date(opciones.fechaReferencia) : fechaReferencia;
-        }
-
-        if (fechaReferencia && typeof this.evento?.yaOcurrio === 'function' && this.evento.yaOcurrio(fechaReferencia)) {
+    utilizar({ quien = null, fechaReferencia = new Date() } = {}) {
+        const fecha = fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia);
+        if (typeof this.evento?.yaOcurrio === 'function' && this.evento.yaOcurrio(fecha)) {
             throw new ConflictError('No se puede utilizar una compra de un evento que ya finalizó.');
         }
+        return this.actualizarEstado(estadoCompra.UTILIZADA, quien, fecha);
+    }
 
-        return this.actualizarEstado(estadoCompra.UTILIZADA, quien, fechaReferencia);
+    #devolverCupo() {
+        if (this.#cupoRestituido) return;
+        if (this.evento && typeof this.evento.restituirCupo === 'function') {
+            this.evento.restituirCupo(extraerId(this.tipoEntrada), this.cantidad);
+        } else if (this.tipoEntrada && typeof this.tipoEntrada.restituirCupo === 'function') {
+            this.tipoEntrada.restituirCupo(this.cantidad);
+        }
+        this.#cupoRestituido = true;
     }
 
     reembolsar(quien = null, fechaReferencia = new Date(), motivo = null) {

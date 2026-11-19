@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { MensajeService } from '../backend/services/mensajeService.js';
 import { MensajeRepository } from '../backend/repositories/mensajeRepository.js';
 import { CompraRepository } from '../backend/repositories/compraRepository.js';
+import { Mensaje } from '../backend/models/mensaje.js';
 import { Compra } from '../backend/models/compra.js';
 import { Evento } from '../backend/models/evento.js';
 import { NotFoundError, ForbiddenError, ValidationError } from '../backend/errors/appError.js';
@@ -14,7 +15,7 @@ describe('MensajeService (Pruebas Unitarias)', () => {
   beforeEach(() => {
     mensajeRepo = new MensajeRepository();
     compraRepo = new CompraRepository();
-    service = new MensajeService(mensajeRepo, compraRepo);
+    service = new MensajeService({ mensajeRepository: mensajeRepo, compraRepository: compraRepo });
   });
 
   describe('Chat de la compra', () => {
@@ -46,6 +47,39 @@ describe('MensajeService (Pruebas Unitarias)', () => {
         usuarioActual: { id: 'comprador-1' }
       });
       expect(mensajes).toHaveLength(2);
+    });
+
+    it('debe mantener los mensajes previos del seed al enviar un mensaje nuevo', async () => {
+      const evento = new Evento({ id: 'ev-seed', organizador: 'org-seed' });
+      const msgSeed = new Mensaje({
+        id: 'msg-seed-1',
+        usuario: 'usr-1',
+        mensaje: '¿A qué hora habilitan el acceso?',
+        enviado: new Date('2026-11-01T12:00:00Z')
+      });
+      msgSeed.compra = 'cmp-seed';
+
+      const compra = new Compra({
+        id: 'cmp-seed',
+        comprador: 'usr-1',
+        evento,
+        mensajes: [msgSeed]
+      });
+      await compraRepo.save(compra);
+
+      // Enviamos un mensaje nuevo
+      await service.enviarMensaje('cmp-seed', {
+        texto: 'Por favor confirmar ubicación',
+        usuarioActual: { id: 'usr-1' }
+      });
+
+      const todos = await service.obtenerMensajes('cmp-seed', {
+        usuarioActual: { id: 'usr-1' }
+      });
+
+      expect(todos).toHaveLength(2);
+      expect(todos[0].mensaje).toBe('¿A qué hora habilitan el acceso?');
+      expect(todos[1].mensaje).toBe('Por favor confirmar ubicación');
     });
 
     it('debe lanzar ForbiddenError (403) si un usuario ajeno intenta leer o enviar mensajes', async () => {

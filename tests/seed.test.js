@@ -21,7 +21,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
     expect(summary).toEqual({
       usuarios: 5,
       categorias: 4,
-      eventos: 4,
+      eventos: 10,
       compras: 4,
       mensajes: 2,
       resenias: 1
@@ -68,7 +68,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
   describe('Eventos y Tipos de Entrada sembrados', () => {
     it('debe persistir eventos futuros y pasados con sus respectivos tipos de entrada y cupos', async () => {
       const eventos = await eventoRepository.findAll();
-      expect(eventos).toHaveLength(4);
+      expect(eventos).toHaveLength(10);
 
       const rockFest = await eventoRepository.findById('evt-rock-fest-1');
       expect(rockFest).toBeDefined();
@@ -165,7 +165,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.data.resumen.usuarios).toBe(5);
-      expect(res.data.resumen.eventos).toBe(4);
+      expect(res.data.resumen.eventos).toBe(10);
       expect(res.data.mensaje).toContain('reinicializada exitosamente');
     });
 

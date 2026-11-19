@@ -12,30 +12,16 @@ import {
 } from '../errors/appError.js';
 
 export class EventoService {
-    constructor(
-        eventoRepoOrOptions = defaultEventoRepository,
-        categoriaRepo = defaultCategoriaRepository,
-        compraRepo = defaultCompraRepository,
-        usuarioRepo = defaultUsuarioRepository
-    ) {
-        if (
-            eventoRepoOrOptions &&
-            typeof eventoRepoOrOptions === 'object' &&
-            ('eventoRepository' in eventoRepoOrOptions ||
-                'categoriaRepository' in eventoRepoOrOptions ||
-                'compraRepository' in eventoRepoOrOptions ||
-                'usuarioRepository' in eventoRepoOrOptions)
-        ) {
-            this.eventoRepository = eventoRepoOrOptions.eventoRepository || defaultEventoRepository;
-            this.categoriaRepository = eventoRepoOrOptions.categoriaRepository || defaultCategoriaRepository;
-            this.compraRepository = eventoRepoOrOptions.compraRepository || defaultCompraRepository;
-            this.usuarioRepository = eventoRepoOrOptions.usuarioRepository || defaultUsuarioRepository;
-        } else {
-            this.eventoRepository = eventoRepoOrOptions || defaultEventoRepository;
-            this.categoriaRepository = categoriaRepo || defaultCategoriaRepository;
-            this.compraRepository = compraRepo || defaultCompraRepository;
-            this.usuarioRepository = usuarioRepo || defaultUsuarioRepository;
-        }
+    constructor({
+        eventoRepository = defaultEventoRepository,
+        categoriaRepository = defaultCategoriaRepository,
+        compraRepository = defaultCompraRepository,
+        usuarioRepository = defaultUsuarioRepository
+    } = {}) {
+        this.eventoRepository = eventoRepository;
+        this.categoriaRepository = categoriaRepository;
+        this.compraRepository = compraRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     extraerId = extraerId;
@@ -147,32 +133,29 @@ export class EventoService {
         fecha,
         tiposEntrada = [],
         multimedia = [],
+        ubicacion = null,
         organizadorId,
         ...resto
     } = {}) => {
-        if (this.categoriaRepository && categoriaId) {
-            const categoriasRegistradas = await this.categoriaRepository.findAll();
-            if (categoriasRegistradas.length > 0) {
-                const categoria = await this.categoriaRepository.findById(categoriaId);
-                if (!categoria) throw new NotFoundError('La categoría seleccionada no existe.');
-            }
-        }
-
-        const tiposEntradaInstancias = this.armarTiposEntrada(tiposEntrada);
+        const categoria = await this.categoriaRepository.findById(categoriaId);
+        if (!categoria) throw new NotFoundError('La categoría seleccionada no existe.');
 
         if (!organizadorId) {
             throw new ValidationError('El organizadorId es obligatorio.');
         }
+        const organizador = await this.usuarioRepository.findById(organizadorId);
+        if (!organizador) throw new NotFoundError('El organizador no existe.');
 
         const nuevoEvento = new Evento({
             id: resto.id,
             nombre,
             descripcion,
-            categoria: categoriaId,
+            categoria,
             fecha: new Date(fecha),
-            tiposEntrada: tiposEntradaInstancias,
+            tiposEntrada: this.armarTiposEntrada(tiposEntrada),
             multimedia: Array.isArray(multimedia) ? multimedia : [],
-            organizador: organizadorId
+            ubicacion: ubicacion || null,
+            organizador
         });
 
         return await this.eventoRepository.save(nuevoEvento);
