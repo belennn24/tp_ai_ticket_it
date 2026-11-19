@@ -2,11 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { crearCompra } from '@/api/compras';
 import { obtenerEvento } from '@/api/eventos';
+import { agregarFavorito, eliminarFavorito, listarFavoritos } from '@/api/favoritos';
 import { obtenerReseniasDeOrganizador } from '@/api/resenias';
 import { TarjetaUbicacion } from '@/components/eventos/MapaUbicaciones';
 import { MapaSectores } from '@/components/eventos/MapaSectores';
@@ -37,6 +38,30 @@ export default function DetalleEvento() {
     () => (organizadorId ? obtenerReseniasDeOrganizador(organizadorId) : Promise.resolve(null)),
     organizadorId ?? '',
   );
+
+  const consultaFavoritos = useConsulta(
+    () => (rol === 'comprador' ? listarFavoritos() : Promise.resolve([])),
+    rol === 'comprador' ? 'favoritos' : '',
+  );
+  const esFavorito = (consultaFavoritos.datos ?? []).some((f) => String(f.id) === String(id));
+  const [toggleandoFavorito, setToggleandoFavorito] = useState(false);
+
+  const toggleFavorito = async () => {
+    if (toggleandoFavorito || rol !== 'comprador') return;
+    setToggleandoFavorito(true);
+    try {
+      if (esFavorito) {
+        await eliminarFavorito(id);
+      } else {
+        await agregarFavorito(id);
+      }
+      await consultaFavoritos.recargar();
+    } catch {
+      // Ignorar
+    } finally {
+      setToggleandoFavorito(false);
+    }
+  };
 
   if (consulta.cargando && !evento) {
     return <Cargando />;
@@ -106,10 +131,27 @@ export default function DetalleEvento() {
         </View>
 
         <View style={[estilos.bloque, estilos.encabezado]}>
-          {evento.categoria?.nombre ? <Text style={estilos.categoria}>{evento.categoria.nombre.toUpperCase()}</Text> : null}
-          <Text style={estilos.nombre} accessibilityRole="header">
-            {evento.nombre}
-          </Text>
+          <View style={estilos.filaTitulo}>
+            <View style={estilos.columnaTitulo}>
+              {evento.categoria?.nombre ? <Text style={estilos.categoria}>{evento.categoria.nombre.toUpperCase()}</Text> : null}
+              <Text style={estilos.nombre} accessibilityRole="header">
+                {evento.nombre}
+              </Text>
+            </View>
+            {rol === 'comprador' ? (
+              <Pressable
+                onPress={toggleFavorito}
+                accessibilityRole="button"
+                accessibilityLabel={esFavorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                style={estilos.botonFavorito}>
+                <Ionicons
+                  name={esFavorito ? 'heart' : 'heart-outline'}
+                  size={26}
+                  color={esFavorito ? '#F43F5E' : colores.textoSecundario}
+                />
+              </Pressable>
+            ) : null}
+          </View>
           <View style={estilos.pastillas}>
             <View style={estilos.pastilla}>
               <Ionicons name="calendar-outline" size={16} color={colores.acentoFecha} />
@@ -325,6 +367,21 @@ const estilos = StyleSheet.create({
   },
   encabezado: {
     marginTop: -espacios.xxl,
+  },
+  filaTitulo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: espacios.md,
+  },
+  columnaTitulo: {
+    flex: 1,
+    gap: 4,
+  },
+  botonFavorito: {
+    padding: espacios.xs,
+    borderRadius: radios.pildora,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   pastillas: {
     flexDirection: 'row',
