@@ -9,3 +9,13 @@ export function buscarEventos({ texto, categoriaId, orden } = {}) {
 export function obtenerEvento(id) {
   return api.get(`/eventos/${id}`);
 }
+
+// POST /api/eventos
+export function crearEvento(datos) {
+  return api.post('/eventos', datos);
+}
+
+// GET /api/eventos/:id/compras -> balance de cupos y listado de compras
+export function obtenerComprasDeEvento(eventoId) {
+  return api.get(`/eventos/${eventoId}/compras`);
+}

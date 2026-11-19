@@ -156,7 +156,7 @@ export default function DetalleCompra() {
 
         <View style={estilos.acciones}>
           <Boton
-            titulo="Chat con el organizador"
+            titulo={esComprador ? 'Chat con el organizador' : 'Chat con el comprador'}
             variante="secundario"
             icono={<Ionicons name="chatbubbles-outline" size={20} color={colores.texto} />}
             onPress={() => router.push(`/compras/${compra.id}/chat`)}

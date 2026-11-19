@@ -24,3 +24,8 @@ export function crearCompra({ eventoId, tipoEntradaId, cantidad }) {
 export function cancelarCompra(id, motivo) {
   return api.patch(`/compras/${id}/cancelar`, motivo ? { motivo } : {});
 }
+
+// PATCH /api/compras/:id/utilizar
+export function utilizarCompra(id) {
+  return api.patch(`/compras/${id}/utilizar`);
+}

@@ -36,6 +36,7 @@ function Navegacion() {
         <Stack.Screen name="eventos/[id]" options={{ ...opcionesDetalle, title: 'Evento' }} />
         <Stack.Screen name="compras/[id]/index" options={{ ...opcionesDetalle, title: 'Mi compra' }} />
         <Stack.Screen name="compras/[id]/chat" options={{ ...opcionesDetalle, title: 'Chat' }} />
+        <Stack.Screen name="gestion/[id]" options={{ ...opcionesDetalle, title: 'Gestión del evento' }} />
       </Stack.Protected>
 
       <Stack.Protected guard={rol === 'comprador'} redirectTo="/">

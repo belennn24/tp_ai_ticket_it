@@ -33,7 +33,7 @@ export class EventoController {
 
   create = async (req, res, next) => {
     try {
-      const { nombre, descripcion, categoriaId, fecha, tiposEntrada, multimedia } = req.body;
+      const { nombre, descripcion, categoriaId, fecha, tiposEntrada, multimedia, ubicacion } = req.body;
       // Seguridad: organizadorId proviene exclusivamente del usuario autenticado
       const nuevoEvento = await this.service.create({
         nombre,
@@ -42,6 +42,7 @@ export class EventoController {
         fecha,
         tiposEntrada,
         multimedia,
+        ubicacion,
         organizadorId: req.user.id
       });
       res.status(201).json(nuevoEvento);
