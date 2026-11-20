@@ -29,31 +29,104 @@ export function abrirUbicacionEnMaps(ubicacion) {
   Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
 }
 
-// Proyecta coordenadas (lat, lng) a porcentajes [12%, 88%] dentro del lienzo del mapa.
-function calcularPosiciones(eventosConUbicacion) {
-  if (eventosConUbicacion.length === 0) return [];
-  const lats = eventosConUbicacion.map((e) => e.ubicacion.latitud);
-  const lngs = eventosConUbicacion.map((e) => e.ubicacion.longitud);
+const TILE_SIZE = 256;
+const SUBDOMINIOS = ['a', 'b', 'c', 'd'];
+const ZOOM_MIN = 10;
+const ZOOM_MAX = 16;
+
+function latLngAPixel(lat, lng, zoom) {
+  const worldSize = TILE_SIZE * 2 ** zoom;
+  const x = ((lng + 180) / 360) * worldSize;
+  const latLimitada = Math.max(-85.0511, Math.min(85.0511, lat));
+  const sinLat = Math.sin((latLimitada * Math.PI) / 180);
+  const y = (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * worldSize;
+  return { x, y };
+}
+
+function calcularVistaMapa(eventosConUbicacion, ancho, alto) {
+  const validos = eventosConUbicacion.filter(
+    (e) => typeof e.ubicacion?.latitud === 'number' && typeof e.ubicacion?.longitud === 'number'
+  );
+  if (validos.length === 0) {
+    return { centroLat: -34.6037, centroLng: -58.3816, zoomBase: 12 };
+  }
+  const lats = validos.map((e) => e.ubicacion.latitud);
+  const lngs = validos.map((e) => e.ubicacion.longitud);
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs);
   const maxLng = Math.max(...lngs);
-  const spanLat = maxLat - minLat || 0.02;
-  const spanLng = maxLng - minLng || 0.02;
+  const centroLat = (minLat + maxLat) / 2;
+  const centroLng = (minLng + maxLng) / 2;
 
-  return eventosConUbicacion.map((evento) => {
-    const { latitud, longitud } = evento.ubicacion;
-    // En el mapa: norte (mayor latitud) va arriba (menor `top`), este (mayor longitud) va a la derecha.
-    const xPct = 14 + ((longitud - minLng) / spanLng) * 72;
-    const yPct = 16 + ((maxLat - latitud) / spanLat) * 68;
-    return { evento, xPct, yPct };
-  });
+  if (validos.length === 1) {
+    return { centroLat, centroLng, zoomBase: 14 };
+  }
+
+  let zoomBase = 11;
+  for (let z = 15; z >= 10; z -= 1) {
+    const pMin = latLngAPixel(maxLat, minLng, z);
+    const pMax = latLngAPixel(minLat, maxLng, z);
+    const dx = Math.abs(pMax.x - pMin.x);
+    const dy = Math.abs(pMax.y - pMin.y);
+    if (dx <= ancho * 0.7 && dy <= alto * 0.65) {
+      zoomBase = z;
+      break;
+    }
+  }
+  return { centroLat, centroLng, zoomBase };
+}
+
+function FondoTilesMapa({ centroLat, centroLng, zoom, ancho, alto }) {
+  if (!ancho || !alto) return null;
+
+  const { x: centroX, y: centroY } = latLngAPixel(centroLat, centroLng, zoom);
+  const origenX = centroX - ancho / 2;
+  const origenY = centroY - alto / 2;
+  const maxTile = 2 ** zoom;
+  const minTx = Math.floor(origenX / TILE_SIZE);
+  const maxTx = Math.floor((origenX + ancho) / TILE_SIZE);
+  const minTy = Math.max(0, Math.floor(origenY / TILE_SIZE));
+  const maxTy = Math.min(maxTile - 1, Math.floor((origenY + alto) / TILE_SIZE));
+
+  const tiles = [];
+  for (let tx = minTx; tx <= maxTx; tx += 1) {
+    for (let ty = minTy; ty <= maxTy; ty += 1) {
+      const txNorm = ((tx % maxTile) + maxTile) % maxTile;
+      const sub = SUBDOMINIOS[Math.abs(tx + ty) % SUBDOMINIOS.length];
+      tiles.push({
+        key: `${zoom}-${tx}-${ty}`,
+        uri: `https://${sub}.basemaps.cartocdn.com/dark_all/${zoom}/${txNorm}/${ty}.png`,
+        left: Math.round(tx * TILE_SIZE - origenX),
+        top: Math.round(ty * TILE_SIZE - origenY),
+      });
+    }
+  }
+
+  return (
+    <View style={estilos.grilla} pointerEvents="none">
+      {tiles.map((tile) => (
+        <Image
+          key={tile.key}
+          source={{ uri: tile.uri }}
+          style={[estilos.tile, { left: tile.left, top: tile.top }]}
+          resizeMode="cover"
+          accessible={false}
+        />
+      ))}
+      <View style={estilos.atribucion}>
+        <Text style={estilos.textoAtribucion}>© OpenStreetMap · CARTO</Text>
+      </View>
+    </View>
+  );
 }
 
 // Mapa interactivo de ubicaciones para la pantalla Explorar.
 export function MapaUbicaciones({ eventos, onSeleccionarEvento }) {
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [seleccionadoId, setSeleccionadoId] = useState(null);
+  const [dimensiones, setDimensiones] = useState({ ancho: 340, alto: 280 });
+  const [ajusteZoom, setAjusteZoom] = useState(0);
 
   const conUbicacion = useMemo(() => (eventos ?? []).filter((e) => e.ubicacion), [eventos]);
 
@@ -75,7 +148,24 @@ export function MapaUbicaciones({ eventos, onSeleccionarEvento }) {
     [conUbicacion, filtroTipo],
   );
 
-  const pines = useMemo(() => calcularPosiciones(filtrados), [filtrados]);
+  const vista = useMemo(
+    () => calcularVistaMapa(filtrados, dimensiones.ancho, dimensiones.alto),
+    [filtrados, dimensiones.ancho, dimensiones.alto],
+  );
+  const zoomActual = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, vista.zoomBase + ajusteZoom));
+
+  const pines = useMemo(() => {
+    const { x: centroX, y: centroY } = latLngAPixel(vista.centroLat, vista.centroLng, zoomActual);
+    const origenX = centroX - dimensiones.ancho / 2;
+    const origenY = centroY - dimensiones.alto / 2;
+    return filtrados
+      .filter((e) => typeof e.ubicacion?.latitud === 'number' && typeof e.ubicacion?.longitud === 'number')
+      .map((evento) => {
+        const { x, y } = latLngAPixel(evento.ubicacion.latitud, evento.ubicacion.longitud, zoomActual);
+        return { evento, left: x - origenX, top: y - origenY };
+      });
+  }, [filtrados, vista.centroLat, vista.centroLng, zoomActual, dimensiones.ancho, dimensiones.alto]);
+
   const activo = filtrados.find((e) => e.id === seleccionadoId) ?? filtrados[0] ?? null;
 
   if (conUbicacion.length === 0) {
@@ -104,6 +194,7 @@ export function MapaUbicaciones({ eventos, onSeleccionarEvento }) {
               onPress={() => {
                 setFiltroTipo(op.valor);
                 setSeleccionadoId(null);
+                setAjusteZoom(0);
               }}
               style={[estilos.chipTipo, esActivo && estilos.chipTipoActivo]}>
               <Text style={[estilos.textoChip, esActivo && estilos.textoChipActivo]}>{op.etiqueta}</Text>
@@ -112,24 +203,45 @@ export function MapaUbicaciones({ eventos, onSeleccionarEvento }) {
         })}
       </ScrollView>
 
-      <View style={estilos.lienzo}>
-        {/* Grilla urbana decorativa */}
-        <View style={estilos.grilla} pointerEvents="none">
-          <View style={[estilos.calleH, { top: '25%' }]} />
-          <View style={[estilos.calleH, { top: '52%' }]} />
-          <View style={[estilos.calleH, { top: '78%' }]} />
-          <View style={[estilos.calleV, { left: '24%' }]} />
-          <View style={[estilos.calleV, { left: '54%' }]} />
-          <View style={[estilos.calleV, { left: '80%' }]} />
-          <View style={estilos.zonaAgua} />
-        </View>
+      <View
+        style={estilos.lienzo}
+        onLayout={(e) => {
+          const { width, height } = e.nativeEvent.layout;
+          if (width > 0 && height > 0) {
+            setDimensiones({ ancho: width, alto: height });
+          }
+        }}>
+        <FondoTilesMapa
+          centroLat={vista.centroLat}
+          centroLng={vista.centroLng}
+          zoom={zoomActual}
+          ancho={dimensiones.ancho}
+          alto={dimensiones.alto}
+        />
 
         <View style={estilos.etiquetaCiudad} pointerEvents="none">
           <Ionicons name="compass-outline" size={14} color={colores.textoSecundario} />
           <Text style={estilos.textoCiudad}>Buenos Aires · {filtrados.length} lugares</Text>
         </View>
 
-        {pines.map(({ evento, xPct, yPct }) => {
+        <View style={estilos.controlesZoom}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Acercar mapa"
+            onPress={() => setAjusteZoom((z) => Math.min(ZOOM_MAX - vista.zoomBase, z + 1))}
+            style={estilos.botonZoom}>
+            <Ionicons name="add" size={18} color={colores.texto} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Alejar mapa"
+            onPress={() => setAjusteZoom((z) => Math.max(ZOOM_MIN - vista.zoomBase, z - 1))}
+            style={estilos.botonZoom}>
+            <Ionicons name="remove" size={18} color={colores.texto} />
+          </Pressable>
+        </View>
+
+        {pines.map(({ evento, left, top }) => {
           const esSeleccionado = activo?.id === evento.id;
           const { icono } = infoTipoLugar(evento.ubicacion.tipo);
           return (
@@ -140,7 +252,7 @@ export function MapaUbicaciones({ eventos, onSeleccionarEvento }) {
               onPress={() => setSeleccionadoId(evento.id)}
               style={[
                 estilos.pinContenedor,
-                { left: `${xPct}%`, top: `${yPct}%` },
+                { left, top },
                 esSeleccionado && estilos.pinContenedorActivo,
               ]}>
               <View style={[estilos.pin, esSeleccionado && estilos.pinActivo]}>
@@ -222,24 +334,37 @@ function TarjetaResumenMapa({ evento, onVerEvento }) {
 
 // Tarjeta de ubicación con mini-mapa para la pantalla de detalle de un evento.
 export function TarjetaUbicacion({ ubicacion }) {
+  const [tamanoMini, setTamanoMini] = useState({ ancho: 320, alto: 140 });
+
   if (!ubicacion) return null;
   const { etiqueta, icono } = infoTipoLugar(ubicacion.tipo);
+  const tieneCoords = typeof ubicacion.latitud === 'number' && typeof ubicacion.longitud === 'number';
 
   return (
     <View style={estilos.tarjetaDetalle}>
-      <View style={estilos.miniMapa}>
-        <View style={estilos.grilla} pointerEvents="none">
-          <View style={[estilos.calleH, { top: '35%' }]} />
-          <View style={[estilos.calleH, { top: '68%' }]} />
-          <View style={[estilos.calleV, { left: '30%' }]} />
-          <View style={[estilos.calleV, { left: '66%' }]} />
-        </View>
+      <View
+        style={estilos.miniMapa}
+        onLayout={(e) => {
+          const { width, height } = e.nativeEvent.layout;
+          if (width > 0 && height > 0) {
+            setTamanoMini({ ancho: width, alto: height });
+          }
+        }}>
+        {tieneCoords ? (
+          <FondoTilesMapa
+            centroLat={ubicacion.latitud}
+            centroLng={ubicacion.longitud}
+            zoom={15}
+            ancho={tamanoMini.ancho}
+            alto={tamanoMini.alto}
+          />
+        ) : null}
         <View style={estilos.pinCentro}>
           <View style={[estilos.pin, estilos.pinActivo]}>
             <Ionicons name={icono} size={18} color={colores.sobrePrimario} />
           </View>
         </View>
-        {ubicacion.latitud !== undefined && ubicacion.longitud !== undefined ? (
+        {tieneCoords ? (
           <Text style={estilos.coordenadas}>
             {ubicacion.latitud.toFixed(4)}, {ubicacion.longitud.toFixed(4)}
           </Text>
@@ -311,29 +436,43 @@ const estilos = StyleSheet.create({
   },
   grilla: {
     ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
   },
-  calleH: {
+  tile: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: 'rgba(139, 92, 246, 0.16)',
+    width: TILE_SIZE + 1,
+    height: TILE_SIZE + 1,
   },
-  calleV: {
+  atribucion: {
     position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 1,
-    backgroundColor: 'rgba(139, 92, 246, 0.16)',
+    right: espacios.xs,
+    bottom: espacios.xs,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: colores.veloFoto,
   },
-  zonaAgua: {
+  textoAtribucion: {
+    fontFamily: fuentes.regular,
+    fontSize: 9,
+    color: colores.textoAtenuado,
+  },
+  controlesZoom: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    width: '28%',
-    height: '45%',
-    backgroundColor: 'rgba(56, 189, 248, 0.08)',
-    borderBottomLeftRadius: 80,
+    top: espacios.md,
+    right: espacios.md,
+    gap: espacios.xs,
+    zIndex: 5,
+  },
+  botonZoom: {
+    width: 34,
+    height: 34,
+    borderRadius: radios.input,
+    borderWidth: 1,
+    borderColor: colores.bordeControl,
+    backgroundColor: colores.veloFoto,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   etiquetaCiudad: {
     position: 'absolute',
