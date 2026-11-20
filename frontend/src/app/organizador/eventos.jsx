@@ -1,10 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   FlatList,
-  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -12,17 +10,16 @@ import {
   View,
 } from 'react-native';
 
-import { buscarEventos } from '@/api/eventos';
+import { listarEventosDeOrganizador } from '@/api/eventos';
 import { FilaChips } from '@/components/eventos/FilaChips';
-import { Boton, Cargando, EstadoVacio, Pantalla } from '@/components/ui';
+import { Boton, EstadoConsulta, EstadoVacio, ImagenEvento, Pantalla } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
 import { useConsulta } from '@/hooks/useConsulta';
-import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
+import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
 import {
   entradasDisponibles,
   formatearFecha,
   formatearPrecio,
-  idDe,
   precioDesde,
   yaOcurrio,
 } from '@/utils/formato';
@@ -38,11 +35,8 @@ export default function MisEventos() {
   const { usuario } = useSesion();
   const [filtro, setFiltro] = useState('todos');
 
-  const consulta = useConsulta(buscarEventos);
-  const eventos = consulta.datos ?? [];
-
-  // Filtramos exclusivamente los eventos del organizador autenticado
-  const misEventos = eventos.filter((ev) => idDe(ev.organizador) === usuario?.id);
+  const consulta = useConsulta(() => listarEventosDeOrganizador(usuario?.id), usuario?.id ?? '');
+  const misEventos = consulta.datos ?? [];
 
   const eventosFiltrados = misEventos.filter((ev) => {
     const finalizado = yaOcurrio(ev.fecha);
@@ -51,30 +45,10 @@ export default function MisEventos() {
     return true;
   });
 
-  if (consulta.cargando && !consulta.datos) {
-    return (
-      <Pantalla titulo="Mis eventos">
-        <Cargando />
-      </Pantalla>
-    );
-  }
-
-  if (consulta.error && !consulta.datos) {
-    return (
-      <Pantalla titulo="Mis eventos">
-        <EstadoVacio
-          icono="cloud-offline-outline"
-          titulo="No se pudieron cargar tus eventos"
-          descripcion={consulta.error}
-          accion={<Boton titulo="Reintentar" variante="secundario" onPress={consulta.recargar} />}
-        />
-      </Pantalla>
-    );
-  }
-
   return (
     <Pantalla titulo="Mis eventos">
-      <View style={estilos.contenedor}>
+      <EstadoConsulta consulta={consulta} tituloError="No se pudieron cargar tus eventos">
+        <View style={estilos.contenedor}>
         {misEventos.length > 0 ? (
           <View style={estilos.filaFiltros}>
             <FilaChips opciones={FILTROS} seleccionado={filtro} onSeleccionar={setFiltro} />
@@ -125,13 +99,7 @@ export default function MisEventos() {
             return (
               <View style={estilos.tarjeta}>
                 <View style={estilos.cabeceraTarjeta}>
-                  {imagen ? (
-                    <Image source={{ uri: imagen }} style={estilos.miniatura} resizeMode="cover" />
-                  ) : (
-                    <LinearGradient colors={degrades.ticket} style={estilos.miniaturaVacia}>
-                      <Ionicons name="musical-notes" size={24} color={colores.textoTicket} />
-                    </LinearGradient>
-                  )}
+                  <ImagenEvento uri={imagen} style={estilos.miniatura} tamanoIcono={24} />
 
                   <View style={estilos.infoCabecera}>
                     <View style={estilos.filaInsignias}>
@@ -207,6 +175,7 @@ export default function MisEventos() {
           }}
         />
       </View>
+      </EstadoConsulta>
     </Pantalla>
   );
 }

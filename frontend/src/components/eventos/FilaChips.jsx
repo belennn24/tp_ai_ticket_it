@@ -5,9 +5,13 @@ import { espacios } from '@/theme';
 
 // Fila horizontal de chips de selección única.
 // `opciones`: [{ valor, etiqueta }]. Se usa para categorías, orden y estados.
-export function FilaChips({ opciones, seleccionado, onSeleccionar }) {
+export function FilaChips({ opciones, seleccionado, onSeleccionar, sinMargenHorizontal = false }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.fila} style={estilos.contenedor}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={[estilos.fila, sinMargenHorizontal && estilos.sinMargen]}
+      style={estilos.contenedor}>
       {opciones.map((opcion) => (
         <Chip
           key={String(opcion.valor)}
@@ -27,5 +31,8 @@ const estilos = StyleSheet.create({
   fila: {
     gap: espacios.sm,
     paddingHorizontal: espacios.xl,
+  },
+  sinMargen: {
+    paddingHorizontal: 0,
   },
 });

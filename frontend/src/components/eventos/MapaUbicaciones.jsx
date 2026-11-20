@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Boton } from '@/components/ui';
 import { ALTO_TACTIL, colores, espacios, fuentes, radios, tamanios } from '@/theme';
 import { formatearFecha, formatearPrecio, precioDesde } from '@/utils/formato';
+
+import { FilaChips } from './FilaChips';
 
 const CONFIG_LUGAR = {
   estadio: { etiqueta: 'Estadio', icono: 'trophy-outline' },
@@ -179,29 +181,16 @@ export function MapaUbicaciones({ eventos, onSeleccionarEvento }) {
 
   return (
     <View style={estilos.contenedor}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={estilos.barraTipos}
-        style={estilos.scrollTipos}>
-        {tiposDisponibles.map((op) => {
-          const esActivo = op.valor === filtroTipo;
-          return (
-            <Pressable
-              key={op.valor}
-              accessibilityRole="button"
-              accessibilityState={{ selected: esActivo }}
-              onPress={() => {
-                setFiltroTipo(op.valor);
-                setSeleccionadoId(null);
-                setAjusteZoom(0);
-              }}
-              style={[estilos.chipTipo, esActivo && estilos.chipTipoActivo]}>
-              <Text style={[estilos.textoChip, esActivo && estilos.textoChipActivo]}>{op.etiqueta}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <FilaChips
+        opciones={tiposDisponibles}
+        seleccionado={filtroTipo}
+        sinMargenHorizontal
+        onSeleccionar={(valor) => {
+          setFiltroTipo(valor);
+          setSeleccionadoId(null);
+          setAjusteZoom(0);
+        }}
+      />
 
       <View
         style={estilos.lienzo}
@@ -395,34 +384,6 @@ const estilos = StyleSheet.create({
     paddingHorizontal: espacios.xl,
     paddingBottom: espacios.lg,
     gap: espacios.md,
-  },
-  scrollTipos: {
-    flexGrow: 0,
-  },
-  barraTipos: {
-    gap: espacios.sm,
-    paddingVertical: espacios.xs,
-  },
-  chipTipo: {
-    minHeight: 36,
-    paddingHorizontal: espacios.md,
-    borderRadius: radios.pildora,
-    borderWidth: 1,
-    borderColor: colores.bordeControl,
-    backgroundColor: colores.tarjeta,
-    justifyContent: 'center',
-  },
-  chipTipoActivo: {
-    backgroundColor: colores.primario,
-    borderColor: colores.primario,
-  },
-  textoChip: {
-    fontFamily: fuentes.semibold,
-    fontSize: tamanios.xs,
-    color: colores.textoSecundario,
-  },
-  textoChipActivo: {
-    color: colores.sobrePrimario,
   },
   lienzo: {
     flex: 1,

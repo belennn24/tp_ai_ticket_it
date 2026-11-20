@@ -1,17 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { listarMisCompras } from '@/api/compras';
-import { buscarEventos, obtenerComprasDeEvento } from '@/api/eventos';
+import { listarEventosDeOrganizador, obtenerComprasDeEvento } from '@/api/eventos';
 import { FilaChips } from '@/components/eventos/FilaChips';
-import { Boton, Cargando, EstadoBadge, EstadoVacio, FondoConBrillo } from '@/components/ui';
+import { EstadoBadge, EstadoConsulta, EstadoVacio, FondoConBrillo, ImagenEvento, Separador } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
 import { useConsulta } from '@/hooks/useConsulta';
-import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
+import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
 import { formatearFechaCorta, idDe, nombreCompleto } from '@/utils/formato';
 
 const FILTROS = [
@@ -41,8 +39,7 @@ export default function BuzonChats() {
 
   const cargarConversaciones = useCallback(async () => {
     if (rol === 'organizador') {
-      const todosEventos = await buscarEventos();
-      const misEventos = (todosEventos ?? []).filter((ev) => idDe(ev.organizador) === usuario?.id);
+      const misEventos = await listarEventosDeOrganizador(usuario?.id);
       if (misEventos.length === 0) return [];
 
       const respuestas = await Promise.all(
@@ -74,62 +71,43 @@ export default function BuzonChats() {
     ? ordenadas.filter((c) => (c.mensajes?.length ?? 0) > 0)
     : ordenadas;
 
-  if (consulta.cargando && !consulta.datos) {
-    return (
-      <FondoConBrillo>
-        <Cargando />
-      </FondoConBrillo>
-    );
-  }
-
-  if (consulta.error && !consulta.datos) {
-    return (
-      <FondoConBrillo>
-        <EstadoVacio
-          icono="cloud-offline-outline"
-          titulo="No se pudieron cargar los chats"
-          descripcion={consulta.error}
-          accion={<Boton titulo="Reintentar" variante="secundario" onPress={consulta.recargar} />}
-        />
-      </FondoConBrillo>
-    );
-  }
-
   return (
     <FondoConBrillo>
-      <View style={estilos.filtros}>
-        <FilaChips opciones={FILTROS} seleccionado={filtro} onSeleccionar={setFiltro} />
-      </View>
-      <FlatList
-        data={filtradas}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ConversacionItem
-            compra={item}
-            rol={rol}
-            usuarioId={usuario?.id}
-            onPress={() => router.push(`/compras/${item.id}/chat`)}
-          />
-        )}
-        contentContainerStyle={[estilos.lista, { paddingBottom: espacios.xl + bottom }]}
-        ItemSeparatorComponent={Separador}
-        refreshControl={
-          <RefreshControl refreshing={consulta.recargando} onRefresh={consulta.recargar} tintColor={colores.primario} />
-        }
-        ListEmptyComponent={
-          <EstadoVacio
-            icono="mail-open-outline"
-            titulo={filtro === 'con_mensajes' ? 'Sin mensajes todavía' : 'Sin conversaciones'}
-            descripcion={
-              filtro === 'con_mensajes'
-                ? 'Cuando envíes o recibas un mensaje en una compra va a aparecer acá.'
-                : rol === 'organizador'
-                  ? 'Cuando un comprador adquiera entradas para tus eventos vas a poder chatear desde acá.'
-                  : 'Cuando compres entradas para un evento vas a poder chatear con el organizador desde acá.'
-            }
-          />
-        }
-      />
+      <EstadoConsulta consulta={consulta} tituloError="No se pudieron cargar los chats">
+        <View style={estilos.filtros}>
+          <FilaChips opciones={FILTROS} seleccionado={filtro} onSeleccionar={setFiltro} />
+        </View>
+        <FlatList
+          data={filtradas}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ConversacionItem
+              compra={item}
+              rol={rol}
+              usuarioId={usuario?.id}
+              onPress={() => router.push(`/compras/${item.id}/chat`)}
+            />
+          )}
+          contentContainerStyle={[estilos.lista, { paddingBottom: espacios.xl + bottom }]}
+          ItemSeparatorComponent={Separador}
+          refreshControl={
+            <RefreshControl refreshing={consulta.recargando} onRefresh={consulta.recargar} tintColor={colores.primario} />
+          }
+          ListEmptyComponent={
+            <EstadoVacio
+              icono="mail-open-outline"
+              titulo={filtro === 'con_mensajes' ? 'Sin mensajes todavía' : 'Sin conversaciones'}
+              descripcion={
+                filtro === 'con_mensajes'
+                  ? 'Cuando envíes o recibas un mensaje en una compra va a aparecer acá.'
+                  : rol === 'organizador'
+                    ? 'Cuando un comprador adquiera entradas para tus eventos vas a poder chatear desde acá.'
+                    : 'Cuando compres entradas para un evento vas a poder chatear con el organizador desde acá.'
+              }
+            />
+          }
+        />
+      </EstadoConsulta>
     </FondoConBrillo>
   );
 }
@@ -161,13 +139,7 @@ function ConversacionItem({ compra, rol, usuarioId, onPress }) {
       onPress={onPress}
       style={({ pressed }) => [estilos.tarjeta, pressed && estilos.presionada]}>
       <View style={estilos.miniaturaContenedor}>
-        {imagen ? (
-          <Image source={{ uri: imagen }} style={estilos.miniatura} resizeMode="cover" accessible={false} />
-        ) : (
-          <LinearGradient colors={degrades.ticket} style={[estilos.miniatura, estilos.sinImagen]}>
-            <Ionicons name="musical-notes" size={22} color={colores.textoTicket} />
-          </LinearGradient>
-        )}
+        <ImagenEvento uri={imagen} tamanoIcono={22} />
       </View>
 
       <View style={estilos.contenido}>
@@ -202,10 +174,6 @@ function ConversacionItem({ compra, rol, usuarioId, onPress }) {
   );
 }
 
-function Separador() {
-  return <View style={estilos.separador} />;
-}
-
 const estilos = StyleSheet.create({
   filtros: {
     paddingTop: espacios.md,
@@ -215,9 +183,6 @@ const estilos = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: espacios.xl,
     paddingTop: espacios.sm,
-  },
-  separador: {
-    height: espacios.md,
   },
   tarjeta: {
     flexDirection: 'row',
@@ -238,14 +203,6 @@ const estilos = StyleSheet.create({
     borderRadius: radios.input,
     overflow: 'hidden',
     backgroundColor: colores.violetaOscuro,
-  },
-  miniatura: {
-    width: '100%',
-    height: '100%',
-  },
-  sinImagen: {
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   contenido: {
     flex: 1,

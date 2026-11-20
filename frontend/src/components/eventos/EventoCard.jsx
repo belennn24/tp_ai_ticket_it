@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
+import { ImagenEvento } from '@/components/ui';
+import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
 import { entradasDisponibles, formatearFecha, formatearPrecio, nombreCompleto, precioDesde, yaOcurrio } from '@/utils/formato';
 
 function etiquetaDisponibilidad(evento) {
@@ -17,8 +16,6 @@ function etiquetaDisponibilidad(evento) {
 export function EventoCard({ evento, onPress }) {
   const fotos = Array.isArray(evento.multimedia) ? evento.multimedia.filter(Boolean) : [];
   const imagen = fotos[0];
-  const [imagenConError, setImagenConError] = useState(null);
-  const mostrarImagen = Boolean(imagen && imagenConError !== imagen);
 
   const desde = precioDesde(evento);
   const disponibilidad = etiquetaDisponibilidad(evento);
@@ -44,19 +41,7 @@ export function EventoCard({ evento, onPress }) {
       onPress={onPress}
       style={({ pressed }) => [estilos.tarjeta, pressed && estilos.presionada]}>
       <View style={estilos.portada}>
-        {mostrarImagen ? (
-          <Image
-            source={{ uri: imagen }}
-            style={estilos.imagen}
-            resizeMode="cover"
-            accessible={false}
-            onError={() => setImagenConError(imagen)}
-          />
-        ) : (
-          <LinearGradient colors={degrades.ticket} style={[estilos.imagen, estilos.sinImagen]}>
-            <Ionicons name="musical-notes" size={48} color={colores.textoTicket} />
-          </LinearGradient>
-        )}
+        <ImagenEvento uri={imagen} />
 
         <View style={estilos.filaSuperior}>
           {evento.categoria?.nombre ? (
@@ -134,14 +119,6 @@ const estilos = StyleSheet.create({
     width: '100%',
     position: 'relative',
     backgroundColor: colores.violetaOscuro,
-  },
-  imagen: {
-    width: '100%',
-    height: '100%',
-  },
-  sinImagen: {
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   filaSuperior: {
     position: 'absolute',

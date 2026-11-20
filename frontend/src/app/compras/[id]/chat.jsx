@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { obtenerCompra } from '@/api/compras';
 import { enviarMensaje } from '@/api/mensajes';
 import { BurbujaMensaje } from '@/components/chat/BurbujaMensaje';
-import { Boton, Cargando, EstadoVacio, FondoConBrillo } from '@/components/ui';
+import { Boton, Cargando, EstadoVacio, FondoConBrillo, Separador } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
 import { useConsulta } from '@/hooks/useConsulta';
 import { useSondeo } from '@/hooks/useSondeo';
@@ -339,10 +339,6 @@ export default function ChatCompra() {
       </KeyboardAvoidingView>
     </FondoConBrillo>
   );
-}
-
-function Separador() {
-  return <View style={estilos.separador} />;
 }
 
 const estilos = StyleSheet.create({
