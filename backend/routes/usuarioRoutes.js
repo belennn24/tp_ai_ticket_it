@@ -3,8 +3,17 @@ import { usuarioController } from '../controllers/usuarioController.js';
 import { authMiddleware, requireRole } from '../middlewares/authMiddleware.js';
 import { validate } from '../middlewares/validate.js';
 import { favoritoEventoIdParamSchema } from '../validations/favoritoValidation.js';
+import { actualizarPerfilSchema } from '../validations/usuarioValidation.js';
 
 const router = Router();
+
+// PATCH /api/usuarios/me - Actualizar nombre/apellido del usuario autenticado
+router.patch(
+  '/me',
+  authMiddleware,
+  validate(actualizarPerfilSchema),
+  usuarioController.actualizarPerfil
+);
 
 // GET /api/usuarios/me/favoritos - Listar eventos favoritos del comprador autenticado
 router.get(

@@ -91,6 +91,36 @@ export class UsuarioService {
             favoritos: usuario.favoritos
         };
     };
+
+    actualizarPerfil = async (usuarioId, { nombre, apellido } = {}) => {
+        const usuario = await this.buscarUsuarioOError(usuarioId);
+        const nombreLimpio = typeof nombre === 'string' ? nombre.trim() : nombre;
+        if (!nombreLimpio) {
+            throw new ValidationError('El nombre no puede estar vacío.');
+        }
+
+        const datos = { nombre: nombreLimpio };
+        if (apellido !== undefined) {
+            datos.apellido = typeof apellido === 'string' ? apellido.trim() : apellido;
+        }
+
+        usuario.modificar(datos);
+        await this.usuarioRepository.update(usuario.id, usuario);
+
+        const rolNormalizado = String(usuario.rol || 'comprador').toLowerCase().trim();
+        return {
+            mensaje: 'Perfil actualizado con éxito.',
+            usuario: {
+                id: String(usuario.id),
+                nombre: usuario.nombre || '',
+                apellido: usuario.apellido || '',
+                email: usuario.email || null,
+                rol: rolNormalizado,
+                reputacion: Number(usuario.reputacion) || 0,
+                favoritos: Array.isArray(usuario.favoritos) ? usuario.favoritos : []
+            }
+        };
+    };
 }
 
 export const usuarioService = new UsuarioService();
