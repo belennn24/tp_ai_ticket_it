@@ -166,7 +166,4 @@ const estilos = StyleSheet.create({
     paddingHorizontal: espacios.xl,
     paddingBottom: espacios.xl,
   },
-  separador: {
-    height: espacios.lg,
-  },
 });

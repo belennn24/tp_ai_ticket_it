@@ -120,7 +120,7 @@ function ConversacionItem({ compra, rol, usuarioId, onPress }) {
     ? nombreCompleto(compra.comprador) || 'Comprador'
     : nombreCompleto(compra.evento?.organizador) || 'Organizador';
 
-  const esUltimoPropio = ultimo && idDe(ultimo.emisor ?? ultimo.emisorId) === usuarioId;
+  const esUltimoPropio = ultimo && idDe(ultimo.usuario) === usuarioId;
   const textoUltimo = ultimo
     ? `${esUltimoPropio ? 'Vos: ' : ''}${ultimo.mensaje}`
     : 'Sin mensajes aún · Tocá para escribir';
