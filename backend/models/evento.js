@@ -3,6 +3,8 @@ import { ValidationError, NotFoundError } from '../errors/appError.js';
 import { estadoCompra } from './estadoCompra.js';
 import { extraerId } from '../utils/idUtils.js';
 
+const inicioDelDia = (fecha) => new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()).getTime();
+
 export class Evento {
     constructor({
         id,
@@ -111,6 +113,14 @@ export class Evento {
         if (!this.fecha || isNaN(this.fecha.getTime())) return false;
         const ref = fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia);
         return this.fecha.getTime() < ref.getTime();
+    }
+
+    // A diferencia de yaOcurrio, compara por día calendario: el evento sigue vigente
+    // durante todo el día de su realización (por ejemplo, para validar ingresos en la puerta).
+    finalizo(fechaReferencia = new Date()) {
+        if (!this.fecha || isNaN(this.fecha.getTime())) return false;
+        const ref = fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia);
+        return inicioDelDia(ref) > inicioDelDia(this.fecha);
     }
 
     diasFaltantes(fechaReferencia = new Date()) {
