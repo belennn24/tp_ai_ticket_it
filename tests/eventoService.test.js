@@ -112,19 +112,14 @@ describe('EventoService (Pruebas Unitarias)', () => {
       expect(porReputacion[0].id).toBe('1'); // mayor reputación primero
     });
 
-    it('debe ordenar por reputación resolviendo organizador cuando es un string ID', async () => {
-      const mockUsuarioRepo = {
-        findById: jest.fn(async (id) => {
-          if (id === 'org-alto') return { id: 'org-alto', nombre: 'Top Org', reputacion: 4.9 };
-          if (id === 'org-bajo') return { id: 'org-bajo', nombre: 'Low Org', reputacion: 2.1 };
-          return null;
-        })
-      };
+    it('debe ordenar por la reputación del organizador (Usuario) y dejar al final los eventos sin organizador', async () => {
+      const orgAlto = new Usuario({ id: 'org-alto', nombre: 'Top Org', rol: 'organizador', reputacion: 4.9 });
+      const orgBajo = new Usuario({ id: 'org-bajo', nombre: 'Low Org', rol: 'organizador', reputacion: 2.1 });
 
-      service.usuarioRepository = mockUsuarioRepo;
-
-      const evA = new Evento({ id: 'ev-a', organizador: 'org-bajo' });
-      const evB = new Evento({ id: 'ev-b', organizador: 'org-alto' });
+      const evA = new Evento({ id: 'ev-a', organizador: orgBajo });
+      const evB = new Evento({ id: 'ev-b', organizador: orgAlto });
+      const evSinOrganizador = new Evento({ id: 'ev-c' });
+      await eventoRepo.save(evSinOrganizador);
 
       await eventoRepo.save(evA);
       await eventoRepo.save(evB);
@@ -132,6 +127,7 @@ describe('EventoService (Pruebas Unitarias)', () => {
       const ordenados = await service.getAll({ orden: 'reputacion' });
       expect(ordenados[0].id).toBe('ev-b'); // org-alto (4.9) primero
       expect(ordenados[1].id).toBe('ev-a'); // org-bajo (2.1) segundo
+      expect(ordenados[2].id).toBe('ev-c'); // sin organizador: reputación 0
     });
   });
 

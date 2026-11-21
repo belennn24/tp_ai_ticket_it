@@ -71,24 +71,10 @@ export class EventoService {
             eventos = eventos.filter(ev => ev.tuPrecioEstaEntre(min, max));
         }
 
-        if (orden === 'reputacion') {
-            const reputaciones = new Map();
-            for (const ev of eventos) {
-                if (ev.organizador && typeof ev.organizador === 'object' && ev.organizador.reputacion !== undefined) {
-                    reputaciones.set(ev.id, Number(ev.organizador.reputacion) || 0);
-                } else if (typeof ev.organizador === 'string' && this.usuarioRepository) {
-                    const org = await this.usuarioRepository.findById(ev.organizador);
-                    reputaciones.set(ev.id, Number(org?.reputacion ?? ev.reputacion ?? 0));
-                } else {
-                    reputaciones.set(ev.id, Number(ev.reputacion ?? 0));
-                }
-            }
-            return [...eventos].sort((a, b) => (reputaciones.get(b.id) ?? 0) - (reputaciones.get(a.id) ?? 0));
-        }
-
         const ORDENES = {
             fecha: (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
-            precio: (a, b) => this.calcularPrecioMinimo(a) - this.calcularPrecioMinimo(b)
+            precio: (a, b) => this.calcularPrecioMinimo(a) - this.calcularPrecioMinimo(b),
+            reputacion: (a, b) => b.reputacionOrganizador() - a.reputacionOrganizador()
         };
 
         if (orden && ORDENES[orden]) {

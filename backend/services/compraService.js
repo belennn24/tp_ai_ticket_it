@@ -102,7 +102,7 @@ export class CompraService {
   // El service solo coordina: busca las entidades, delega la venta en el dominio
   // (Evento.venderEntradas) y persiste el resultado.
   create = async ({ eventoId, tipoEntradaId, cantidad, compradorId } = {}) => {
-    if (!eventoId || !tipoEntradaId || cantidad === undefined || cantidad === null) {
+    if (!eventoId || !tipoEntradaId || !compradorId || cantidad === undefined || cantidad === null) {
       throw new ValidationError('Faltan campos obligatorios para crear la compra.');
     }
     const cantidadNum = Number(cantidad);
@@ -113,10 +113,9 @@ export class CompraService {
     const evento = await this.eventoRepository.findById(eventoId);
     if (!evento) throw new NotFoundError('El evento solicitado no existe.');
 
-    const comprador = (compradorId && (await this.usuarioRepository?.findById?.(compradorId))) || compradorId;
-    const comprasPrevias = compradorId
-      ? await this.compraRepository.findAll({ compradorId, eventoId })
-      : [];
+    const comprador = await this.usuarioRepository.findById(compradorId);
+    if (!comprador) throw new NotFoundError('Comprador no encontrado.');
+    const comprasPrevias = await this.compraRepository.findAll({ compradorId, eventoId });
 
     const { compra, cambio } = evento.venderEntradas({
       comprador,

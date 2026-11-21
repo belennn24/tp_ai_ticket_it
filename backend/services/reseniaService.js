@@ -54,7 +54,8 @@ export class ReseniaService {
         }
 
         const comprasDelComprador = await this.compraRepository.findAll({ compradorId, eventoId });
-        const comprador = (await this.usuarioRepository?.findById?.(compradorId)) || compradorId;
+        const comprador = await this.usuarioRepository.findById(compradorId);
+        if (!comprador) throw new NotFoundError('Comprador no encontrado.');
 
         // La regla de elegibilidad (compra UTILIZADA) vive en el dominio.
         const nuevaResenia = Resenia.crear({

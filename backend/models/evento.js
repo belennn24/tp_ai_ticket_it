@@ -110,6 +110,10 @@ export class Evento {
         return extraerId(this.organizador) === extraerId(usuarioRef);
     }
 
+    reputacionOrganizador() {
+        return Number(this.organizador?.reputacion) || 0;
+    }
+
     yaOcurrio(fechaReferencia = new Date()) {
         if (!this.fecha || isNaN(this.fecha.getTime())) return false;
         const ref = fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia);

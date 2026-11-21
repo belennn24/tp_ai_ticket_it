@@ -17,11 +17,15 @@ describe('ReseniaService (Pruebas Unitarias)', () => {
   let usuarioRepo;
   let service;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     reseniaRepo = new ReseniaRepository();
     compraRepo = new CompraRepository();
     eventoRepo = new EventoRepository();
     usuarioRepo = new UsuarioRepository();
+    // Los compradores tienen que existir: la reseña guarda la entidad Usuario, no un id suelto.
+    for (const id of ['user-1', 'u1', 'u2']) {
+      await usuarioRepo.save(new Usuario({ id, nombre: id, rol: 'comprador' }));
+    }
 
     service = new ReseniaService({
       reseniaRepository: reseniaRepo,
@@ -60,7 +64,8 @@ describe('ReseniaService (Pruebas Unitarias)', () => {
 
       expect(reseniaCreada).toBeDefined();
       expect(reseniaCreada.puntuacion).toBe(5);
-      expect(reseniaCreada.comprador).toBe('user-1');
+      expect(reseniaCreada.comprador).toBeInstanceOf(Usuario);
+      expect(reseniaCreada.comprador.id).toBe('user-1');
       expect(reseniaCreada.organizador).toBe('org-1');
 
       // Verifica actualización de reputación del organizador
