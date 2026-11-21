@@ -100,22 +100,6 @@ export class CompraController {
       next(error);
     }
   };
-
-  agregarMensaje = async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const { mensaje } = req.body;
-      // Seguridad: el emisor del mensaje es el usuario autenticado
-      const nuevoMensaje = await this.service.agregarMensaje(id, {
-        mensaje,
-        usuarioId: req.user.id,
-        usuarioActual: req.user
-      });
-      res.status(201).json(nuevoMensaje);
-    } catch (error) {
-      next(error);
-    }
-  };
 }
 
 export const compraController = new CompraController();

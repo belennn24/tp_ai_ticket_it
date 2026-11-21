@@ -1,5 +1,5 @@
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { limiteGeneral, limiteAuth } from '../backend/middlewares/rateLimiting.js';
+import { limiteGeneral, limiteAuth, limiteRefresh } from '../backend/middlewares/rateLimiting.js';
 import { app } from '../backend/app.js';
 
 describe('Rate Limiting Middleware', () => {
@@ -22,13 +22,17 @@ describe('Rate Limiting Middleware', () => {
       expect(tieneLimiteGeneral).toBe(true);
     });
 
-    it('debe registrar el middleware limiteAuth para las rutas de login y token', () => {
+    it('debe registrar el middleware limiteAuth para las rutas de login, token y registro, y limiteRefresh para refresh', () => {
       const stack = (app.router || app._router).stack;
       const capasLimiteAuth = stack.filter(
         layer => layer.handle === limiteAuth
       );
-      // Debe estar presente para /api/auth/login, /api/auth/token, /api/auth/registro y /api/auth/refresh
-      expect(capasLimiteAuth.length).toBeGreaterThanOrEqual(4);
+      const tieneLimiteRefresh = stack.some(
+        layer => layer.handle === limiteRefresh
+      );
+      // limiteAuth aplica a /api/auth/login, /api/auth/token y /api/auth/registro; limiteRefresh a /api/auth/refresh
+      expect(capasLimiteAuth.length).toBeGreaterThanOrEqual(3);
+      expect(tieneLimiteRefresh).toBe(true);
     });
   });
 

@@ -1,6 +1,7 @@
 import { Mensaje } from '../models/mensaje.js';
 import { mensajeRepository as defaultMensajeRepository } from '../repositories/mensajeRepository.js';
 import { compraRepository as defaultCompraRepository } from '../repositories/compraRepository.js';
+import { usuarioRepository as defaultUsuarioRepository } from '../repositories/usuarioRepository.js';
 import { extraerId } from '../utils/idUtils.js';
 import {
     NotFoundError,
@@ -12,10 +13,12 @@ export class MensajeService {
     constructor({
         mensajeRepository = defaultMensajeRepository,
         compraRepository = defaultCompraRepository,
+        usuarioRepository = defaultUsuarioRepository,
         fechaActualProvider = () => new Date()
     } = {}) {
         this.mensajeRepository = mensajeRepository;
         this.compraRepository = compraRepository;
+        this.usuarioRepository = usuarioRepository;
         this.fechaActualProvider = typeof fechaActualProvider === 'function' ? fechaActualProvider : (() => new Date());
     }
 
@@ -51,9 +54,12 @@ export class MensajeService {
         const compra = await this.buscarCompraOError(compraId);
         this.validarParticipante(compra, usuarioActual);
 
+        const usuarioId = usuarioActual?.id;
+        const autor = (usuarioId && (await this.usuarioRepository?.findById?.(usuarioId))) || usuarioId || 'ANONIMO';
+
         const nuevoMensaje = new Mensaje({
             id,
-            usuario: usuarioActual?.id || 'ANONIMO',
+            usuario: autor,
             mensaje: texto.trim(),
             enviado: this.obtenerFechaActual()
         });

@@ -125,6 +125,19 @@ export class Usuario {
         );
     }
 
+    aPerfilPublico() {
+        const rolNormalizado = String(this.rol || 'comprador').toLowerCase().trim();
+        return {
+            id: String(this.id),
+            nombre: this.nombre || '',
+            apellido: this.apellido || '',
+            email: this.email || null,
+            rol: rolNormalizado,
+            reputacion: Number(this.reputacion) || 0,
+            favoritos: Array.isArray(this.favoritos) ? this.favoritos : []
+        };
+    }
+
     toJSON() {
         const { passwordHash, borrado, fechaBaja, ...publicProps } = this;
         return publicProps;

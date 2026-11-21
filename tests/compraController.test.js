@@ -18,8 +18,7 @@ describe('CompraController (Pruebas Unitarias)', () => {
       create: jest.fn(),
       cancelar: jest.fn(),
       utilizar: jest.fn(),
-      cambiarEstado: jest.fn(),
-      agregarMensaje: jest.fn()
+      cambiarEstado: jest.fn()
     };
 
     controller = new CompraController(mockService);
@@ -133,23 +132,6 @@ describe('CompraController (Pruebas Unitarias)', () => {
     });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(utilizada);
-  });
-
-  it('agregarMensaje debe asignar emisor desde req.user y responder 201', async () => {
-    const mensaje = { id: 'm-1', mensaje: 'Hola' };
-    mockService.agregarMensaje.mockResolvedValue(mensaje);
-    req.params = { id: 'c-1' };
-    req.body = { mensaje: 'Hola' };
-
-    await controller.agregarMensaje(req, res, next);
-
-    expect(mockService.agregarMensaje).toHaveBeenCalledWith('c-1', {
-      mensaje: 'Hola',
-      usuarioId: 'u-1',
-      usuarioActual: req.user
-    });
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(mensaje);
   });
 
   it('debe propagar errores a next(error)', async () => {

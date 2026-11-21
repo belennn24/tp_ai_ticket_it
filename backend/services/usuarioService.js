@@ -107,18 +107,9 @@ export class UsuarioService {
         usuario.modificar(datos);
         await this.usuarioRepository.update(usuario.id, usuario);
 
-        const rolNormalizado = String(usuario.rol || 'comprador').toLowerCase().trim();
         return {
             mensaje: 'Perfil actualizado con éxito.',
-            usuario: {
-                id: String(usuario.id),
-                nombre: usuario.nombre || '',
-                apellido: usuario.apellido || '',
-                email: usuario.email || null,
-                rol: rolNormalizado,
-                reputacion: Number(usuario.reputacion) || 0,
-                favoritos: Array.isArray(usuario.favoritos) ? usuario.favoritos : []
-            }
+            usuario: usuario.aPerfilPublico()
         };
     };
 }
