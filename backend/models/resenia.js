@@ -1,5 +1,6 @@
 import crypto from 'crypto';
-import { ValidationError } from '../errors/appError.js';
+import { ValidationError, ConflictError } from '../errors/appError.js';
+import { extraerId } from '../utils/idUtils.js';
 
 export class Resenia {
     constructor({ id, comprador = null, evento = null, organizador = null, detalle = '', puntuacion = 5.0 } = {}) {
@@ -17,6 +18,24 @@ export class Resenia {
         this.fechaBaja = null;
         this.fechaCreacion = new Date();
         this.fechaModificacion = null;
+    }
+
+    // Alta de una reseña: solo puede calificar quien tiene al menos una compra
+    // utilizada del evento. El organizador calificado se toma del propio evento.
+    static crear({ id, comprador, evento, comprasDelComprador = [], puntuacion, detalle = '' } = {}) {
+        if (!comprasDelComprador.some(c => c.puedeSerCalificada())) {
+            throw new ConflictError(
+                'No se puede calificar un evento sin poseer al menos una compra en estado UTILIZADA.'
+            );
+        }
+        return new Resenia({
+            id,
+            comprador,
+            evento,
+            organizador: extraerId(evento?.organizador) || null,
+            detalle,
+            puntuacion: Number(puntuacion)
+        });
     }
 
     validar({ puntuacion } = {}) {

@@ -523,6 +523,13 @@ describe('CompraService (Pruebas Unitarias)', () => {
 
   describe('Límite de 5 entradas por persona (create)', () => {
     it('debe rechazar una compra de más de 5 entradas', async () => {
+      await eventoRepo.save(new Evento({
+        id: 'ev-1',
+        nombre: 'Concierto',
+        fecha: new Date('2027-01-01T20:00:00Z'),
+        tiposEntrada: [new TipoEntrada({ id: 'te-1', nombre: 'General', precio: 1000, cupo: 20 })]
+      }));
+
       await expect(service.create({
         eventoId: 'ev-1',
         tipoEntradaId: 'te-1',

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
-import { ValidationError, NotFoundError } from '../errors/appError.js';
+import { ValidationError, NotFoundError, ConflictError } from '../errors/appError.js';
 import { estadoCompra } from './estadoCompra.js';
+import { Compra } from './compra.js';
 import { extraerId } from '../utils/idUtils.js';
 
 const inicioDelDia = (fecha) => new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()).getTime();
@@ -157,6 +158,22 @@ export class Evento {
         tipo.restituirCupo(cantidad);
         this.fechaModificacion = new Date();
         return tipo;
+    }
+
+    // Venta de entradas: valida todas las reglas antes de modificar nada y después
+    // descuenta el cupo, crea la compra y la confirma como una única operación.
+    // Devuelve la compra confirmada y el cambio de estado para el historial.
+    venderEntradas({ comprador, tipoEntradaId, cantidad, comprasPrevias = [], fechaReferencia = new Date() } = {}) {
+        if (this.yaOcurrio(fechaReferencia)) {
+            throw new ConflictError('No se pueden comprar entradas para un evento que ya ocurrió.');
+        }
+        Compra.validarLimitePorPersona(comprasPrevias, cantidad);
+        const tipoEntrada = this.obtenerTipoEntrada(tipoEntradaId);
+        const compra = new Compra({ comprador, evento: this, tipoEntrada, cantidad });
+
+        this.descontarCupo(tipoEntrada.id, cantidad);
+        const cambio = compra.confirmar(comprador, fechaReferencia);
+        return { compra, cambio };
     }
 
     agregarTipoEntrada(tipoEntrada) {
