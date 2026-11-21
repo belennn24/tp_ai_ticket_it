@@ -281,13 +281,18 @@ describe('EventoService (Pruebas Unitarias)', () => {
       expect(service.calcularPrecioMinimo(eventoSinEntradas)).toBe(Infinity);
     });
 
-    it('validarNumeroPositivo debe validar y retornar el número, o lanzar ValidationError si no es positivo', () => {
-      expect(service.validarNumeroPositivo('150', 'Invalido')).toBe(150);
-      expect(service.validarNumeroPositivo(20, 'Invalido')).toBe(20);
+    it('armarTiposEntrada delega en TipoEntrada.crear: convierte precio y cupo, y exige que sean mayores a 0', () => {
+      const [tipo] = service.armarTiposEntrada([{ nombre: 'General', precio: '150', cupo: 20 }]);
+      expect(tipo).toBeInstanceOf(TipoEntrada);
+      expect(tipo.precio).toBe(150);
+      expect(tipo.cupo).toBe(20);
 
-      expect(() => service.validarNumeroPositivo(0, 'Debe ser mayor a 0')).toThrow(ValidationError);
-      expect(() => service.validarNumeroPositivo(-5, 'Debe ser mayor a 0')).toThrow(ValidationError);
-      expect(() => service.validarNumeroPositivo('abc', 'Debe ser mayor a 0')).toThrow('Debe ser mayor a 0');
+      expect(() => service.armarTiposEntrada([{ nombre: 'General', precio: 0, cupo: 10 }]))
+        .toThrow('El precio del tipo de entrada debe ser mayor a 0.');
+      expect(() => service.armarTiposEntrada([{ nombre: 'General', precio: -5, cupo: 10 }])).toThrow(ValidationError);
+      expect(() => service.armarTiposEntrada([{ nombre: 'General', precio: 'abc', cupo: 10 }])).toThrow(ValidationError);
+      expect(() => service.armarTiposEntrada([{ nombre: 'General', precio: 100, cupo: 0 }]))
+        .toThrow('El cupo del tipo de entrada debe ser mayor a 0.');
     });
   });
 });

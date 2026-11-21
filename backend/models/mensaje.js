@@ -2,11 +2,12 @@ import crypto from 'crypto';
 import { ValidationError } from '../errors/appError.js';
 
 export class Mensaje {
-    constructor({ id, usuario = null, mensaje = '', enviado = new Date(), fechaHora } = {}) {
+    constructor({ id, usuario = null, mensaje = '', enviado = new Date(), fechaHora, compra = null } = {}) {
         this.validar({ mensaje });
 
         this.id = id || crypto.randomUUID();
         this.usuario = usuario;
+        this.compra = compra;
         this.mensaje = mensaje;
         this.fechaHora = new Date(fechaHora || enviado);
 

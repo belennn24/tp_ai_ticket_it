@@ -3,6 +3,10 @@ import { ValidationError } from '../errors/appError.js';
 import { extraerId } from '../utils/idUtils.js';
 
 export class Usuario {
+    static ROLES = Object.freeze(['comprador', 'organizador', 'admin']);
+    // El rol admin no se puede elegir al registrarse.
+    static ROLES_REGISTRABLES = Object.freeze(['comprador', 'organizador']);
+
     constructor({
         id,
         nombre,
@@ -47,7 +51,7 @@ export class Usuario {
         }
         if (rol !== undefined && rol !== null) {
             const r = String(rol).trim().toLowerCase();
-            if (!['comprador', 'organizador', 'admin'].includes(r)) {
+            if (!Usuario.ROLES.includes(r)) {
                 throw new ValidationError('El rol del usuario es inválido');
             }
         }
@@ -94,11 +98,11 @@ export class Usuario {
         if (!evento) {
             throw new ValidationError('El evento es requerido para agregarlo a favoritos');
         }
-        const eventoId = String(extraerId(evento));
-        if (!this.tieneFavorito(eventoId)) {
-            this.favoritos.push(evento);
-            this.fechaModificacion = new Date();
-        }
+        // Devuelve false si el evento ya estaba en favoritos (no se duplica).
+        if (this.tieneFavorito(extraerId(evento))) return false;
+        this.favoritos.push(evento);
+        this.fechaModificacion = new Date();
+        return true;
     }
 
     eliminarFavorito(eventoId) {

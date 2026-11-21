@@ -41,33 +41,9 @@ export class EventoService {
         return Math.min(...evento.tiposEntrada.map(t => Number(t?.precio) || Infinity));
     };
 
-    validarNumeroPositivo = (valor, mensajeError) => {
-        const num = Number(valor);
-        if (isNaN(num) || num <= 0) {
-            throw new ValidationError(mensajeError);
-        }
-        return num;
-    };
-
+    // Las reglas de alta (precio y cupo mayores a 0) viven en TipoEntrada.crear.
     armarTiposEntrada = (tiposEntrada = []) => {
-        return (tiposEntrada || []).map(t => {
-            const precio = this.validarNumeroPositivo(
-                t.precio,
-                'El precio del tipo de entrada debe ser mayor a 0.'
-            );
-            const cupo = this.validarNumeroPositivo(
-                t.cupo,
-                'El cupo del tipo de entrada debe ser mayor a 0.'
-            );
-
-            return new TipoEntrada({
-                id: t.id,
-                nombre: t.nombre,
-                descripcion: t.descripcion || '',
-                precio,
-                cupo
-            });
-        });
+        return (tiposEntrada || []).map(t => TipoEntrada.crear(t));
     };
 
     getAll = async ({

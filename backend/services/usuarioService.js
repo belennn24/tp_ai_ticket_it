@@ -58,11 +58,9 @@ export class UsuarioService {
         const evento = await this.buscarEventoOError(eventoId);
         const usuario = await this.buscarUsuarioOError(usuarioId);
 
-        if (usuario.tieneFavorito(eventoId)) {
+        if (!usuario.agregarFavorito(evento)) {
             throw new ConflictError('El evento ya se encuentra en la lista de favoritos.');
         }
-
-        usuario.agregarFavorito(evento);
         await this.usuarioRepository.update(usuario.id, usuario);
 
         return {
@@ -79,11 +77,9 @@ export class UsuarioService {
         await this.buscarEventoOError(eventoId);
         const usuario = await this.buscarUsuarioOError(usuarioId);
 
-        if (!usuario.tieneFavorito(eventoId)) {
+        if (!usuario.eliminarFavorito(eventoId)) {
             throw new NotFoundError('El evento no se encontraba en la lista de favoritos.');
         }
-
-        usuario.eliminarFavorito(eventoId);
         await this.usuarioRepository.update(usuario.id, usuario);
 
         return {

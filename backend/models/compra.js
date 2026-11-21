@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 import { estadoCompra } from './estadoCompra.js';
 import { CambioEstadoCompra } from './cambioEstadoCompra.js';
+import { Mensaje } from './mensaje.js';
 import { extraerId } from '../utils/idUtils.js';
-import { ValidationError, ConflictError } from '../errors/appError.js';
+import { ValidationError, ConflictError, ForbiddenError } from '../errors/appError.js';
 
 export const TRANSICIONES_COMPRA = Object.freeze({
     [estadoCompra.PENDIENTE]: [estadoCompra.CONFIRMADA, estadoCompra.CANCELADA],
@@ -130,7 +131,6 @@ export class Compra {
             motivo: this.motivo,
             fechaHora: fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia)
         });
-        this.ultimoCambio = cambio;
         return cambio;
     }
 
@@ -228,6 +228,22 @@ export class Compra {
         }
         this.mensajes.push(mensaje);
         this.fechaModificacion = new Date();
+    }
+
+    // Solo el comprador o el organizador del evento pueden escribir en el chat de la compra.
+    enviarMensaje({ id, autor, texto, fechaReferencia = new Date() } = {}) {
+        if (!this.puedeAcceder(autor)) {
+            throw new ForbiddenError('Usuario ajeno a la compra.');
+        }
+        const mensaje = new Mensaje({
+            id,
+            usuario: autor,
+            mensaje: String(texto ?? '').trim(),
+            enviado: fechaReferencia,
+            compra: this.id
+        });
+        this.agregarMensaje(mensaje);
+        return mensaje;
     }
 
     toJSON() {
