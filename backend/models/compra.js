@@ -153,7 +153,7 @@ export class Compra {
 
     utilizar({ quien = null, fechaReferencia = new Date() } = {}) {
         const fecha = fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia);
-        if (typeof this.evento?.yaOcurrio === 'function' && this.evento.yaOcurrio(fecha)) {
+        if (typeof this.evento?.finalizo === 'function' && this.evento.finalizo(fecha)) {
             throw new ConflictError('No se puede utilizar una compra de un evento que ya finalizó.');
         }
         return this.actualizarEstado(estadoCompra.UTILIZADA, quien, fecha);

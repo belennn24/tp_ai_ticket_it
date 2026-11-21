@@ -74,32 +74,6 @@ export class CompraController {
       next(error);
     }
   };
-
-  cancelar = async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const { motivo } = req.body || {};
-      const compraCancelada = await this.service.cancelar(id, {
-        motivo,
-        usuarioActual: req.user
-      });
-      res.status(200).json(compraCancelada);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  utilizar = async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const compraUtilizada = await this.service.utilizar(id, {
-        usuarioActual: req.user
-      });
-      res.status(200).json(compraUtilizada);
-    } catch (error) {
-      next(error);
-    }
-  };
 }
 
 export const compraController = new CompraController();

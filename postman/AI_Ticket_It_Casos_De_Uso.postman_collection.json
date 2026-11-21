@@ -13,22 +13,22 @@
     },
     {
       "key": "token_comprador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NTIyMjEyMH0.XmZDpqJDpdfL4AHCZ4WmGJ3d47bj8MEXvw9TBesyvL4",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NTI2Mjk4M30.aPCqge6qdQw34T5beVM49du1nL7v68LN1GV63zHMPP8",
       "type": "string"
     },
     {
       "key": "token_organizador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTUyMjIxMjB9.5yMmFjEhK9iqUqbEBJof0cbSTAWpkcFxQl-ocF85egM",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTUyNjI5ODN9.fxQZB-pyigse56Dj2b9xjV94i9aUqXviao0YdLclO_s",
       "type": "string"
     },
     {
       "key": "token_admin",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTUyMjIxMjB9.eWnr9ijDtywqtGgt2-65ZwL8JdG8B5qlH0J_tOkeeS0",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1hZG1pbi0xIiwiZW1haWwiOiJhZG1pbkB0aWNrZXRpdC5jb20iLCJyb2xlIjoiYWRtaW4iLCJyb2wiOiJhZG1pbiIsIm5vbWJyZSI6IkFkbWluIFNpc3RlbWEiLCJpYXQiOjE3OTUyNjI5ODN9.7f8r3pQ8X5Vvlz4kEjkLZpO252PWwkSf8mGuPq5VC3s",
       "type": "string"
     },
     {
       "key": "token_comprador_2",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTUyMjIxMjB9.KSlcxfa8AVS9RYH8cdRuwWD6iGbiqPnNYceNLZBhfbg",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTUyNjI5ODN9.1O12u6aQWo9XFMu2AymdETJBXyBa2YCO0Ucv_uGISOs",
       "type": "string"
     },
     {
@@ -1251,14 +1251,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/compras/{{compra2Id}}",
+              "raw": "{{baseUrl}}/api/compras/{{compra2Id}}/estado",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "compras",
-                "{{compra2Id}}"
+                "{{compra2Id}}",
+                "estado"
               ]
             },
             "body": {
@@ -1398,14 +1399,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/compras/{{compra2Id}}",
+              "raw": "{{baseUrl}}/api/compras/{{compra2Id}}/estado",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "compras",
-                "{{compra2Id}}"
+                "{{compra2Id}}",
+                "estado"
               ]
             },
             "body": {
@@ -1450,14 +1452,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/compras/{{compraId}}",
+              "raw": "{{baseUrl}}/api/compras/{{compraId}}/estado",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "compras",
-                "{{compraId}}"
+                "{{compraId}}",
+                "estado"
               ]
             },
             "body": {
@@ -1611,14 +1614,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/compras/{{compraId}}",
+              "raw": "{{baseUrl}}/api/compras/{{compraId}}/estado",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "compras",
-                "{{compraId}}"
+                "{{compraId}}",
+                "estado"
               ]
             },
             "body": {

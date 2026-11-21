@@ -16,8 +16,6 @@ describe('CompraController (Pruebas Unitarias)', () => {
       getHistorial: jest.fn(),
       getMensajes: jest.fn(),
       create: jest.fn(),
-      cancelar: jest.fn(),
-      utilizar: jest.fn(),
       cambiarEstado: jest.fn()
     };
 
@@ -87,22 +85,6 @@ describe('CompraController (Pruebas Unitarias)', () => {
     expect(res.json).toHaveBeenCalledWith(nuevaCompra);
   });
 
-  it('cancelar debe responder 200 pasando usuarioActual', async () => {
-    const cancelada = { id: 'c-1', estado: 'CANCELADA' };
-    mockService.cancelar.mockResolvedValue(cancelada);
-    req.params = { id: 'c-1' };
-    req.body = { motivo: 'Problemas' };
-
-    await controller.cancelar(req, res, next);
-
-    expect(mockService.cancelar).toHaveBeenCalledWith('c-1', {
-      motivo: 'Problemas',
-      usuarioActual: req.user
-    });
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(cancelada);
-  });
-
   it('cambiarEstado debe delegar en service.cambiarEstado y responder 200 con la compra actualizada', async () => {
     const cancelada = { id: 'c-1', estado: 'CANCELADA' };
     mockService.cambiarEstado.mockResolvedValue(cancelada);
@@ -120,14 +102,17 @@ describe('CompraController (Pruebas Unitarias)', () => {
     expect(res.json).toHaveBeenCalledWith(cancelada);
   });
 
-  it('utilizar debe responder 200 pasando usuarioActual', async () => {
+  it('cambiarEstado a UTILIZADA debe delegar en service.cambiarEstado y responder 200', async () => {
     const utilizada = { id: 'c-1', estado: 'UTILIZADA' };
-    mockService.utilizar.mockResolvedValue(utilizada);
+    mockService.cambiarEstado.mockResolvedValue(utilizada);
     req.params = { id: 'c-1' };
+    req.body = { estado: 'UTILIZADA' };
 
-    await controller.utilizar(req, res, next);
+    await controller.cambiarEstado(req, res, next);
 
-    expect(mockService.utilizar).toHaveBeenCalledWith('c-1', {
+    expect(mockService.cambiarEstado).toHaveBeenCalledWith('c-1', {
+      estado: 'UTILIZADA',
+      motivo: undefined,
       usuarioActual: req.user
     });
     expect(res.status).toHaveBeenCalledWith(200);

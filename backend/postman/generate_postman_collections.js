@@ -553,7 +553,7 @@ pm.test("Historial contiene la conversación completa entre comprador y organiza
       createRequestItem({
         name: '1. Comprador cancela compra activa para obtener reembolso',
         method: 'PATCH',
-        urlPath: '/api/compras/{{compra2Id}}',
+        urlPath: '/api/compras/{{compra2Id}}/estado',
         authBearerVar: 'token_comprador',
         body: {
           estado: 'CANCELADA',
@@ -611,7 +611,7 @@ pm.test("El historial registra la transición a CANCELADA y guarda el motivo", (
       createRequestItem({
         name: '1. Conflicto - Intento de cancelar compra ya cancelada (409)',
         method: 'PATCH',
-        urlPath: '/api/compras/{{compra2Id}}',
+        urlPath: '/api/compras/{{compra2Id}}/estado',
         authBearerVar: 'token_comprador',
         body: {
           estado: 'CANCELADA',
@@ -625,7 +625,7 @@ pm.test("Status code es 409 Conflict", () => {
       createRequestItem({
         name: '2. Seguridad - Usuario ajeno intenta cancelar la compra (403)',
         method: 'PATCH',
-        urlPath: '/api/compras/{{compraId}}',
+        urlPath: '/api/compras/{{compraId}}/estado',
         authBearerVar: 'token_comprador_2',
         body: {
           estado: 'CANCELADA',
@@ -675,7 +675,7 @@ pm.test("Status code es 409 Conflict (no tiene compra UTILIZADA)", () => {
       createRequestItem({
         name: '2. Organizador registra ingreso y marca compra como UTILIZADA',
         method: 'PATCH',
-        urlPath: '/api/compras/{{compraId}}',
+        urlPath: '/api/compras/{{compraId}}/estado',
         authBearerVar: 'token_organizador',
         body: {
           estado: 'UTILIZADA'
@@ -1363,7 +1363,7 @@ pm.expect(data.total).to.equal(25000);
   createRequestItem({
     name: '15. Flujo Alternativo - Comprador cancela la Compra 2 para reembolso',
     method: 'PATCH',
-    urlPath: '/api/compras/{{compra2Id}}',
+    urlPath: '/api/compras/{{compra2Id}}/estado',
     authBearerVar: 'token_comprador',
     body: {
       estado: 'CANCELADA',
@@ -1394,7 +1394,7 @@ pm.expect(vip.cupo).to.equal(5); // Vuelve a los 5 iniciales
   createRequestItem({
     name: '17. Día del Evento - Organizador registra ingreso marcando Compra 1 como UTILIZADA',
     method: 'PATCH',
-    urlPath: '/api/compras/{{compraId}}',
+    urlPath: '/api/compras/{{compraId}}/estado',
     authBearerVar: 'token_organizador',
     body: {
       estado: 'UTILIZADA'

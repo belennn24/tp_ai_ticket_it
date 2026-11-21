@@ -35,12 +35,6 @@ export const cambiarEstadoCompraSchema = z.object({
     motivo: z.string().trim().optional()
 });
 
-export const cancelarCompraSchema = z.object({
-    motivo: z.string().trim().optional(),
-}).optional();
-
-export const utilizarCompraSchema = z.object({}).passthrough().optional();
-
 export const agregarMensajeSchema = z.object({
     mensaje: z.string({ message: 'El mensaje debe ser una cadena de texto.' })
         .trim()

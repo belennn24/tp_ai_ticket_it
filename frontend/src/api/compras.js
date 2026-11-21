@@ -20,12 +20,12 @@ export function crearCompra({ eventoId, tipoEntradaId, cantidad }) {
   return api.post('/compras', { eventoId, tipoEntradaId, cantidad });
 }
 
-// PATCH /api/compras/:id/cancelar
+// PATCH /api/compras/:id/estado { estado: 'CANCELADA', motivo? } (comprador)
 export function cancelarCompra(id, motivo) {
-  return api.patch(`/compras/${id}/cancelar`, motivo ? { motivo } : {});
+  return api.patch(`/compras/${id}/estado`, motivo ? { estado: 'CANCELADA', motivo } : { estado: 'CANCELADA' });
 }
 
-// PATCH /api/compras/:id/utilizar
+// PATCH /api/compras/:id/estado { estado: 'UTILIZADA' } (organizador)
 export function utilizarCompra(id) {
-  return api.patch(`/compras/${id}/utilizar`);
+  return api.patch(`/compras/${id}/estado`, { estado: 'UTILIZADA' });
 }

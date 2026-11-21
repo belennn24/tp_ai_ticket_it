@@ -5,9 +5,7 @@ import { authMiddleware, requireRole } from '../middlewares/authMiddleware.js';
 import { validate } from '../middlewares/validate.js';
 import {
   crearCompraSchema,
-  cancelarCompraSchema,
   agregarMensajeSchema,
-  utilizarCompraSchema,
   cambiarEstadoCompraSchema
 } from '../validations/compraValidation.js';
 
@@ -61,33 +59,6 @@ router.patch(
   requireRole('comprador', 'organizador'),
   validate(cambiarEstadoCompraSchema),
   compraController.cambiarEstado
-);
-
-// PATCH /api/compras/:id - Modificar estado de compra (estándar REST)
-router.patch(
-  '/:id',
-  authMiddleware,
-  requireRole('comprador', 'organizador'),
-  validate(cambiarEstadoCompraSchema),
-  compraController.cambiarEstado
-);
-
-// PATCH /api/compras/:id/cancelar - Cancelar compra y restituir cupo (solo comprador dueño)
-router.patch(
-  '/:id/cancelar',
-  authMiddleware,
-  requireRole('comprador'),
-  validate(cancelarCompraSchema),
-  compraController.cancelar
-);
-
-// PATCH /api/compras/:id/utilizar - Marcar entrada utilizada en acceso (solo organizador dueño)
-router.patch(
-  '/:id/utilizar',
-  authMiddleware,
-  requireRole('organizador'),
-  validate(utilizarCompraSchema),
-  compraController.utilizar
 );
 
 // POST /api/compras/:id/mensajes - Enviar mensaje en el chat (comprador u organizador)

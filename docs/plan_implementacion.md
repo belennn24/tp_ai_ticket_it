@@ -136,8 +136,8 @@ flowchart TD
       - `GET /api/compras` $\rightarrow$ 200.
       - `GET /api/compras/:id` $\rightarrow$ 200 / 404.
       - `GET /api/compras/:id/historial` $\rightarrow$ 200.
-      - `PATCH /api/compras/:id/cancelar` $\rightarrow$ 200 / 404 / 409.
-      - `PATCH /api/compras/:id/utilizar` $\rightarrow$ 200 / 404 / 409.
+      - `PATCH /api/compras/:id/estado` con `{ estado: "CANCELADA", motivo? }` (comprador) $\rightarrow$ 200 / 400 / 401 / 403 / 404 / 409.
+      - `PATCH /api/compras/:id/estado` con `{ estado: "UTILIZADA" }` (organizador) $\rightarrow$ 200 / 400 / 401 / 403 / 404 / 409.
 - **Testing a la par:**
   - **Unitarios:**
     - Pruebas exhaustivas de decremento y restitución de cupo.

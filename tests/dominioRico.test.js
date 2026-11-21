@@ -110,6 +110,14 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
       expect(eventoFuturo.yaOcurrio()).toBe(false);
     });
 
+    it('finalizo debe comparar por día calendario y no por hora de inicio', () => {
+      const evento = new Evento({ nombre: 'Recital', fecha: new Date(2026, 10, 21, 21, 0) });
+      expect(evento.finalizo(new Date(2026, 10, 21, 20, 0))).toBe(false);
+      expect(evento.finalizo(new Date(2026, 10, 21, 23, 30))).toBe(false);
+      expect(evento.yaOcurrio(new Date(2026, 10, 21, 23, 30))).toBe(true);
+      expect(evento.finalizo(new Date(2026, 10, 22, 0, 1))).toBe(true);
+    });
+
     it('debe buscar, descontar cupo, calcular precio mínimo y balance de cupos en el dominio', () => {
       const evento = new Evento({ nombre: 'Festival' });
       const tipo1 = new TipoEntrada({ id: 't-1', nombre: 'Campo', precio: 200, cupo: 50 });
@@ -183,6 +191,16 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
 
       // Una compra utilizada no puede ser cancelada
       expect(() => compra.cancelar()).toThrow(ConflictError);
+    });
+
+    it('utilizar debe permitirse durante el día del evento aunque ya haya empezado, y no al día siguiente', () => {
+      const evento = new Evento({ id: 'ev-hoy', nombre: 'Recital', fecha: new Date(2026, 10, 21, 21, 0) });
+      const enLaPuerta = new Compra({ evento, cantidad: 1, estado: estadoCompra.CONFIRMADA });
+      enLaPuerta.utilizar({ fechaReferencia: new Date(2026, 10, 21, 21, 15) });
+      expect(enLaPuerta.estado).toBe(estadoCompra.UTILIZADA);
+
+      const tarde = new Compra({ evento, cantidad: 1, estado: estadoCompra.CONFIRMADA });
+      expect(() => tarde.utilizar({ fechaReferencia: new Date(2026, 10, 22, 10, 0) })).toThrow(ConflictError);
     });
 
     it('cancelar debe setear estado CANCELADA, registrar fechaBaja y restituir cupo al evento desde el modelo', () => {

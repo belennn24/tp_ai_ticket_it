@@ -2,8 +2,6 @@ import {
     compraBaseSchema,
     crearCompraSchema,
     actualizarCompraSchema,
-    cancelarCompraSchema,
-    utilizarCompraSchema,
     cambiarEstadoCompraSchema,
     agregarMensajeSchema,
     cantidadSchema,
@@ -145,14 +143,11 @@ describe('CompraValidation (Declarativo)', () => {
         });
     });
 
-    describe('cancelarCompraSchema, utilizarCompraSchema y agregarMensajeSchema', () => {
-        test('cancelarCompraSchema acepta motivo opcional o cuerpo vacío', () => {
-            expect(cancelarCompraSchema.safeParse({}).success).toBe(true);
-            expect(cancelarCompraSchema.safeParse({ motivo: 'Inconveniente' }).success).toBe(true);
-        });
-
-        test('utilizarCompraSchema acepta cuerpo vacío', () => {
-            expect(utilizarCompraSchema.safeParse({}).success).toBe(true);
+    describe('cambiarEstadoCompraSchema y agregarMensajeSchema', () => {
+        test('cambiarEstadoCompraSchema rechaza estado faltante o inválido', () => {
+            expect(cambiarEstadoCompraSchema.safeParse({}).success).toBe(false);
+            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'CONFIRMADA' }).success).toBe(false);
+            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'cancelada' }).success).toBe(false);
         });
 
         test('cambiarEstadoCompraSchema valida estado CANCELADA (con/sin motivo) y UTILIZADA', () => {
