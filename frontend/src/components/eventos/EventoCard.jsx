@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
+import { ImagenEvento } from '@/components/ui';
+import { colores, espacios, fuentes, radios, tamanios } from '@/theme';
 import { entradasDisponibles, formatearFecha, formatearPrecio, nombreCompleto, precioDesde, yaOcurrio } from '@/utils/formato';
 
 function etiquetaDisponibilidad(evento) {
@@ -11,10 +11,12 @@ function etiquetaDisponibilidad(evento) {
   return null;
 }
 
-// Tarjeta de evento: imagen grande con el nombre encima. Un velo oscuro en
-// degradé garantiza el contraste del texto sea cual sea la foto.
+// Tarjeta de evento: portada superior con la foto completa del evento y cuerpo
+// debajo sobre superficie sólida para garantizar contraste y lectura clara.
 export function EventoCard({ evento, onPress }) {
-  const imagen = evento.multimedia?.[0];
+  const fotos = Array.isArray(evento.multimedia) ? evento.multimedia.filter(Boolean) : [];
+  const imagen = fotos[0];
+
   const desde = precioDesde(evento);
   const disponibilidad = etiquetaDisponibilidad(evento);
   const reputacion = Number(evento.organizador?.reputacion) || 0;
@@ -39,13 +41,7 @@ export function EventoCard({ evento, onPress }) {
       onPress={onPress}
       style={({ pressed }) => [estilos.tarjeta, pressed && estilos.presionada]}>
       <View style={estilos.portada}>
-        {imagen ? (
-          <Image source={{ uri: imagen }} style={estilos.imagen} resizeMode="cover" accessible={false} />
-        ) : (
-          <LinearGradient colors={degrades.ticket} style={[estilos.imagen, estilos.sinImagen]}>
-            <Ionicons name="musical-notes" size={48} color={colores.textoTicket} />
-          </LinearGradient>
-        )}
+        <ImagenEvento uri={imagen} />
 
         <View style={estilos.filaSuperior}>
           {evento.categoria?.nombre ? (
@@ -59,35 +55,31 @@ export function EventoCard({ evento, onPress }) {
             <View style={[estilos.pastilla, estilos.pastillaAlerta]}>
               <Text style={estilos.textoPastilla}>{disponibilidad}</Text>
             </View>
-          ) : evento.multimedia?.length > 1 ? (
+          ) : fotos.length > 1 ? (
             <View style={[estilos.pastilla, estilos.pastillaFotos]}>
               <Ionicons name="images-outline" size={12} color="#FFFFFF" />
-              <Text style={estilos.textoPastilla}>{evento.multimedia.length}</Text>
+              <Text style={estilos.textoPastilla}>{fotos.length}</Text>
             </View>
           ) : null}
         </View>
+      </View>
 
-        {/* El texto va siempre sobre velo al 85 %: aunque la letra se agrande, nunca queda sobre la foto sin oscurecer. */}
-        <View>
-          <LinearGradient colors={[degrades.veloFoto[0], colores.veloFoto]} style={estilos.transicionVelo} />
-          <View style={estilos.textoPortada}>
-            <Text style={estilos.nombre} numberOfLines={2}>
-              {evento.nombre}
-            </Text>
-            <View style={estilos.fila}>
-              <Ionicons name="calendar-outline" size={14} color={colores.acentoFecha} />
-              <Text style={estilos.fecha}>{formatearFecha(evento.fecha)}</Text>
-            </View>
-            {evento.ubicacion?.nombre ? (
-              <View style={estilos.fila}>
-                <Ionicons name="location-outline" size={14} color={colores.textoSecundario} />
-                <Text style={estilos.lugar} numberOfLines={1}>
-                  {evento.ubicacion.nombre}
-                </Text>
-              </View>
-            ) : null}
-          </View>
+      <View style={estilos.cuerpo}>
+        <Text style={estilos.nombre} numberOfLines={2}>
+          {evento.nombre}
+        </Text>
+        <View style={estilos.fila}>
+          <Ionicons name="calendar-outline" size={14} color={colores.acentoFecha} />
+          <Text style={estilos.fecha}>{formatearFecha(evento.fecha)}</Text>
         </View>
+        {evento.ubicacion?.nombre ? (
+          <View style={estilos.fila}>
+            <Ionicons name="location-outline" size={14} color={colores.textoSecundario} />
+            <Text style={estilos.lugar} numberOfLines={1}>
+              {evento.ubicacion.nombre}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={estilos.pie}>
@@ -123,19 +115,10 @@ const estilos = StyleSheet.create({
     opacity: 0.85,
   },
   portada: {
-    minHeight: 200,
-    justifyContent: 'flex-end',
-  },
-  imagen: {
-    ...StyleSheet.absoluteFillObject,
+    height: 170,
+    width: '100%',
+    position: 'relative',
     backgroundColor: colores.violetaOscuro,
-  },
-  sinImagen: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  transicionVelo: {
-    height: 64,
   },
   filaSuperior: {
     position: 'absolute',
@@ -165,10 +148,9 @@ const estilos = StyleSheet.create({
     fontSize: tamanios.xs,
     color: '#FFFFFF',
   },
-  textoPortada: {
-    backgroundColor: colores.veloFoto,
+  cuerpo: {
     paddingHorizontal: espacios.lg,
-    paddingBottom: espacios.md,
+    paddingTop: espacios.md,
     gap: espacios.xs,
   },
   nombre: {

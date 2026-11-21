@@ -39,5 +39,4 @@ export function requireRole(...roles) {
   };
 }
 
-export const requireAuth = authMiddleware;
 export default authMiddleware;

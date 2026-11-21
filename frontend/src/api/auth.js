@@ -15,3 +15,9 @@ export async function obtenerUsuarioActual() {
 export function cerrarSesion() {
   return api.post('/auth/logout');
 }
+
+// PATCH /api/usuarios/me -> { mensaje, usuario }
+export async function actualizarPerfil({ nombre, apellido }) {
+  const respuesta = await api.patch('/usuarios/me', { nombre, apellido });
+  return respuesta.usuario;
+}

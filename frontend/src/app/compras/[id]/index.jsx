@@ -15,14 +15,15 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { cancelarCompra, obtenerCompra, obtenerHistorial } from '@/api/compras';
-import { crearResenia, obtenerReseniasDeOrganizador } from '@/api/resenias';
+import { crearResenia } from '@/api/resenias';
 import { HistorialEstados } from '@/components/compras/HistorialEstados';
 import { TicketCompra } from '@/components/compras/TicketCompra';
 import { FormularioResenia } from '@/components/resenias/FormularioResenia';
 import { ReseniaItem } from '@/components/resenias/ReseniaItem';
-import { Boton, Cargando, EstadoVacio, FondoConBrillo } from '@/components/ui';
+import { Boton, EstadoConsulta, FondoConBrillo } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
 import { useConsulta } from '@/hooks/useConsulta';
+import { useReseniasOrganizador } from '@/hooks/useReseniasOrganizador';
 import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
 import { confirmar } from '@/utils/dialogos';
 import { idDe, yaOcurrio } from '@/utils/formato';
@@ -55,24 +56,10 @@ export default function DetalleCompra() {
 
   // Las reseñas solo hacen falta cuando la entrada ya fue utilizada.
   const organizadorId = compra?.evento?.organizador?.id;
-  const pideResenias = compra?.estado === 'UTILIZADA' && Boolean(organizadorId);
-  const resenias = useConsulta(
-    () => (pideResenias ? obtenerReseniasDeOrganizador(organizadorId) : Promise.resolve(null)),
-    pideResenias ? organizadorId : '',
-  );
+  const resenias = useReseniasOrganizador(organizadorId, { activo: compra?.estado === 'UTILIZADA' });
 
-  if (consulta.cargando && !compra) {
-    return <Cargando />;
-  }
   if (!compra) {
-    return (
-      <EstadoVacio
-        icono="alert-circle-outline"
-        titulo="No se pudo cargar la compra"
-        descripcion={consulta.error}
-        accion={<Boton titulo="Reintentar" variante="secundario" onPress={consulta.recargar} />}
-      />
-    );
+    return <EstadoConsulta consulta={consulta} tituloError="No se pudo cargar la compra" />;
   }
 
   const esComprador = rol === 'comprador';

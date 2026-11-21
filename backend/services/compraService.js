@@ -3,6 +3,7 @@ import { estadoCompra } from '../models/estadoCompra.js';
 import { compraRepository as defaultCompraRepository } from '../repositories/compraRepository.js';
 import { eventoRepository as defaultEventoRepository } from '../repositories/eventoRepository.js';
 import { cambioEstadoCompraRepository as defaultCambioEstadoCompraRepository } from '../repositories/cambioEstadoCompraRepository.js';
+import { usuarioRepository as defaultUsuarioRepository } from '../repositories/usuarioRepository.js';
 import { extraerId } from '../utils/idUtils.js';
 import {
   NotFoundError,
@@ -18,11 +19,13 @@ export class CompraService {
     compraRepository = defaultCompraRepository,
     eventoRepository = defaultEventoRepository,
     cambioEstadoCompraRepository = defaultCambioEstadoCompraRepository,
+    usuarioRepository = defaultUsuarioRepository,
     fechaActualProvider = () => new Date()
   } = {}) {
     this.compraRepository = compraRepository;
     this.eventoRepository = eventoRepository;
     this.cambioEstadoCompraRepository = cambioEstadoCompraRepository;
+    this.usuarioRepository = usuarioRepository;
     this.fechaActualProvider = fechaActualProvider;
   }
 
@@ -140,9 +143,10 @@ export class CompraService {
       }
     }
     const tipoEntrada = evento.obtenerTipoEntrada(tipoEntradaId);
+    const comprador = (compradorId && (await this.usuarioRepository?.findById?.(compradorId))) || compradorId;
     const nuevaCompra = new Compra({
       id: resto.id,
-      comprador: compradorId,
+      comprador,
       evento,
       tipoEntrada,
       cantidad: cantidadNum,

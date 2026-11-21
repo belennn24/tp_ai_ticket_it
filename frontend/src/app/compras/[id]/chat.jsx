@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { obtenerCompra } from '@/api/compras';
 import { enviarMensaje } from '@/api/mensajes';
 import { BurbujaMensaje } from '@/components/chat/BurbujaMensaje';
-import { Boton, Cargando, EstadoVacio, FondoConBrillo } from '@/components/ui';
+import { EstadoConsulta, EstadoVacio, FondoConBrillo, Separador } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
 import { useConsulta } from '@/hooks/useConsulta';
 import { useSondeo } from '@/hooks/useSondeo';
@@ -195,21 +195,8 @@ export default function ChatCompra() {
     </Pressable>
   );
 
-  const renderLista = () => {
-    if (mensajes.cargando && !mensajes.datos) {
-      return <Cargando />;
-    }
-    if (mensajes.error && !mensajes.datos) {
-      return (
-        <EstadoVacio
-          icono="alert-circle-outline"
-          titulo="No se pudo cargar el chat"
-          descripcion={mensajes.error}
-          accion={<Boton titulo="Reintentar" variante="secundario" onPress={mensajes.recargar} />}
-        />
-      );
-    }
-    return (
+  const renderLista = () => (
+    <EstadoConsulta consulta={mensajes} tituloError="No se pudo cargar el chat">
       <FlatList
         ref={lista}
         data={ordenados}
@@ -243,8 +230,8 @@ export default function ChatCompra() {
           />
         }
       />
-    );
-  };
+    </EstadoConsulta>
+  );
 
   // En Android con adjustResize el offset suele ser 0 u 80 según el header del stack.
   const verticalOffset = Platform.OS === 'ios' ? 90 : 80;
@@ -339,10 +326,6 @@ export default function ChatCompra() {
       </KeyboardAvoidingView>
     </FondoConBrillo>
   );
-}
-
-function Separador() {
-  return <View style={estilos.separador} />;
 }
 
 const estilos = StyleSheet.create({

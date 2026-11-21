@@ -40,6 +40,12 @@ export function SesionProvider({ children }) {
     limpiar();
   }, [limpiar]);
 
+  const actualizarPerfil = useCallback(async ({ nombre, apellido }) => {
+    const actualizado = await authApi.actualizarPerfil({ nombre, apellido });
+    setUsuario(actualizado);
+    return actualizado;
+  }, []);
+
   const valor = useMemo(
     () => ({
       usuario,
@@ -48,8 +54,9 @@ export function SesionProvider({ children }) {
       sesionVencida,
       iniciarSesion,
       cerrarSesion,
+      actualizarPerfil,
     }),
-    [usuario, sesionVencida, iniciarSesion, cerrarSesion]
+    [usuario, sesionVencida, iniciarSesion, cerrarSesion, actualizarPerfil]
   );
 
   return <SesionContext.Provider value={valor}>{children}</SesionContext.Provider>;

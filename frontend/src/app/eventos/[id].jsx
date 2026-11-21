@@ -8,15 +8,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { crearCompra } from '@/api/compras';
 import { obtenerEvento } from '@/api/eventos';
 import { agregarFavorito, eliminarFavorito, listarFavoritos } from '@/api/favoritos';
-import { obtenerReseniasDeOrganizador } from '@/api/resenias';
 import { TarjetaUbicacion } from '@/components/eventos/MapaUbicaciones';
 import { MapaSectores } from '@/components/eventos/MapaSectores';
 import { SelectorCantidad } from '@/components/eventos/SelectorCantidad';
 import { TipoEntradaItem } from '@/components/eventos/TipoEntradaItem';
 import { ReseniaItem } from '@/components/resenias/ReseniaItem';
-import { Boton, Cargando, EstadoVacio, Estrellas } from '@/components/ui';
+import { Boton, EstadoConsulta, Estrellas } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
 import { useConsulta } from '@/hooks/useConsulta';
+import { useReseniasOrganizador } from '@/hooks/useReseniasOrganizador';
 import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
 import { confirmar } from '@/utils/dialogos';
 import { formatearFecha, formatearPrecio, nombreCompleto, yaOcurrio } from '@/utils/formato';
@@ -34,10 +34,7 @@ export default function DetalleEvento() {
   const consulta = useConsulta(() => obtenerEvento(id), id);
   const evento = consulta.datos;
   const organizadorId = evento?.organizador?.id;
-  const resenias = useConsulta(
-    () => (organizadorId ? obtenerReseniasDeOrganizador(organizadorId) : Promise.resolve(null)),
-    organizadorId ?? '',
-  );
+  const resenias = useReseniasOrganizador(organizadorId);
 
   const consultaFavoritos = useConsulta(
     () => (rol === 'comprador' ? listarFavoritos() : Promise.resolve([])),
@@ -63,18 +60,8 @@ export default function DetalleEvento() {
     }
   };
 
-  if (consulta.cargando && !evento) {
-    return <Cargando />;
-  }
   if (!evento) {
-    return (
-      <EstadoVacio
-        icono="alert-circle-outline"
-        titulo="No se pudo cargar el evento"
-        descripcion={consulta.error}
-        accion={<Boton titulo="Reintentar" variante="secundario" onPress={consulta.recargar} />}
-      />
-    );
+    return <EstadoConsulta consulta={consulta} tituloError="No se pudo cargar el evento" />;
   }
 
   const finalizado = yaOcurrio(evento.fecha);

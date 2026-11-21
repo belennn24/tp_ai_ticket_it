@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,6 +16,7 @@ import { crearEvento } from '@/api/eventos';
 import { Boton, Cargando, Chip, Input, Pantalla } from '@/components/ui';
 import { useConsulta } from '@/hooks/useConsulta';
 import { ALTO_TACTIL, colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
+import { avisar } from '@/utils/dialogos';
 
 function obtenerFechaManiana() {
   const maniana = new Date();
@@ -155,12 +155,8 @@ export default function CrearEvento() {
 
       await crearEvento(payload);
 
-      Alert.alert('¡Evento publicado!', 'El evento se ha creado con éxito.', [
-        {
-          text: 'Aceptar',
-          onPress: () => router.replace('/organizador/eventos'),
-        },
-      ]);
+      avisar('¡Evento publicado!', 'El evento se ha creado con éxito.');
+      router.replace('/organizador/eventos');
     } catch (e) {
       setErrorEnvio(e.message || 'Error al publicar el evento.');
     } finally {

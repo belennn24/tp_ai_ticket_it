@@ -82,7 +82,7 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     }
   ];
 
-  const passwordSeed = process.env.SEED_PASSWORD || (esEntornoLocal() ? 'Password123!' : null);
+  const passwordSeed = process.env.SEED_PASSWORD || (esEntornoLocal() ? '1234' : null);
   if (!passwordSeed) {
     throw new Error('SEED_PASSWORD es obligatorio para sembrar datos fuera de desarrollo.');
   }

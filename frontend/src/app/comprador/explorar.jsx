@@ -8,7 +8,7 @@ import { buscarEventos } from '@/api/eventos';
 import { EventoCard } from '@/components/eventos/EventoCard';
 import { FilaChips } from '@/components/eventos/FilaChips';
 import { MapaUbicaciones } from '@/components/eventos/MapaUbicaciones';
-import { Boton, Cargando, EstadoVacio, Input, Pantalla } from '@/components/ui';
+import { Boton, EstadoConsulta, EstadoVacio, Input, Pantalla, SeparadorGrande } from '@/components/ui';
 import { useConsulta } from '@/hooks/useConsulta';
 import { ALTO_TACTIL, colores, espacios, fuentes, radios, tamanios } from '@/theme';
 
@@ -53,19 +53,6 @@ export default function Explorar() {
   };
 
   const renderContenido = () => {
-    if (eventos.cargando && !eventos.datos) {
-      return <Cargando />;
-    }
-    if (eventos.error && !eventos.datos) {
-      return (
-        <EstadoVacio
-          icono="cloud-offline-outline"
-          titulo="No se pudieron cargar los eventos"
-          descripcion={eventos.error}
-          accion={<Boton titulo="Reintentar" variante="secundario" onPress={eventos.recargar} />}
-        />
-      );
-    }
     if (vista === 'mapa') {
       return (
         <MapaUbicaciones
@@ -80,7 +67,7 @@ export default function Explorar() {
         keyExtractor={(evento) => evento.id}
         renderItem={({ item }) => <EventoCard evento={item} onPress={() => router.push(`/eventos/${item.id}`)} />}
         contentContainerStyle={estilos.lista}
-        ItemSeparatorComponent={Separador}
+        ItemSeparatorComponent={SeparadorGrande}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={eventos.recargando} onRefresh={eventos.recargar} tintColor={colores.primario} />
@@ -132,13 +119,11 @@ export default function Explorar() {
           </>
         ) : null}
       </View>
-      {renderContenido()}
+      <EstadoConsulta consulta={eventos} tituloError="No se pudieron cargar los eventos">
+        {renderContenido()}
+      </EstadoConsulta>
     </Pantalla>
   );
-}
-
-function Separador() {
-  return <View style={estilos.separador} />;
 }
 
 const estilos = StyleSheet.create({
@@ -180,8 +165,5 @@ const estilos = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: espacios.xl,
     paddingBottom: espacios.xl,
-  },
-  separador: {
-    height: espacios.lg,
   },
 });

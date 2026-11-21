@@ -9,7 +9,7 @@ import { organizadorRoutes } from './routes/organizadorRoutes.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { seedRoutes } from './routes/seedRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-import { limiteGeneral, limiteAuth } from './middlewares/rateLimiting.js';
+import { limiteGeneral, limiteAuth, limiteRefresh } from './middlewares/rateLimiting.js';
 import { esEntornoLocal } from './config/entorno.js';
 
 const app = express();
@@ -30,7 +30,7 @@ app.use('/api', limiteGeneral);
 app.use('/api/auth/login', limiteAuth);
 app.use('/api/auth/token', limiteAuth);
 app.use('/api/auth/registro', limiteAuth);
-app.use('/api/auth/refresh', limiteAuth);
+app.use('/api/auth/refresh', limiteRefresh);
 
 // Rutas de desarrollo para reiniciar y verificar el Seed
 if (esEntornoLocal()) {

@@ -1,7 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Boton, Pantalla } from '@/components/ui';
+import { Boton, Input, Pantalla } from '@/components/ui';
 import { useSesion } from '@/context/SesionContext';
 import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
 
@@ -10,9 +12,15 @@ const NOMBRE_ROL = {
   organizador: 'Organizador',
 };
 
-// Datos del usuario autenticado y cierre de sesión. Lo usan ambos roles.
+// Datos del usuario autenticado, edición de nombre y cierre de sesión. Lo usan ambos roles.
 export function PerfilUsuario() {
-  const { usuario, cerrarSesion } = useSesion();
+  const { usuario, cerrarSesion, actualizarPerfil } = useSesion();
+  const [editando, setEditando] = useState(false);
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [error, setError] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+
   if (!usuario) return null;
 
   const nombreCompleto = [usuario.nombre, usuario.apellido].filter(Boolean).join(' ');
@@ -20,6 +28,40 @@ export function PerfilUsuario() {
     .filter(Boolean)
     .map((parte) => parte[0].toUpperCase())
     .join('');
+
+  const abrirEdicion = () => {
+    setNombre(usuario.nombre ?? '');
+    setApellido(usuario.apellido ?? '');
+    setError(null);
+    setEditando(true);
+  };
+
+  const cancelarEdicion = () => {
+    setEditando(false);
+    setError(null);
+  };
+
+  const guardarNombre = async () => {
+    const nombreLimpio = nombre.trim();
+    if (!nombreLimpio) {
+      setError('El nombre no puede estar vacío.');
+      return;
+    }
+
+    setGuardando(true);
+    setError(null);
+    try {
+      await actualizarPerfil({
+        nombre: nombreLimpio,
+        apellido: apellido.trim(),
+      });
+      setEditando(false);
+    } catch (err) {
+      setError(err?.message ?? 'No se pudo actualizar el nombre.');
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   return (
     <Pantalla titulo="Perfil">
@@ -41,6 +83,52 @@ export function PerfilUsuario() {
           </View>
           <Text style={estilos.nombre}>{nombreCompleto}</Text>
           <Text style={estilos.email}>{usuario.email}</Text>
+
+          {editando ? (
+            <View style={estilos.formularioEdicion}>
+              <Input
+                etiqueta="Nombre"
+                value={nombre}
+                onChangeText={setNombre}
+                placeholder="Tu nombre"
+                autoCapitalize="words"
+                returnKeyType="next"
+              />
+              <Input
+                etiqueta="Apellido"
+                value={apellido}
+                onChangeText={setApellido}
+                placeholder="Tu apellido (opcional)"
+                autoCapitalize="words"
+                returnKeyType="done"
+                onSubmitEditing={guardarNombre}
+              />
+              {error ? <Text style={estilos.error} accessibilityRole="alert">{error}</Text> : null}
+              <View style={estilos.accionesEdicion}>
+                <Boton
+                  titulo="Cancelar"
+                  variante="secundario"
+                  onPress={cancelarEdicion}
+                  deshabilitado={guardando}
+                  style={estilos.botonMitad}
+                />
+                <Boton
+                  titulo="Guardar"
+                  onPress={guardarNombre}
+                  cargando={guardando}
+                  style={estilos.botonMitad}
+                />
+              </View>
+            </View>
+          ) : (
+            <Boton
+              titulo="Editar nombre"
+              variante="secundario"
+              onPress={abrirEdicion}
+              icono={<Ionicons name="pencil-outline" size={18} color={colores.texto} />}
+              style={estilos.botonEditar}
+            />
+          )}
         </View>
 
         <Boton titulo="Cerrar sesión" variante="peligro" onPress={cerrarSesion} />
@@ -99,5 +187,24 @@ const estilos = StyleSheet.create({
     fontFamily: fuentes.mono,
     fontSize: tamanios.sm,
     color: colores.textoSecundario,
+  },
+  botonEditar: {
+    marginTop: espacios.md,
+  },
+  formularioEdicion: {
+    marginTop: espacios.md,
+    gap: espacios.md,
+  },
+  accionesEdicion: {
+    flexDirection: 'row',
+    gap: espacios.md,
+  },
+  botonMitad: {
+    flex: 1,
+  },
+  error: {
+    fontFamily: fuentes.regular,
+    fontSize: tamanios.xs,
+    color: colores.error,
   },
 });

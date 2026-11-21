@@ -34,6 +34,15 @@ export class UsuarioController {
       next(error);
     }
   };
+
+  actualizarPerfil = async (req, res, next) => {
+    try {
+      const resultado = await this.service.actualizarPerfil(req.user.id, req.body);
+      res.status(200).json(resultado);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export const usuarioController = new UsuarioController();

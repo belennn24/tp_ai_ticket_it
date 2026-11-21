@@ -173,22 +173,6 @@ export class Compra {
         return this.actualizarEstado(estadoCompra.REEMBOLSADA, quien, fechaReferencia, motivo);
     }
 
-    cambiarEstado(nuevoEstado, { fechaReferencia, quien, motivo } = {}) {
-        if (nuevoEstado === estadoCompra.CANCELADA) {
-            return this.cancelar({ fechaReferencia, quien, motivo });
-        }
-        if (nuevoEstado === estadoCompra.UTILIZADA) {
-            return this.utilizar({ fechaReferencia, quien });
-        }
-        if (nuevoEstado === estadoCompra.CONFIRMADA) {
-            return this.confirmar(quien, fechaReferencia);
-        }
-        if (nuevoEstado === estadoCompra.REEMBOLSADA) {
-            return this.reembolsar(quien, fechaReferencia, motivo);
-        }
-        throw new ValidationError('El estado es obligatorio y debe ser CANCELADA o UTILIZADA.');
-    }
-
     esDeComprador(usuarioRef) {
         if (!usuarioRef || !this.comprador) return false;
         return extraerId(this.comprador) === extraerId(usuarioRef);

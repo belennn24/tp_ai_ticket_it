@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { BotonBuzon } from '@/components/chat/BotonBuzon';
 import { SesionProvider, useSesion } from '@/context/SesionContext';
 import { colores, fuentes, mapaFuentes } from '@/theme';
 
@@ -17,6 +18,7 @@ const opcionesDetalle = {
   headerTitleStyle: { fontFamily: fuentes.bold },
   headerShadowVisible: false,
   headerBackButtonDisplayMode: 'minimal',
+  headerRight: () => <BotonBuzon compacto />,
 };
 
 // Guardia de sesión: cada grupo de rutas solo existe si se cumple su condición.
@@ -33,9 +35,10 @@ function Navegacion() {
       <Stack.Protected guard={haySesion} redirectTo="/login">
         <Stack.Screen name="index" />
         {/* Pantallas de detalle: se abren por encima de las pestañas, con encabezado y botón "atrás". */}
+        <Stack.Screen name="chats" options={{ ...opcionesDetalle, title: 'Buzón de chats', headerRight: () => null }} />
         <Stack.Screen name="eventos/[id]" options={{ ...opcionesDetalle, title: 'Evento' }} />
         <Stack.Screen name="compras/[id]/index" options={{ ...opcionesDetalle, title: 'Mi compra' }} />
-        <Stack.Screen name="compras/[id]/chat" options={{ ...opcionesDetalle, title: 'Chat' }} />
+        <Stack.Screen name="compras/[id]/chat" options={{ ...opcionesDetalle, title: 'Chat', headerRight: () => null }} />
         <Stack.Screen name="gestion/[id]" options={{ ...opcionesDetalle, title: 'Gestión del evento' }} />
       </Stack.Protected>
 

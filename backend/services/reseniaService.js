@@ -70,10 +70,11 @@ export class ReseniaService {
         }
 
         const organizadorId = this.extraerId(evento.organizador);
+        const comprador = (await this.usuarioRepository?.findById?.(compradorId)) || compradorId;
 
         const nuevaResenia = new Resenia({
             id: resto.id,
-            comprador: compradorId,
+            comprador,
             evento,
             organizador: organizadorId,
             detalle,

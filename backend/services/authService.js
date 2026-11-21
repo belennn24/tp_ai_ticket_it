@@ -50,11 +50,10 @@ export class AuthService {
     return jwt.sign(payload, this.jwtSecret, { expiresIn: this.refreshTokenExpiresIn });
   }
 
-  generarToken(usuario) {
-    return this.generarAccessToken(usuario);
-  }
-
   formatearUsuario(usuario) {
+    if (typeof usuario?.aPerfilPublico === 'function') {
+      return usuario.aPerfilPublico();
+    }
     const rolNormalizado = String(usuario?.rol || 'comprador').toLowerCase().trim();
     return {
       id: String(usuario.id),

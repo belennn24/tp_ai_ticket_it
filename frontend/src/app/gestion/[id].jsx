@@ -15,8 +15,8 @@ import { obtenerComprasDeEvento, obtenerEvento } from '@/api/eventos';
 import { FilaChips } from '@/components/eventos/FilaChips';
 import {
   Boton,
-  Cargando,
   EstadoBadge,
+  EstadoConsulta,
   EstadoVacio,
   FondoConBrillo,
 } from '@/components/ui';
@@ -59,8 +59,6 @@ export default function GestionEvento() {
   const datosCompras = consultaCompras.datos;
   const evento = consultaEvento.datos;
 
-  const cargando = (consultaCompras.cargando && !datosCompras) || (consultaEvento.cargando && !evento);
-
   const recargarTodo = async () => {
     await Promise.all([consultaCompras.recargar(), consultaEvento.recargar()]);
   };
@@ -101,23 +99,12 @@ export default function GestionEvento() {
     }
   };
 
-  if (cargando) {
-    return <Cargando />;
-  }
-
-  if (consultaCompras.error && !datosCompras) {
-    return (
-      <EstadoVacio
-        icono="alert-circle-outline"
-        titulo="No se pudo cargar la gestión"
-        descripcion={consultaCompras.error}
-        accion={<Boton titulo="Reintentar" variante="secundario" onPress={recargarTodo} />}
-      />
-    );
-  }
-
   return (
-    <FondoConBrillo>
+    <EstadoConsulta
+      consultas={[consultaCompras, consultaEvento]}
+      tituloError="No se pudo cargar la gestión"
+      onReintentar={recargarTodo}>
+      <FondoConBrillo>
       <FlatList
         data={comprasFiltradas}
         keyExtractor={(item) => String(item.id)}
@@ -259,11 +246,11 @@ export default function GestionEvento() {
                   <Text style={estilos.montoCompra}>{formatearPrecio(compra.total)}</Text>
                 </View>
 
-                {compra.fechaCreacion ? (
+                {compra.fechaCompra ? (
                   <View>
                     <Text style={estilos.etiquetaGris}>FECHA</Text>
                     <Text style={estilos.valorDetalle}>
-                      {formatearFechaCorta(compra.fechaCreacion)}
+                      {formatearFechaCorta(compra.fechaCompra)}
                     </Text>
                   </View>
                 ) : null}
@@ -293,6 +280,7 @@ export default function GestionEvento() {
         }}
       />
     </FondoConBrillo>
+    </EstadoConsulta>
   );
 }
 
