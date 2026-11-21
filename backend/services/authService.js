@@ -77,10 +77,7 @@ export class AuthService {
 
     const emailNormalizado = email.toLowerCase().trim();
     const rolNormalizado = String(rol || 'comprador').toLowerCase().trim();
-    if (rolNormalizado === 'admin') {
-      throw new BadRequestError('No está permitido el autorregistro con rol de administrador.');
-    }
-    if (!Usuario.ROLES_REGISTRABLES.includes(rolNormalizado)) {
+    if (!Usuario.ROLES.includes(rolNormalizado)) {
       throw new BadRequestError('Rol de usuario no permitido para registro.');
     }
 

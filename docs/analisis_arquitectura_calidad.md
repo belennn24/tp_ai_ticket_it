@@ -8,7 +8,7 @@ Basado en la evaluación de atributos de calidad (ISO/IEC 25010), principios SOL
 
 1. **Escalamiento de privilegios a Administrador en Autorregistro:**
    - `authService.registro` aceptaba `rol` arbitrario del cuerpo de la petición.
-   - *Corrección:* El autorregistro público solo admite `comprador` u `organizador`. Queda expresamente prohibido registrar `admin` por endpoint público. El usuario `admin` solo nace del `seed` o por aprovisionamiento interno seguro.
+   - *Corrección:* El autorregistro público solo admite `comprador` u `organizador`. Son los únicos roles del sistema: el enunciado no contempla un administrador.
 
 2. **Fuga de Credenciales (`passwordHash`) en Endpoints Públicos:**
    - `seed.js` asigna el objeto `Usuario` al `organizador` del evento.

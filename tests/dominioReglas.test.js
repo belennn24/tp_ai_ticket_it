@@ -80,9 +80,9 @@ describe('Reglas de dominio: mensajes, tipos de entrada, favoritos y roles', () 
       expect(usuario.eliminarFavorito('ev-1')).toBe(false);
     });
 
-    it('expone los roles válidos y los que se pueden elegir al registrarse', () => {
-      expect(Usuario.ROLES).toEqual(['comprador', 'organizador', 'admin']);
-      expect(Usuario.ROLES_REGISTRABLES).toEqual(['comprador', 'organizador']);
+    it('solo admite los roles comprador y organizador', () => {
+      expect(Usuario.ROLES).toEqual(['comprador', 'organizador']);
+      expect(() => new Usuario({ nombre: 'X', rol: 'admin' })).toThrow(ValidationError);
       expect(() => new Usuario({ nombre: 'X', rol: 'superusuario' })).toThrow(ValidationError);
     });
   });

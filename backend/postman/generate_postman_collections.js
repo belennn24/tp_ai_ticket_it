@@ -15,11 +15,6 @@ const tokenOrganizador = jwt.sign(
   JWT_SECRET
 );
 
-const tokenAdmin = jwt.sign(
-  { id: 'usr-admin-1', email: 'admin@ticketit.com', role: 'admin', rol: 'admin', nombre: 'Admin Sistema' },
-  JWT_SECRET
-);
-
 const tokenComprador2 = jwt.sign(
   { id: 'usr-comprador-2', email: 'maria@ticketit.com', role: 'comprador', rol: 'comprador', nombre: 'Maria Compradora' },
   JWT_SECRET
@@ -29,7 +24,6 @@ const defaultVariables = [
   { key: 'baseUrl', value: 'http://localhost:3000', type: 'string' },
   { key: 'token_comprador', value: tokenComprador, type: 'string' },
   { key: 'token_organizador', value: tokenOrganizador, type: 'string' },
-  { key: 'token_admin', value: tokenAdmin, type: 'string' },
   { key: 'token_comprador_2', value: tokenComprador2, type: 'string' },
   { key: 'categoriaId', value: 'cat-musica-1', type: 'string' },
   { key: 'eventoId', value: 'evt-rock-fest-1', type: 'string' },

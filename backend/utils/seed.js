@@ -38,7 +38,7 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     refreshTokenRepository.clear();
   }
 
-  // 1. Usuarios representativos (Compradores, Organizadores, Admin)
+  // 1. Usuarios representativos (Compradores y Organizadores)
   const usuariosData = [
     {
       id: 'usr-organizador-1',
@@ -70,14 +70,6 @@ export async function seedDatabase({ clearExisting = false } = {}) {
       apellido: 'Compradora',
       email: 'maria@ticketit.com',
       rol: 'comprador',
-      reputacion: 0
-    },
-    {
-      id: 'usr-admin-1',
-      nombre: 'Admin',
-      apellido: 'Sistema',
-      email: 'admin@ticketit.com',
-      rol: 'admin',
       reputacion: 0
     }
   ];

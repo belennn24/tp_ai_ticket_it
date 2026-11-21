@@ -3,9 +3,7 @@ import { ValidationError } from '../errors/appError.js';
 import { extraerId } from '../utils/idUtils.js';
 
 export class Usuario {
-    static ROLES = Object.freeze(['comprador', 'organizador', 'admin']);
-    // El rol admin no se puede elegir al registrarse.
-    static ROLES_REGISTRABLES = Object.freeze(['comprador', 'organizador']);
+    static ROLES = Object.freeze(['comprador', 'organizador']);
 
     constructor({
         id,
