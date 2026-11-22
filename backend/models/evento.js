@@ -172,7 +172,7 @@ export class Evento {
         if (this.yaOcurrio(fechaReferencia)) {
             throw new ConflictError('No se pueden comprar entradas para un evento que ya ocurrió.');
         }
-        Compra.validarLimitePorPersona(comprasPrevias, cantidad);
+        Compra.validarLimitePorEvento(comprasPrevias, cantidad);
         const tipoEntrada = this.obtenerTipoEntrada(tipoEntradaId);
         const compra = new Compra({ comprador, evento: this, tipoEntrada, cantidad });
 

@@ -143,7 +143,7 @@ export class Compra {
         return cambio;
     }
 
-    static MAX_POR_PERSONA = 5;
+    static MAX_POR_EVENTO = 5;
 
     // Una compra vigente es la que ocupa entradas del comprador: las canceladas
     // o reembolsadas ya devolvieron su cupo y no cuentan para el límite.
@@ -156,12 +156,12 @@ export class Compra {
         return this.estado === estadoCompra.UTILIZADA;
     }
 
-    // Regla de negocio: nadie puede tener más de MAX_POR_PERSONA entradas vigentes
+    // Regla de negocio: cada comprador puede tener hasta MAX_POR_EVENTO entradas vigentes
     // para un mismo evento, sumando las compras previas y la nueva.
-    static validarLimitePorPersona(comprasPrevias = [], cantidad) {
-        const maximo = Compra.MAX_POR_PERSONA;
+    static validarLimitePorEvento(comprasPrevias = [], cantidad) {
+        const maximo = Compra.MAX_POR_EVENTO;
         if (cantidad > maximo) {
-            throw new ValidationError(`Solo se pueden comprar hasta ${maximo} entradas por persona.`);
+            throw new ValidationError(`Solo se pueden comprar hasta ${maximo} entradas por evento.`);
         }
         const yaCompradas = comprasPrevias
             .filter(c => c.estaVigente())
@@ -170,8 +170,8 @@ export class Compra {
             const restantes = Math.max(0, maximo - yaCompradas);
             throw new ConflictError(
                 restantes > 0
-                    ? `Solo se permiten hasta ${maximo} entradas por persona para este evento (podés comprar ${restantes} más).`
-                    : `Ya alcanzaste el límite de ${maximo} entradas por persona para este evento.`
+                    ? `Solo se permiten hasta ${maximo} entradas por evento (podés comprar ${restantes} más).`
+                    : `Ya alcanzaste el límite de ${maximo} entradas para este evento.`
             );
         }
     }

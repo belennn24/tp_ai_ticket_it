@@ -237,7 +237,7 @@ export default function DetalleEvento() {
   );
 }
 
-const MAX_ENTRADAS_POR_PERSONA = 5;
+const MAX_ENTRADAS_POR_EVENTO = 5;
 
 // Barra inferior de compra. Solo se muestra con un tipo de entrada elegido,
 // por eso acá `tipo` nunca es nulo.
@@ -247,8 +247,8 @@ function BarraCompra({ eventoId, tipo, onComprada, onError }) {
   const [comprando, setComprando] = useState(false);
   const [error, setError] = useState(null);
 
-  // El selector se limita tanto por el cupo disponible como por el máximo por persona.
-  const maximoPermitido = Math.min(tipo.cupo, MAX_ENTRADAS_POR_PERSONA);
+  // El selector se limita tanto por el cupo disponible como por el máximo de entradas por evento.
+  const maximoPermitido = Math.min(tipo.cupo, MAX_ENTRADAS_POR_EVENTO);
   const cantidadValida = Math.min(cantidad, Math.max(maximoPermitido, 1));
   const total = tipo.precio * cantidadValida;
 

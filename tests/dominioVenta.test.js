@@ -59,7 +59,7 @@ describe('Reglas de venta en el dominio', () => {
       expect(tipo.cupo).toBe(2);
     });
 
-    it('valida el límite por persona antes de descontar cupo', () => {
+    it('valida el límite de entradas por evento antes de descontar cupo', () => {
       const { evento, tipo } = crearEvento();
       const comprasPrevias = [compraCon(estadoCompra.CONFIRMADA, 3)];
 
@@ -70,22 +70,22 @@ describe('Reglas de venta en el dominio', () => {
     });
   });
 
-  describe('Compra.validarLimitePorPersona', () => {
+  describe('Compra.validarLimitePorEvento', () => {
     it('rechaza más de 5 entradas en una sola compra', () => {
-      expect(() => Compra.validarLimitePorPersona([], 6)).toThrow(ValidationError);
+      expect(() => Compra.validarLimitePorEvento([], 6)).toThrow(ValidationError);
     });
 
     it('suma las compras vigentes previas', () => {
       const previas = [compraCon(estadoCompra.CONFIRMADA, 2), compraCon(estadoCompra.UTILIZADA, 2)];
 
-      expect(() => Compra.validarLimitePorPersona(previas, 1)).not.toThrow();
-      expect(() => Compra.validarLimitePorPersona(previas, 2)).toThrow(ConflictError);
+      expect(() => Compra.validarLimitePorEvento(previas, 1)).not.toThrow();
+      expect(() => Compra.validarLimitePorEvento(previas, 2)).toThrow(ConflictError);
     });
 
     it('no cuenta las compras canceladas ni reembolsadas', () => {
       const previas = [compraCon(estadoCompra.CANCELADA, 4), compraCon(estadoCompra.REEMBOLSADA, 4)];
 
-      expect(() => Compra.validarLimitePorPersona(previas, 5)).not.toThrow();
+      expect(() => Compra.validarLimitePorEvento(previas, 5)).not.toThrow();
     });
   });
 
