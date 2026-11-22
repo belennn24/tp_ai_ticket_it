@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { crearCompra } from '@/api/compras';
+import { crearCompra, listarMisCompras } from '@/api/compras';
 import { obtenerEvento } from '@/api/eventos';
 import { agregarFavorito, eliminarFavorito, listarFavoritos } from '@/api/favoritos';
 import { TarjetaUbicacion } from '@/components/eventos/MapaUbicaciones';
@@ -19,7 +19,7 @@ import { useConsulta } from '@/hooks/useConsulta';
 import { useReseniasOrganizador } from '@/hooks/useReseniasOrganizador';
 import { colores, degrades, espacios, fuentes, radios, tamanios } from '@/theme';
 import { confirmar } from '@/utils/dialogos';
-import { formatearFecha, formatearPrecio, nombreCompleto, yaOcurrio } from '@/utils/formato';
+import { entradasVigentesEnEvento, formatearFecha, formatearPrecio, nombreCompleto, yaOcurrio } from '@/utils/formato';
 
 export default function DetalleEvento() {
   const { id } = useLocalSearchParams();
@@ -41,6 +41,12 @@ export default function DetalleEvento() {
     rol === 'comprador' ? 'favoritos' : '',
   );
   const esFavorito = (consultaFavoritos.datos ?? []).some((f) => String(f.id) === String(id));
+
+  // Para avisar cuántas entradas le quedan al comprador en este evento antes de que compre.
+  const misCompras = useConsulta(
+    () => (rol === 'comprador' ? listarMisCompras() : Promise.resolve([])),
+    rol === 'comprador' ? 'mis-compras' : '',
+  );
   const [toggleandoFavorito, setToggleandoFavorito] = useState(false);
 
   const toggleFavorito = async () => {
@@ -229,26 +235,32 @@ export default function DetalleEvento() {
           key={tipo.id}
           eventoId={evento.id}
           tipo={tipo}
+          yaCompradas={entradasVigentesEnEvento(misCompras.datos, evento.id)}
           onComprada={(compra) => router.replace({ pathname: '/compras/[id]', params: { id: compra.id, nueva: '1' } })}
-          onError={consulta.recargar}
+          onError={() => Promise.all([consulta.recargar(), misCompras.recargar()])}
         />
       ) : null}
     </View>
   );
 }
 
+// Mismo valor que Compra.MAX_POR_EVENTO en el backend, que es quien hace cumplir la regla:
+// acá solo se usa para guiar al comprador antes de confirmar.
 const MAX_ENTRADAS_POR_EVENTO = 5;
 
 // Barra inferior de compra. Solo se muestra con un tipo de entrada elegido,
 // por eso acá `tipo` nunca es nulo.
-function BarraCompra({ eventoId, tipo, onComprada, onError }) {
+function BarraCompra({ eventoId, tipo, yaCompradas = 0, onComprada, onError }) {
   const { bottom } = useSafeAreaInsets();
   const [cantidad, setCantidad] = useState(1);
   const [comprando, setComprando] = useState(false);
   const [error, setError] = useState(null);
 
-  // El selector se limita tanto por el cupo disponible como por el máximo de entradas por evento.
-  const maximoPermitido = Math.min(tipo.cupo, MAX_ENTRADAS_POR_EVENTO);
+  // El selector se limita por el cupo disponible y por las entradas que el comprador
+  // todavía puede sumar en este evento (el máximo menos las que ya tiene).
+  const restantes = Math.max(0, MAX_ENTRADAS_POR_EVENTO - yaCompradas);
+  const alcanzoLimite = restantes === 0;
+  const maximoPermitido = Math.min(tipo.cupo, restantes);
   const cantidadValida = Math.min(cantidad, Math.max(maximoPermitido, 1));
   const total = tipo.precio * cantidadValida;
 
@@ -275,19 +287,34 @@ function BarraCompra({ eventoId, tipo, onComprada, onError }) {
 
   return (
     <View style={[estilos.barraCompra, { paddingBottom: bottom + espacios.md }]}>
+      {yaCompradas > 0 ? (
+        <Text style={estilos.avisoLimite} accessibilityLiveRegion="polite">
+          {alcanzoLimite
+            ? `Ya tenés ${MAX_ENTRADAS_POR_EVENTO} entradas para este evento, el máximo permitido.`
+            : `Ya tenés ${yaCompradas} ${yaCompradas === 1 ? 'entrada' : 'entradas'} para este evento: podés comprar ${restantes} más.`}
+        </Text>
+      ) : null}
       {error ? (
         <Text style={estilos.error} accessibilityRole="alert" accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : null}
-      <View style={estilos.filaCompra}>
-        <SelectorCantidad cantidad={cantidadValida} maximo={maximoPermitido} onCambiar={setCantidad} />
-        <View style={estilos.total}>
-          <Text style={estilos.etiquetaTotal}>TOTAL</Text>
-          <Text style={estilos.montoTotal}>{formatearPrecio(total)}</Text>
+      {!alcanzoLimite ? (
+        <View style={estilos.filaCompra}>
+          <SelectorCantidad cantidad={cantidadValida} maximo={maximoPermitido} onCambiar={setCantidad} />
+          <View style={estilos.total}>
+            <Text style={estilos.etiquetaTotal}>TOTAL</Text>
+            <Text style={estilos.montoTotal}>{formatearPrecio(total)}</Text>
+          </View>
         </View>
-      </View>
-      <Boton titulo="Comprar" variante="degradeDorado" cargando={comprando} onPress={comprar} />
+      ) : null}
+      <Boton
+        titulo="Comprar"
+        variante="degradeDorado"
+        cargando={comprando}
+        deshabilitado={alcanzoLimite}
+        onPress={comprar}
+      />
     </View>
   );
 }
@@ -502,5 +529,10 @@ const estilos = StyleSheet.create({
     fontFamily: fuentes.semibold,
     fontSize: tamanios.sm,
     color: colores.error,
+  },
+  avisoLimite: {
+    fontFamily: fuentes.semibold,
+    fontSize: tamanios.sm,
+    color: colores.primario,
   },
 });
