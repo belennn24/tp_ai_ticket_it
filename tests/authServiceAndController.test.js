@@ -91,7 +91,7 @@ describe('AuthService y AuthController (Arquitectura Limpia)', () => {
       ).rejects.toThrow(ConflictError);
     });
 
-    it('debe rechazar el registro con rol admin con BadRequestError', async () => {
+    it('debe rechazar el registro con un rol inexistente (admin) con BadRequestError', async () => {
       await expect(
         authService.registro({
           nombre: 'Hacker',

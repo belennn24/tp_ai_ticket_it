@@ -52,7 +52,8 @@ router.post(
   compraController.create
 );
 
-// PATCH /api/compras/:id/estado - Cambiar estado de compra (CANCELADA por comprador / UTILIZADA por organizador)
+// PATCH /api/compras/:id/estado - Cambiar estado de compra
+// (CANCELADA por el comprador; CONFIRMADA, UTILIZADA y REEMBOLSADA por el organizador del evento)
 router.patch(
   '/:id/estado',
   authMiddleware,

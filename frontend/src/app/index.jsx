@@ -17,7 +17,7 @@ export default function Inicio() {
     return <Redirect href={destino} />;
   }
 
-  // Roles sin pantallas en la app (por ejemplo, admin).
+  // Respaldo por si la sesión trajera un rol sin pantallas en la app.
   return (
     <Pantalla bordes={['top', 'bottom']}>
       <EstadoVacio

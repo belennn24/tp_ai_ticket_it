@@ -62,8 +62,7 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
       const uOrg = new Usuario({ nombre: 'Organizador Uno', rol: 'organizador' });
       expect(uOrg.rol).toBe('organizador');
 
-      const uAdmin = new Usuario({ nombre: 'Admin Uno', rol: 'admin' });
-      expect(uAdmin.rol).toBe('admin');
+      expect(() => new Usuario({ nombre: 'Admin Uno', rol: 'admin' })).toThrow(ValidationError);
 
       uDefault.modificar({ rol: 'organizador' });
       expect(uDefault.rol).toBe('organizador');
@@ -228,7 +227,7 @@ describe('Entidades de Dominio Rico (Estilo 2026-2c-lu-sa-grupo-2)', () => {
       expect(() => compra.confirmar()).toThrow(ConflictError);
 
       // Desde CANCELADA solo se puede pasar a REEMBOLSADA
-      const cambioReembolso = compra.reembolsar('admin-1', new Date(), 'Devolución de dinero');
+      const cambioReembolso = compra.reembolsar('org-1', new Date(), 'Devolución de dinero');
       expect(compra.estado).toBe(estadoCompra.REEMBOLSADA);
       expect(cambioReembolso.estado).toBe(estadoCompra.REEMBOLSADA);
 

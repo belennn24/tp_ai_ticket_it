@@ -29,8 +29,8 @@ export const crearCompraSchema = compraBaseSchema;
 export const actualizarCompraSchema = compraBaseSchema.partial();
 
 export const cambiarEstadoCompraSchema = z.object({
-    estado: z.enum(['CANCELADA', 'UTILIZADA'], {
-        message: 'El estado es obligatorio y debe ser CANCELADA o UTILIZADA.'
+    estado: z.enum(['CONFIRMADA', 'CANCELADA', 'UTILIZADA', 'REEMBOLSADA'], {
+        message: 'El estado es obligatorio y debe ser CONFIRMADA, CANCELADA, UTILIZADA o REEMBOLSADA.'
     }),
     motivo: z.string().trim().optional()
 });

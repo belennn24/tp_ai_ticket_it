@@ -1,4 +1,3 @@
-import { Mensaje } from '../models/mensaje.js';
 import { mensajeRepository as defaultMensajeRepository } from '../repositories/mensajeRepository.js';
 import { compraRepository as defaultCompraRepository } from '../repositories/compraRepository.js';
 import { usuarioRepository as defaultUsuarioRepository } from '../repositories/usuarioRepository.js';
@@ -52,29 +51,19 @@ export class MensajeService {
         }
 
         const compra = await this.buscarCompraOError(compraId);
-        this.validarParticipante(compra, usuarioActual);
 
         const usuarioId = usuarioActual?.id;
-        const autor = (usuarioId && (await this.usuarioRepository?.findById?.(usuarioId))) || usuarioId || 'ANONIMO';
+        const autor = (usuarioId && (await this.usuarioRepository?.findById?.(usuarioId))) || usuarioId;
 
-        const nuevoMensaje = new Mensaje({
+        // La compra valida que el autor participe y registra el mensaje.
+        const nuevoMensaje = compra.enviarMensaje({
             id,
-            usuario: autor,
-            mensaje: texto.trim(),
-            enviado: this.obtenerFechaActual()
+            autor,
+            texto,
+            fechaReferencia: this.obtenerFechaActual()
         });
-        nuevoMensaje.compra = compraId;
 
         await this.mensajeRepository.save(nuevoMensaje);
-
-        if (typeof compra.agregarMensaje === 'function') {
-            compra.agregarMensaje(nuevoMensaje);
-        } else {
-            if (!Array.isArray(compra.mensajes)) {
-                compra.mensajes = [];
-            }
-            compra.mensajes.push(nuevoMensaje);
-        }
         await this.compraRepository.update(compra.id, compra);
 
         return nuevoMensaje;

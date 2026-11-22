@@ -19,11 +19,11 @@ router.get(
   categoriaController.getById
 );
 
-// POST /api/categorias - Crear categoría (solo Admin u Organizador autenticado)
+// POST /api/categorias - Crear categoría (solo Organizador autenticado)
 router.post(
   '/',
   authMiddleware,
-  requireRole('admin', 'organizador'),
+  requireRole('organizador'),
   validate(crearCategoriaSchema, 'body'),
   categoriaController.create
 );

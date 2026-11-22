@@ -1,4 +1,3 @@
-import { Compra } from '../models/compra.js';
 import { estadoCompra } from '../models/estadoCompra.js';
 import { compraRepository as defaultCompraRepository } from '../repositories/compraRepository.js';
 import { eventoRepository as defaultEventoRepository } from '../repositories/eventoRepository.js';
@@ -8,11 +7,18 @@ import { extraerId } from '../utils/idUtils.js';
 import {
   NotFoundError,
   ValidationError,
-  ConflictError,
   ForbiddenError
 } from '../errors/appError.js';
 
-const ACCIONES = { CANCELADA: 'cancelar', UTILIZADA: 'utilizar' };
+// Acción del service para cada estado destino de PATCH /compras/:id/estado.
+// CANCELADA la pide el comprador; CONFIRMADA (pago), UTILIZADA (ingreso) y
+// REEMBOLSADA (devolución) las registra el organizador del evento.
+const ACCIONES = {
+  CONFIRMADA: 'confirmar',
+  CANCELADA: 'cancelar',
+  UTILIZADA: 'utilizar',
+  REEMBOLSADA: 'reembolsar'
+};
 
 export class CompraService {
   constructor({
@@ -81,7 +87,14 @@ export class CompraService {
       await this.eventoRepository.update(compra.evento.id, compra.evento);
     }
     await this.cambioEstadoCompraRepository.save(cambio);
-    return this.compraRepository.update(compra.id, compra);
+    const guardada = await this.compraRepository.update(compra.id, compra);
+    return this.enriquecerDetalleCompra(guardada);
+  };
+
+  #validarOrganizador = (compra, usuarioActual) => {
+    if (!compra.esDeOrganizador(usuarioActual)) {
+      throw new ForbiddenError('El organizador no es dueño del evento asociado a la compra.');
+    }
   };
 
   getAll = async (filtros = {}) => {
@@ -101,68 +114,35 @@ export class CompraService {
     return await this.cambioEstadoCompraRepository.findByCompraId(id);
   };
 
-  create = async ({
-    eventoId,
-    tipoEntradaId,
-    cantidad,
-    compradorId,
-    total,
-    ...resto
-  } = {}) => {
-    if (!eventoId || !tipoEntradaId || cantidad === undefined || cantidad === null) {
+  // El service solo coordina: busca las entidades, delega la venta en el dominio
+  // (Evento.venderEntradas) y persiste el resultado.
+  create = async ({ eventoId, tipoEntradaId, cantidad, compradorId } = {}) => {
+    if (!eventoId || !tipoEntradaId || !compradorId || cantidad === undefined || cantidad === null) {
       throw new ValidationError('Faltan campos obligatorios para crear la compra.');
     }
-
     const cantidadNum = Number(cantidad);
     if (!Number.isInteger(cantidadNum) || cantidadNum <= 0) {
       throw new ValidationError('La cantidad de entradas debe ser un número entero positivo.');
     }
-    if (cantidadNum > Compra.MAX_POR_PERSONA) {
-      throw new ValidationError(`Solo se pueden comprar hasta ${Compra.MAX_POR_PERSONA} entradas por persona.`);
-    }
 
     const evento = await this.eventoRepository.findById(eventoId);
     if (!evento) throw new NotFoundError('El evento solicitado no existe.');
-    if (evento.yaOcurrio(this.obtenerFechaActual())) {
-      throw new ConflictError('No se pueden comprar entradas para un evento que ya ocurrió.');
-    }
 
-    if (compradorId && typeof this.compraRepository?.findAll === 'function') {
-      const comprasPrevias = await this.compraRepository.findAll({ compradorId, eventoId });
-      const entradasYaCompradas = (comprasPrevias || [])
-        .filter(c => c.estado !== estadoCompra.CANCELADA)
-        .reduce((sum, c) => sum + Number(c.cantidad || 0), 0);
+    const comprador = await this.usuarioRepository.findById(compradorId);
+    if (!comprador) throw new NotFoundError('Comprador no encontrado.');
+    const comprasPrevias = await this.compraRepository.findAll({ compradorId, eventoId });
 
-      if (entradasYaCompradas + cantidadNum > Compra.MAX_POR_PERSONA) {
-        const restantes = Math.max(0, Compra.MAX_POR_PERSONA - entradasYaCompradas);
-        throw new ConflictError(
-          restantes > 0
-            ? `Solo se permiten hasta ${Compra.MAX_POR_PERSONA} entradas por persona para este evento (podés comprar ${restantes} más).`
-            : `Ya alcanzaste el límite de ${Compra.MAX_POR_PERSONA} entradas por persona para este evento.`
-        );
-      }
-    }
-    const tipoEntrada = evento.obtenerTipoEntrada(tipoEntradaId);
-    const comprador = (compradorId && (await this.usuarioRepository?.findById?.(compradorId))) || compradorId;
-    const nuevaCompra = new Compra({
-      id: resto.id,
+    const { compra, cambio } = evento.venderEntradas({
       comprador,
-      evento,
-      tipoEntrada,
+      tipoEntradaId,
       cantidad: cantidadNum,
-      ...(total !== undefined ? { total: Number(total) } : {}),
-      mensajes: []
+      comprasPrevias,
+      fechaReferencia: this.obtenerFechaActual()
     });
-    evento.descontarCupo(tipoEntradaId, cantidadNum);
-    if (this.eventoRepository?.update) {
-      await this.eventoRepository.update(evento.id, evento);
-    }
 
-    nuevaCompra.confirmar(compradorId || 'COMPRADOR');
-
-    const compraGuardada = await this.compraRepository.save(nuevaCompra);
-
-    await this.cambioEstadoCompraRepository.save(nuevaCompra.ultimoCambio);
+    await this.eventoRepository.update(evento.id, evento);
+    const compraGuardada = await this.compraRepository.save(compra);
+    await this.cambioEstadoCompraRepository.save(cambio);
 
     return await this.enriquecerDetalleCompra(compraGuardada);
   };
@@ -180,11 +160,23 @@ export class CompraService {
     return this.#guardar(compra, cambio);
   };
 
+  confirmar = async (id, { usuarioActual } = {}) => {
+    const compra = await this.buscarCompraOError(id);
+    this.#validarOrganizador(compra, usuarioActual);
+    const cambio = compra.confirmar(usuarioActual?.id || usuarioActual, this.obtenerFechaActual());
+    return this.#guardar(compra, cambio);
+  };
+
+  reembolsar = async (id, { motivo, usuarioActual } = {}) => {
+    const compra = await this.buscarCompraOError(id);
+    this.#validarOrganizador(compra, usuarioActual);
+    const cambio = compra.reembolsar(usuarioActual?.id || usuarioActual, this.obtenerFechaActual(), motivo);
+    return this.#guardar(compra, cambio);
+  };
+
   utilizar = async (id, { usuarioActual } = {}) => {
     const compra = await this.buscarCompraOError(id);
-    if (!compra.esDeOrganizador(usuarioActual)) {
-      throw new ForbiddenError('El organizador no es dueño del evento asociado a la compra.');
-    }
+    this.#validarOrganizador(compra, usuarioActual);
     const cambio = compra.utilizar({
       quien: usuarioActual?.id || usuarioActual,
       fechaReferencia: this.obtenerFechaActual()
@@ -194,7 +186,7 @@ export class CompraService {
 
   cambiarEstado = async (id, { estado, ...opciones } = {}) => {
     const accion = ACCIONES[estado];
-    if (!accion) throw new ValidationError('El estado debe ser CANCELADA o UTILIZADA.');
+    if (!accion) throw new ValidationError('El estado debe ser CONFIRMADA, CANCELADA, UTILIZADA o REEMBOLSADA.');
     return this[accion](id, opciones);
   };
 }

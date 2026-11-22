@@ -41,33 +41,9 @@ export class EventoService {
         return Math.min(...evento.tiposEntrada.map(t => Number(t?.precio) || Infinity));
     };
 
-    validarNumeroPositivo = (valor, mensajeError) => {
-        const num = Number(valor);
-        if (isNaN(num) || num <= 0) {
-            throw new ValidationError(mensajeError);
-        }
-        return num;
-    };
-
+    // Las reglas de alta (precio y cupo mayores a 0) viven en TipoEntrada.crear.
     armarTiposEntrada = (tiposEntrada = []) => {
-        return (tiposEntrada || []).map(t => {
-            const precio = this.validarNumeroPositivo(
-                t.precio,
-                'El precio del tipo de entrada debe ser mayor a 0.'
-            );
-            const cupo = this.validarNumeroPositivo(
-                t.cupo,
-                'El cupo del tipo de entrada debe ser mayor a 0.'
-            );
-
-            return new TipoEntrada({
-                id: t.id,
-                nombre: t.nombre,
-                descripcion: t.descripcion || '',
-                precio,
-                cupo
-            });
-        });
+        return (tiposEntrada || []).map(t => TipoEntrada.crear(t));
     };
 
     getAll = async ({
@@ -95,24 +71,10 @@ export class EventoService {
             eventos = eventos.filter(ev => ev.tuPrecioEstaEntre(min, max));
         }
 
-        if (orden === 'reputacion') {
-            const reputaciones = new Map();
-            for (const ev of eventos) {
-                if (ev.organizador && typeof ev.organizador === 'object' && ev.organizador.reputacion !== undefined) {
-                    reputaciones.set(ev.id, Number(ev.organizador.reputacion) || 0);
-                } else if (typeof ev.organizador === 'string' && this.usuarioRepository) {
-                    const org = await this.usuarioRepository.findById(ev.organizador);
-                    reputaciones.set(ev.id, Number(org?.reputacion ?? ev.reputacion ?? 0));
-                } else {
-                    reputaciones.set(ev.id, Number(ev.reputacion ?? 0));
-                }
-            }
-            return [...eventos].sort((a, b) => (reputaciones.get(b.id) ?? 0) - (reputaciones.get(a.id) ?? 0));
-        }
-
         const ORDENES = {
             fecha: (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
-            precio: (a, b) => this.calcularPrecioMinimo(a) - this.calcularPrecioMinimo(b)
+            precio: (a, b) => this.calcularPrecioMinimo(a) - this.calcularPrecioMinimo(b),
+            reputacion: (a, b) => b.reputacionOrganizador() - a.reputacionOrganizador()
         };
 
         if (orden && ORDENES[orden]) {

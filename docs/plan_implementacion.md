@@ -217,7 +217,7 @@ flowchart TD
 - **Componentes a implementar:**
   - Módulo sembrador (`backend/utils/seed.js`):
     - Instanciación de modelos ricos de dominio: `Usuario`, `Categoria`, `TipoEntrada`, `Evento`, `Compra`, `CambioEstadoCompra`, `Mensaje`, `Resenia`.
-    - Precarga de usuarios con roles y credenciales coincidentes con las colecciones de Postman (`usr-organizador-1`, `usr-organizador-2`, `usr-comprador-1`, `usr-comprador-2`, `usr-admin-1`).
+    - Precarga de usuarios con roles y credenciales coincidentes con las colecciones de Postman (`usr-organizador-1`, `usr-organizador-2`, `usr-comprador-1`, `usr-comprador-2`).
     - Precarga de 4 categorías temáticas (Música, Teatro, Deportes, Conferencias).
     - Precarga de 4 eventos con fechas relativas (futuros y pasados) y variedad de tipos de entrada, precios y cupos (incluyendo eventos de cupo limitado para testear agotamiento).
     - Precarga de compras en distintos estados (`CONFIRMADA` con cálculo dinámico de `diasFaltantes`, `UTILIZADA` para habilitar calificación).

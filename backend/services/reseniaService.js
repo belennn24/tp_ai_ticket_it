@@ -1,6 +1,5 @@
 import { Resenia } from '../models/resenia.js';
 import { Usuario } from '../models/usuario.js';
-import { estadoCompra } from '../models/estadoCompra.js';
 import { reseniaRepository as defaultReseniaRepository } from '../repositories/reseniaRepository.js';
 import { compraRepository as defaultCompraRepository } from '../repositories/compraRepository.js';
 import { eventoRepository as defaultEventoRepository } from '../repositories/eventoRepository.js';
@@ -54,32 +53,20 @@ export class ReseniaService {
             throw new ConflictError('Ya existe una reseña registrada para este evento por parte del comprador.');
         }
 
-        const comprasUsuario = await this.compraRepository.findAll({
-            compradorId,
-            eventoId
-        });
+        const comprasDelComprador = await this.compraRepository.findAll({ compradorId, eventoId });
+        const comprador = await this.usuarioRepository.findById(compradorId);
+        if (!comprador) throw new NotFoundError('Comprador no encontrado.');
 
-        const tieneCompraUtilizada = comprasUsuario.some(
-            c => c.estado === estadoCompra.UTILIZADA
-        );
-
-        if (!tieneCompraUtilizada) {
-            throw new ConflictError(
-                'No se puede calificar un evento sin poseer al menos una compra en estado UTILIZADA.'
-            );
-        }
-
-        const organizadorId = this.extraerId(evento.organizador);
-        const comprador = (await this.usuarioRepository?.findById?.(compradorId)) || compradorId;
-
-        const nuevaResenia = new Resenia({
+        // La regla de elegibilidad (compra UTILIZADA) vive en el dominio.
+        const nuevaResenia = Resenia.crear({
             id: resto.id,
             comprador,
             evento,
-            organizador: organizadorId,
-            detalle,
-            puntuacion: Number(puntuacion)
+            comprasDelComprador,
+            puntuacion,
+            detalle
         });
+        const organizadorId = nuevaResenia.organizador;
 
         const reseniaGuardada = await this.reseniaRepository.save(nuevaResenia);
 

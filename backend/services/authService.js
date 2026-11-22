@@ -51,19 +51,7 @@ export class AuthService {
   }
 
   formatearUsuario(usuario) {
-    if (typeof usuario?.aPerfilPublico === 'function') {
-      return usuario.aPerfilPublico();
-    }
-    const rolNormalizado = String(usuario?.rol || 'comprador').toLowerCase().trim();
-    return {
-      id: String(usuario.id),
-      nombre: usuario.nombre || '',
-      apellido: usuario.apellido || '',
-      email: usuario.email || null,
-      rol: rolNormalizado,
-      reputacion: Number(usuario.reputacion) || 0,
-      favoritos: Array.isArray(usuario.favoritos) ? usuario.favoritos : []
-    };
+    return usuario.aPerfilPublico();
   }
 
   async registrarRefreshToken(token, usuarioId) {
@@ -89,10 +77,7 @@ export class AuthService {
 
     const emailNormalizado = email.toLowerCase().trim();
     const rolNormalizado = String(rol || 'comprador').toLowerCase().trim();
-    if (rolNormalizado === 'admin') {
-      throw new BadRequestError('No está permitido el autorregistro con rol de administrador.');
-    }
-    if (!['comprador', 'organizador'].includes(rolNormalizado)) {
+    if (!Usuario.ROLES.includes(rolNormalizado)) {
       throw new BadRequestError('Rol de usuario no permitido para registro.');
     }
 

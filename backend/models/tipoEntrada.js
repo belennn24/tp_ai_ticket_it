@@ -20,6 +20,20 @@ export class TipoEntrada {
         this.fechaModificacion = null;
     }
 
+    // Alta de un tipo de entrada nuevo. A diferencia del constructor, que también
+    // rehidrata tipos agotados (cupo 0, como en el seed), un tipo nuevo tiene que nacer con cupo.
+    static crear({ id, nombre, descripcion = '', precio, cupo } = {}) {
+        const precioNum = Number(precio);
+        if (isNaN(precioNum) || precioNum <= 0) {
+            throw new ValidationError('El precio del tipo de entrada debe ser mayor a 0.');
+        }
+        const cupoNum = Number(cupo);
+        if (isNaN(cupoNum) || cupoNum <= 0) {
+            throw new ValidationError('El cupo del tipo de entrada debe ser mayor a 0.');
+        }
+        return new TipoEntrada({ id, nombre, descripcion: descripcion || '', precio: precioNum, cupo: cupoNum });
+    }
+
     validar({ nombre, precio, cupo } = {}) {
         if (nombre !== undefined && typeof nombre === 'string' && nombre.trim().length === 0) {
             throw new ValidationError('El nombre del tipo de entrada no puede estar vacío');

@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 import { estadoCompra } from './estadoCompra.js';
 import { CambioEstadoCompra } from './cambioEstadoCompra.js';
+import { Mensaje } from './mensaje.js';
 import { extraerId } from '../utils/idUtils.js';
-import { ValidationError, ConflictError } from '../errors/appError.js';
+import { ValidationError, ConflictError, ForbiddenError } from '../errors/appError.js';
 
 export const TRANSICIONES_COMPRA = Object.freeze({
     [estadoCompra.PENDIENTE]: [estadoCompra.CONFIRMADA, estadoCompra.CANCELADA],
@@ -11,6 +12,9 @@ export const TRANSICIONES_COMPRA = Object.freeze({
     [estadoCompra.UTILIZADA]: [],
     [estadoCompra.REEMBOLSADA]: []
 });
+
+// Estados a los que solo se llega con el pago ya confirmado.
+const ESTADOS_CON_PAGO = [estadoCompra.CONFIRMADA, estadoCompra.UTILIZADA, estadoCompra.REEMBOLSADA];
 
 export class Compra {
     constructor({
@@ -22,7 +26,8 @@ export class Compra {
         total,
         estado = estadoCompra.PENDIENTE,
         mensajes = [],
-        motivo = null
+        motivo = null,
+        fechaPago = null
     } = {}) {
         this.validar({ cantidad, estado });
 
@@ -35,6 +40,11 @@ export class Compra {
         this.estado = estado;
         this.mensajes = Array.isArray(mensajes) ? mensajes : [];
         this.motivo = motivo ? String(motivo).trim() : null;
+        // Cuándo el organizador confirmó el pago. Si la compra se rehidrata en un estado
+        // posterior al pago (por ejemplo, desde el seed) se la considera pagada.
+        this.fechaPago = fechaPago
+            ? new Date(fechaPago)
+            : (ESTADOS_CON_PAGO.includes(estado) ? new Date() : null);
 
         // Estados iniciales y trazabilidad
         this.fechaCompra = new Date();
@@ -130,14 +140,65 @@ export class Compra {
             motivo: this.motivo,
             fechaHora: fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia)
         });
-        this.ultimoCambio = cambio;
         return cambio;
     }
 
     static MAX_POR_PERSONA = 5;
 
+    // Una compra vigente es la que ocupa entradas del comprador: las canceladas
+    // o reembolsadas ya devolvieron su cupo y no cuentan para el límite.
+    estaVigente() {
+        return this.estado !== estadoCompra.CANCELADA && this.estado !== estadoCompra.REEMBOLSADA;
+    }
+
+    // Solo quien asistió al evento (entrada utilizada) puede calificarlo.
+    puedeSerCalificada() {
+        return this.estado === estadoCompra.UTILIZADA;
+    }
+
+    // Regla de negocio: nadie puede tener más de MAX_POR_PERSONA entradas vigentes
+    // para un mismo evento, sumando las compras previas y la nueva.
+    static validarLimitePorPersona(comprasPrevias = [], cantidad) {
+        const maximo = Compra.MAX_POR_PERSONA;
+        if (cantidad > maximo) {
+            throw new ValidationError(`Solo se pueden comprar hasta ${maximo} entradas por persona.`);
+        }
+        const yaCompradas = comprasPrevias
+            .filter(c => c.estaVigente())
+            .reduce((suma, c) => suma + c.cantidad, 0);
+        if (yaCompradas + cantidad > maximo) {
+            const restantes = Math.max(0, maximo - yaCompradas);
+            throw new ConflictError(
+                restantes > 0
+                    ? `Solo se permiten hasta ${maximo} entradas por persona para este evento (podés comprar ${restantes} más).`
+                    : `Ya alcanzaste el límite de ${maximo} entradas por persona para este evento.`
+            );
+        }
+    }
+
+    // Toda compra nace pendiente de pago: este es el primer registro de su historial.
+    registrarAlta(quien = null, fechaReferencia = new Date()) {
+        return new CambioEstadoCompra({
+            compra: this.id,
+            compraId: this.id,
+            estado: this.estado,
+            quien: quien ? (quien.id || quien) : null,
+            fechaHora: fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia)
+        });
+    }
+
+    // El pago se coordina por fuera de la app: el organizador lo confirma manualmente.
     confirmar(quien = null, fechaReferencia = new Date()) {
-        return this.actualizarEstado(estadoCompra.CONFIRMADA, quien, fechaReferencia);
+        if (typeof this.evento?.finalizo === 'function' && this.evento.finalizo(fechaReferencia)) {
+            throw new ConflictError('No se puede confirmar el pago de una compra de un evento que ya finalizó.');
+        }
+        const cambio = this.actualizarEstado(estadoCompra.CONFIRMADA, quien, fechaReferencia);
+        this.fechaPago = cambio.fechaHora;
+        return cambio;
+    }
+
+    get pagoConfirmado() {
+        return this.fechaPago !== null;
     }
 
     #cupoRestituido = false;
@@ -169,7 +230,13 @@ export class Compra {
         this.#cupoRestituido = true;
     }
 
+    // La devolución también se coordina por fuera: el organizador registra que se concretó.
+    // Solo es posible desde CANCELADA (ver TRANSICIONES_COMPRA).
     reembolsar(quien = null, fechaReferencia = new Date(), motivo = null) {
+        // Si se canceló antes de confirmar el pago, no hay dinero que devolver.
+        if (this.estado === estadoCompra.CANCELADA && !this.pagoConfirmado) {
+            throw new ConflictError('Solo se puede reembolsar una compra cuyo pago fue confirmado.');
+        }
         return this.actualizarEstado(estadoCompra.REEMBOLSADA, quien, fechaReferencia, motivo);
     }
 
@@ -199,6 +266,22 @@ export class Compra {
         this.fechaModificacion = new Date();
     }
 
+    // Solo el comprador o el organizador del evento pueden escribir en el chat de la compra.
+    enviarMensaje({ id, autor, texto, fechaReferencia = new Date() } = {}) {
+        if (!this.puedeAcceder(autor)) {
+            throw new ForbiddenError('Usuario ajeno a la compra.');
+        }
+        const mensaje = new Mensaje({
+            id,
+            usuario: autor,
+            mensaje: String(texto ?? '').trim(),
+            enviado: fechaReferencia,
+            compra: this.id
+        });
+        this.agregarMensaje(mensaje);
+        return mensaje;
+    }
+
     toJSON() {
         return {
             id: this.id,
@@ -209,9 +292,12 @@ export class Compra {
             total: this.total,
             estado: this.estado,
             mensajes: this.mensajes,
+            motivo: this.motivo,
             fechaCompra: this.fechaCompra,
             fechaModificacion: this.fechaModificacion,
             fechaBaja: this.fechaBaja,
+            fechaPago: this.fechaPago,
+            pagoConfirmado: this.pagoConfirmado,
             borrada: this.borrada,
             diasFaltantes: this.diasFaltantes
         };

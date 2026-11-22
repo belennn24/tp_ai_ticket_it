@@ -58,7 +58,12 @@ export function TicketCompra({ compra }) {
             <Dato etiqueta="TOTAL" valor={formatearPrecio(compra.total)} alineado="derecha" destacado />
           </View>
           <View style={estilos.zonaCodigo}>
-            <CodigoBarras codigo={codigoCompra(compra)} altura={44} color="#FFFFFF" colorTexto={colores.textoTicket} />
+            {compra.estado === 'PENDIENTE' ? (
+              // Sin pago confirmado no hay entrada válida: el código se muestra recién al confirmar.
+              <Text style={estilos.codigoPendiente}>El código de acceso se habilita cuando el organizador confirme el pago.</Text>
+            ) : (
+              <CodigoBarras codigo={codigoCompra(compra)} altura={44} color="#FFFFFF" colorTexto={colores.textoTicket} />
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -188,6 +193,12 @@ const estilos = StyleSheet.create({
   },
   textoDerecha: {
     textAlign: 'right',
+  },
+  codigoPendiente: {
+    fontFamily: fuentes.semibold,
+    fontSize: tamanios.sm,
+    color: colores.textoTicket,
+    textAlign: 'center',
   },
   zonaCodigo: {
     marginTop: espacios.md,

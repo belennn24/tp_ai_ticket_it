@@ -50,7 +50,7 @@ export function CompraCard({ compra, onPress, mostrarCodigoBarras = true }) {
             <Text style={estilos.monto}>{formatearPrecio(compra.total)}</Text>
           </View>
         </View>
-        {mostrarCodigoBarras ? <CodigoBarras codigo={codigo} altura={28} /> : null}
+        {mostrarCodigoBarras && compra.estado !== 'PENDIENTE' ? <CodigoBarras codigo={codigo} altura={28} /> : null}
       </View>
     </LinearGradient>
   );

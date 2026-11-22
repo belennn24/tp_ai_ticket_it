@@ -8,6 +8,7 @@ import { cambioEstadoCompraRepository } from '../backend/repositories/cambioEsta
 import { mensajeRepository } from '../backend/repositories/mensajeRepository.js';
 import { reseniaRepository } from '../backend/repositories/reseniaRepository.js';
 import { estadoCompra } from '../backend/models/estadoCompra.js';
+import { authMiddleware } from '../backend/middlewares/authMiddleware.js';
 import { seedRoutes } from '../backend/routes/seedRoutes.js';
 
 describe('Seed de Datos de Prueba (seedDatabase)', () => {
@@ -19,17 +20,17 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
     const summary = await seedDatabase({ clearExisting: true });
 
     expect(summary).toEqual({
-      usuarios: 5,
+      usuarios: 4,
       categorias: 4,
       eventos: 10,
-      compras: 4,
+      compras: 7,
       mensajes: 2,
       resenias: 1
     });
   });
 
   describe('Usuarios sembrados', () => {
-    it('debe contener los usuarios clave alineados con Postman (organizador, compradores, admin)', async () => {
+    it('debe contener los usuarios clave alineados con Postman (organizador y compradores)', async () => {
       const organizador = await usuarioRepository.findById('usr-organizador-1');
       expect(organizador).toBeDefined();
       expect(organizador.rol).toBe('organizador');
@@ -46,9 +47,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       expect(comprador2.rol).toBe('comprador');
       expect(comprador2.nombre).toBe('María');
 
-      const admin = await usuarioRepository.findById('usr-admin-1');
-      expect(admin).toBeDefined();
-      expect(admin.rol).toBe('admin');
+      expect(await usuarioRepository.findById('usr-admin-1')).toBeNull();
     });
   });
 
@@ -103,8 +102,31 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       expect(compraActiva.mensajes).toHaveLength(2);
 
       const historial = await cambioEstadoCompraRepository.findByCompraId('cmp-activa-1');
-      expect(historial.length).toBeGreaterThanOrEqual(1);
-      expect(historial[0].estado).toBe(estadoCompra.CONFIRMADA);
+      // Nace pendiente y el organizador confirma el pago.
+      expect(historial.map(h => h.estado)).toEqual([estadoCompra.PENDIENTE, estadoCompra.CONFIRMADA]);
+      expect(historial[1].quien.id).toBe('usr-organizador-1');
+    });
+
+    it('debe precargar una compra en cada estado para la demo, con historial coherente', async () => {
+      const estados = (await compraRepository.findAll()).map(c => c.estado);
+      for (const estado of Object.values(estadoCompra)) {
+        expect(estados).toContain(estado);
+      }
+
+      const pendiente = await compraRepository.findById('cmp-pendiente-1');
+      expect(pendiente.estado).toBe(estadoCompra.PENDIENTE);
+      const pitbull = await eventoRepository.findById('evt-pitbull-live-6');
+      const [campo] = pitbull.calcularBalanceCupos(await compraRepository.findByEventoId('evt-pitbull-live-6'));
+      expect(campo.entradasReservadas).toBe(2);
+      expect(campo.cupoDisponible + campo.entradasReservadas).toBe(campo.cupoTotal);
+
+      const historialReembolso = await cambioEstadoCompraRepository.findByCompraId('cmp-reembolsada-1');
+      expect(historialReembolso.map(h => h.estado)).toEqual([
+        estadoCompra.PENDIENTE, estadoCompra.CONFIRMADA, estadoCompra.CANCELADA, estadoCompra.REEMBOLSADA
+      ]);
+
+      const cancelada = await compraRepository.findById('cmp-cancelada-1');
+      expect(cancelada.puedePasarA(estadoCompra.REEMBOLSADA)).toBe(true);
     });
 
     it('debe precargar compras en estado UTILIZADA que habiliten reseñas', async () => {
@@ -124,7 +146,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
   });
 
   describe('Rutas HTTP de Seed (seedRoutes)', () => {
-    it('debe proteger POST / y GET / con authMiddleware y requireRole("admin")', () => {
+    it('debe proteger POST / y GET / con authMiddleware', () => {
       const postLayer = seedRoutes.stack.find(
         l => l.route && l.route.path === '/' && l.route.methods.post
       );
@@ -135,13 +157,13 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       expect(postLayer).toBeDefined();
       expect(getLayer).toBeDefined();
 
-      // Debe contener al menos el authMiddleware y requireRole antes del handler final
-      expect(postLayer.route.stack.length).toBeGreaterThanOrEqual(3);
-      expect(getLayer.route.stack.length).toBeGreaterThanOrEqual(3);
+      // authMiddleware antes del handler final
+      expect(postLayer.route.stack[0].handle).toBe(authMiddleware);
+      expect(getLayer.route.stack[0].handle).toBe(authMiddleware);
     });
 
-    it('POST / debe responder 200 y reiniciar el seed con clearExisting al ser invocado por admin', async () => {
-      const req = { user: { id: 'admin-1', rol: 'admin' } };
+    it('POST / debe responder 200 y reiniciar el seed con clearExisting', async () => {
+      const req = { user: { id: 'usr-organizador-1', rol: 'organizador' } };
       const res = {
         statusCode: null,
         data: null,
@@ -164,13 +186,13 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       await mainHandler(req, res, () => {});
 
       expect(res.statusCode).toBe(200);
-      expect(res.data.resumen.usuarios).toBe(5);
+      expect(res.data.resumen.usuarios).toBe(4);
       expect(res.data.resumen.eventos).toBe(10);
       expect(res.data.mensaje).toContain('reinicializada exitosamente');
     });
 
     it('GET / debe responder 200 y reportar el estado del seed sin destruir datos existentes', async () => {
-      const req = { user: { id: 'admin-1', rol: 'admin' } };
+      const req = { user: { id: 'usr-organizador-1', rol: 'organizador' } };
       const res = {
         statusCode: null,
         data: null,
@@ -193,7 +215,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       await mainHandler(req, res, () => {});
 
       expect(res.statusCode).toBe(200);
-      expect(res.data.resumen.usuarios).toBe(5);
+      expect(res.data.resumen.usuarios).toBe(4);
       expect(res.data.mensaje).toContain('Seed verificado');
     });
   });

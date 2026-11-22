@@ -1,10 +1,11 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import { CompraService } from '../backend/services/compraService.js';
-import { Evento, TipoEntrada, Compra, CambioEstadoCompra, estadoCompra } from '../backend/models/index.js';
+import { Evento, TipoEntrada, Compra, CambioEstadoCompra, Usuario, estadoCompra } from '../backend/models/index.js';
 import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '../backend/errors/appError.js';
 import { CompraRepository } from '../backend/repositories/compraRepository.js';
 import { EventoRepository } from '../backend/repositories/eventoRepository.js';
 import { CambioEstadoCompraRepository } from '../backend/repositories/cambioEstadoCompraRepository.js';
+import { UsuarioRepository } from '../backend/repositories/usuarioRepository.js';
 
 describe('CompraService (Pruebas Unitarias)', () => {
   let compraRepo;
@@ -19,21 +20,27 @@ describe('CompraService (Pruebas Unitarias)', () => {
   // Evento pasado: 2 días antes (2026-11-05T12:00:00Z)
   const fechaEventoPasado = new Date('2026-11-05T12:00:00Z');
 
-  beforeEach(() => {
+  beforeEach(async () => {
     compraRepo = new CompraRepository();
     eventoRepo = new EventoRepository();
     cambioEstadoRepo = new CambioEstadoCompraRepository();
+    // Los compradores tienen que existir: la compra guarda la entidad Usuario, no un id suelto.
+    const usuarioRepo = new UsuarioRepository();
+    for (const id of ['user-123', 'user-1', 'usr-1', 'usr-limite', 'usr-cancel']) {
+      await usuarioRepo.save(new Usuario({ id, nombre: id, rol: 'comprador' }));
+    }
 
     service = new CompraService({
       compraRepository: compraRepo,
       eventoRepository: eventoRepo,
       cambioEstadoCompraRepository: cambioEstadoRepo,
+      usuarioRepository: usuarioRepo,
       fechaActualProvider: () => fechaFija
     });
   });
 
   describe('Creación de compras (create / crearCompra)', () => {
-    it('debe crear una compra exitosamente, descontar cupo, registrar auditoría y calcular diasFaltantes', async () => {
+    it('debe crear una compra pendiente de pago, reservar el cupo y registrar el alta en el historial', async () => {
       const tipoEntrada = new TipoEntrada({
         id: 'tipo-1',
         nombre: 'General',
@@ -56,11 +63,14 @@ describe('CompraService (Pruebas Unitarias)', () => {
       });
 
       expect(resultado).toBeDefined();
-      expect(resultado.estado).toBe(estadoCompra.CONFIRMADA);
+      // La compra queda pendiente de pago hasta que el organizador la confirme.
+      expect(resultado.estado).toBe(estadoCompra.PENDIENTE);
       expect(resultado.cantidad).toBe(3);
       expect(resultado.total).toBe(3000);
-      expect(resultado.comprador).toBe('user-123');
-      expect(resultado.diasFaltantes).toBe(5);
+      expect(resultado.comprador).toBeInstanceOf(Usuario);
+      expect(resultado.comprador.id).toBe('user-123');
+      // Los días faltantes solo se informan en compras confirmadas.
+      expect(resultado.diasFaltantes).toBeNull();
 
       // Verificación de decremento de cupo en el tipo de entrada
       expect(tipoEntrada.cupo).toBe(7);
@@ -68,7 +78,7 @@ describe('CompraService (Pruebas Unitarias)', () => {
       // Verificación de registro histórico en CambioEstadoCompra
       const historial = await cambioEstadoRepo.findByCompraId(resultado.id);
       expect(historial).toHaveLength(1);
-      expect(historial[0].estado).toBe(estadoCompra.CONFIRMADA);
+      expect(historial[0].estado).toBe(estadoCompra.PENDIENTE);
       expect(historial[0].quien).toBe('user-123');
     });
 
@@ -523,6 +533,13 @@ describe('CompraService (Pruebas Unitarias)', () => {
 
   describe('Límite de 5 entradas por persona (create)', () => {
     it('debe rechazar una compra de más de 5 entradas', async () => {
+      await eventoRepo.save(new Evento({
+        id: 'ev-1',
+        nombre: 'Concierto',
+        fecha: new Date('2027-01-01T20:00:00Z'),
+        tiposEntrada: [new TipoEntrada({ id: 'te-1', nombre: 'General', precio: 1000, cupo: 20 })]
+      }));
+
       await expect(service.create({
         eventoId: 'ev-1',
         tipoEntradaId: 'te-1',
