@@ -1,21 +1,23 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import * as authApi from '@/api/auth';
-import { definirAlPerderSesion, definirToken } from '@/api/client';
+import { definirAlPerderSesion, definirTokens, obtenerRefreshToken } from '@/api/client';
 
 const SesionContext = createContext(null);
 
 // La sesión vive solo en memoria: al cerrar la app hay que volver a ingresar.
+// Mientras está abierta, el cliente HTTP renueva el access token con el refresh token,
+// así la sesión no se corta cuando vencen sus 15 minutos.
 export function SesionProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [sesionVencida, setSesionVencida] = useState(false);
 
   const limpiar = useCallback(() => {
-    definirToken(null);
+    definirTokens();
     setUsuario(null);
   }, []);
 
-  // Si el backend rechaza el token, se vuelve al login con un aviso.
+  // Si la sesión no se puede renovar (refresh token vencido o revocado), se vuelve al login con un aviso.
   useEffect(() => {
     definirAlPerderSesion(() => {
       limpiar();
@@ -26,14 +28,14 @@ export function SesionProvider({ children }) {
 
   const iniciarSesion = useCallback(async (email, password) => {
     const respuesta = await authApi.iniciarSesion(email.trim(), password);
-    definirToken(respuesta.token);
+    definirTokens({ token: respuesta.token, refreshToken: respuesta.refreshToken });
     setSesionVencida(false);
     setUsuario(respuesta.usuario);
   }, []);
 
   const cerrarSesion = useCallback(async () => {
     try {
-      await authApi.cerrarSesion();
+      await authApi.cerrarSesion(obtenerRefreshToken());
     } catch {
       // Aunque el backend no responda, la sesión local se cierra igual.
     }
