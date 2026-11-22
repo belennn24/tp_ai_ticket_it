@@ -531,7 +531,7 @@ describe('CompraService (Pruebas Unitarias)', () => {
     });
   });
 
-  describe('Límite de 5 entradas por persona (create)', () => {
+  describe('Límite de 5 entradas por evento (create)', () => {
     it('debe rechazar una compra de más de 5 entradas', async () => {
       await eventoRepo.save(new Evento({
         id: 'ev-1',

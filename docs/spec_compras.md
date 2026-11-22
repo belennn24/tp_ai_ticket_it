@@ -16,7 +16,7 @@
         - Token de comprador ausente o inválido -> 401
         - Rol incorrecto -> 403
         - Si el evento o tipo de entrada no existe -> 404
-        - Si no hay cupos suficientes (`!hayCupoPara`), el evento ya ocurrió o se supera el máximo de 5 entradas por persona -> 409
+        - Si no hay cupos suficientes (`!hayCupoPara`), el evento ya ocurrió o se supera el máximo de 5 entradas por evento para el comprador -> 409
     - **Camino feliz:** Reserva el cupo del tipo de entrada, crea la compra en estado `PENDIENTE` (pendiente de pago), registra el alta en `CambioEstadoCompra` y responde 201. `diasFaltantes` es `null` hasta que se confirme el pago.
 
 - `GET /api/compras`

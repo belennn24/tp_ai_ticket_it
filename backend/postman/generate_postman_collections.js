@@ -919,7 +919,7 @@ pm.test("Compra creada en estado PENDIENTE (pendiente de pago) y reserva cupo", 
         urlPath: '/api/compras',
         authBearerVar: 'token_comprador',
         // La Mesa VIP del Jazz tiene cupo 2 en el seed: 3 entradas respetan el máximo
-        // por persona (5) pero superan el cupo disponible.
+        // por evento (5) pero superan el cupo disponible.
         body: {
           eventoId: 'evt-jazz-night-2',
           tipoEntradaId: 'te-jazz-mesa',
@@ -1549,7 +1549,7 @@ pm.expect(data.resenias.length).to.be.at.least(1);
     method: 'POST',
     urlPath: '/api/compras',
     authBearerVar: 'token_comprador',
-    // Mesa VIP del Jazz: cupo 2 en el seed. 3 entradas respetan el máximo por persona
+    // Mesa VIP del Jazz: cupo 2 en el seed. 3 entradas respetan el máximo por evento
     // (5) pero superan el cupo disponible.
     body: {
       eventoId: 'evt-jazz-night-2',

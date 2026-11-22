@@ -98,7 +98,7 @@ describe('CompraValidation (Declarativo)', () => {
                 cantidad: 6
             });
             expect(resultSeis.success).toBe(false);
-            expect(resultSeis.error.issues[0].message).toContain('5 entradas por persona');
+            expect(resultSeis.error.issues[0].message).toContain('5 entradas por evento');
         });
 
         test('falla si el total es un número negativo', () => {

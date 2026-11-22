@@ -52,6 +52,15 @@ export function nombreCompleto(usuario) {
   return [usuario.nombre, usuario.apellido].filter(Boolean).join(' ');
 }
 
+// Entradas que el comprador ya tiene para un evento. Igual que Compra.estaVigente en el
+// backend: las compras canceladas o reembolsadas ya devolvieron su cupo y no cuentan.
+const ESTADOS_SIN_ENTRADAS = ['CANCELADA', 'REEMBOLSADA'];
+export function entradasVigentesEnEvento(compras, eventoId) {
+  return (compras ?? [])
+    .filter((compra) => idDe(compra.evento) === eventoId && !ESTADOS_SIN_ENTRADAS.includes(compra.estado))
+    .reduce((total, compra) => total + (Number(compra.cantidad) || 0), 0);
+}
+
 // El backend a veces devuelve la entidad completa y a veces solo su id.
 export function idDe(entidad) {
   return entidad && typeof entidad === 'object' ? entidad.id : entidad;
