@@ -1090,7 +1090,7 @@ pm.test("Status code es 409 Conflict", () => {
           nombre: 'Lucia',
           apellido: 'Ventas',
           email: 'lucia.compradora@ticketit.com',
-          password: 'Password123!',
+          password: '1234',
           rol: 'comprador'
         },
         testScript: `
@@ -1109,7 +1109,7 @@ pm.collectionVariables.set("token_lucia", data.token);
         urlPath: '/api/auth/login',
         body: {
           email: 'lucia.compradora@ticketit.com',
-          password: 'Password123!'
+          password: '1234'
         },
         testScript: `
 pm.test("Status code es 200 OK", () => {
@@ -1189,7 +1189,7 @@ const itemsE2E = [
     urlPath: '/api/auth/login',
     body: {
       email: 'organizador@ticketit.com',
-      password: 'Password123!'
+      password: '1234'
     },
     testScript: `
 pm.test("Status code es 200", () => {
@@ -1206,7 +1206,7 @@ pm.collectionVariables.set("organizadorId", data.user?.id || data.usuario?.id ||
     urlPath: '/api/auth/login',
     body: {
       email: 'comprador@ticketit.com',
-      password: 'Password123!'
+      password: '1234'
     },
     testScript: `
 pm.test("Status code es 200", () => {

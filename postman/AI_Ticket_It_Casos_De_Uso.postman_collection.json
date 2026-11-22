@@ -13,17 +13,17 @@
     },
     {
       "key": "token_comprador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NTMwNjQwNH0.nRh8oeiWyqBKSFtiOIk6qoHV0gstGbZ-ymtKvYWE0e8",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NTMwNjU2N30.lBSgX0XYQWWN_Db2Cwh-TDpsqFcg2-QjUoXfkWW7xdM",
       "type": "string"
     },
     {
       "key": "token_organizador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTUzMDY0MDR9.pHuyw8Zciqk_MvQGUmHwsXJkQ-DwdPzof27QHFfcVZs",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTUzMDY1Njd9.ilSkxeaDQTmwYSXhUsRiY96qvaUkNm_ORp1ZuRNoTf0",
       "type": "string"
     },
     {
       "key": "token_comprador_2",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTUzMDY0MDR9.bVrX283ZsHy8eL6Y7Fl7Kdmu9QhYujZT8-H2YbUGC3o",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTUzMDY1Njd9.FqDhGymXvQMmM-mE9MBAXKbz1GyCX4yVmlrR--kMTLE",
       "type": "string"
     },
     {
@@ -2865,7 +2865,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Lucia\",\n  \"apellido\": \"Ventas\",\n  \"email\": \"lucia.compradora@ticketit.com\",\n  \"password\": \"Password123!\",\n  \"rol\": \"comprador\"\n}",
+              "raw": "{\n  \"nombre\": \"Lucia\",\n  \"apellido\": \"Ventas\",\n  \"email\": \"lucia.compradora@ticketit.com\",\n  \"password\": \"1234\",\n  \"rol\": \"comprador\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2917,7 +2917,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"lucia.compradora@ticketit.com\",\n  \"password\": \"Password123!\"\n}",
+              "raw": "{\n  \"email\": \"lucia.compradora@ticketit.com\",\n  \"password\": \"1234\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
