@@ -10,7 +10,15 @@ import {
   ForbiddenError
 } from '../errors/appError.js';
 
-const ACCIONES = { CANCELADA: 'cancelar', UTILIZADA: 'utilizar' };
+// Acción del service para cada estado destino de PATCH /compras/:id/estado.
+// CANCELADA la pide el comprador; CONFIRMADA (pago), UTILIZADA (ingreso) y
+// REEMBOLSADA (devolución) las registra el organizador del evento.
+const ACCIONES = {
+  CONFIRMADA: 'confirmar',
+  CANCELADA: 'cancelar',
+  UTILIZADA: 'utilizar',
+  REEMBOLSADA: 'reembolsar'
+};
 
 export class CompraService {
   constructor({
@@ -79,7 +87,14 @@ export class CompraService {
       await this.eventoRepository.update(compra.evento.id, compra.evento);
     }
     await this.cambioEstadoCompraRepository.save(cambio);
-    return this.compraRepository.update(compra.id, compra);
+    const guardada = await this.compraRepository.update(compra.id, compra);
+    return this.enriquecerDetalleCompra(guardada);
+  };
+
+  #validarOrganizador = (compra, usuarioActual) => {
+    if (!compra.esDeOrganizador(usuarioActual)) {
+      throw new ForbiddenError('El organizador no es dueño del evento asociado a la compra.');
+    }
   };
 
   getAll = async (filtros = {}) => {
@@ -145,11 +160,23 @@ export class CompraService {
     return this.#guardar(compra, cambio);
   };
 
+  confirmar = async (id, { usuarioActual } = {}) => {
+    const compra = await this.buscarCompraOError(id);
+    this.#validarOrganizador(compra, usuarioActual);
+    const cambio = compra.confirmar(usuarioActual?.id || usuarioActual, this.obtenerFechaActual());
+    return this.#guardar(compra, cambio);
+  };
+
+  reembolsar = async (id, { motivo, usuarioActual } = {}) => {
+    const compra = await this.buscarCompraOError(id);
+    this.#validarOrganizador(compra, usuarioActual);
+    const cambio = compra.reembolsar(usuarioActual?.id || usuarioActual, this.obtenerFechaActual(), motivo);
+    return this.#guardar(compra, cambio);
+  };
+
   utilizar = async (id, { usuarioActual } = {}) => {
     const compra = await this.buscarCompraOError(id);
-    if (!compra.esDeOrganizador(usuarioActual)) {
-      throw new ForbiddenError('El organizador no es dueño del evento asociado a la compra.');
-    }
+    this.#validarOrganizador(compra, usuarioActual);
     const cambio = compra.utilizar({
       quien: usuarioActual?.id || usuarioActual,
       fechaReferencia: this.obtenerFechaActual()
@@ -159,7 +186,7 @@ export class CompraService {
 
   cambiarEstado = async (id, { estado, ...opciones } = {}) => {
     const accion = ACCIONES[estado];
-    if (!accion) throw new ValidationError('El estado debe ser CANCELADA o UTILIZADA.');
+    if (!accion) throw new ValidationError('El estado debe ser CONFIRMADA, CANCELADA, UTILIZADA o REEMBOLSADA.');
     return this[accion](id, opciones);
   };
 }

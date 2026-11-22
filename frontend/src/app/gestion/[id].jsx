@@ -3,14 +3,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-import { utilizarCompra } from '@/api/compras';
+import { confirmarPagoCompra, registrarReembolsoCompra, utilizarCompra } from '@/api/compras';
 import { obtenerComprasDeEvento, obtenerEvento } from '@/api/eventos';
 import { FilaChips } from '@/components/eventos/FilaChips';
 import {
@@ -23,7 +22,6 @@ import {
 import { useConsulta } from '@/hooks/useConsulta';
 import {
   colores,
-  degrades,
   espacios,
   fuentes,
   radios,
@@ -40,10 +38,38 @@ import {
 
 const FILTROS = [
   { valor: 'todas', etiqueta: 'Todas' },
+  { valor: 'PENDIENTE', etiqueta: 'Pendientes de pago' },
   { valor: 'CONFIRMADA', etiqueta: 'Confirmadas' },
   { valor: 'UTILIZADA', etiqueta: 'Utilizadas' },
   { valor: 'CANCELADA', etiqueta: 'Canceladas' },
+  { valor: 'REEMBOLSADA', etiqueta: 'Reembolsadas' },
 ];
+
+// Lo que el organizador registra en cada estado. El pago y la devolución se coordinan
+// por fuera de la app (por ejemplo, por el chat): acá solo se deja constancia.
+const ACCIONES_POR_ESTADO = {
+  PENDIENTE: {
+    titulo: 'Confirmar pago',
+    icono: 'card-outline',
+    ejecutar: confirmarPagoCompra,
+    pregunta: (nombre) => `¿Recibiste el pago de ${nombre}? La compra quedará CONFIRMADA y su entrada, lista para usar.`,
+    error: 'No se pudo confirmar el pago.',
+  },
+  CONFIRMADA: {
+    titulo: 'Validar ingreso',
+    icono: 'checkmark-done',
+    ejecutar: utilizarCompra,
+    pregunta: (nombre) => `¿Deseás validar el ingreso de ${nombre}? La entrada quedará marcada como UTILIZADA.`,
+    error: 'Error al validar la entrada.',
+  },
+  CANCELADA: {
+    titulo: 'Registrar reembolso',
+    icono: 'cash-outline',
+    ejecutar: registrarReembolsoCompra,
+    pregunta: (nombre) => `¿Ya le devolviste el dinero a ${nombre}? La compra quedará REEMBOLSADA.`,
+    error: 'No se pudo registrar el reembolso.',
+  },
+};
 
 export default function GestionEvento() {
   const { id } = useLocalSearchParams();
@@ -72,28 +98,29 @@ export default function GestionEvento() {
   });
 
   const totalEntradasVendidas = balance.reduce((acc, b) => acc + (b.entradasVendidas ?? 0), 0);
+  const totalEntradasReservadas = balance.reduce((acc, b) => acc + (b.entradasReservadas ?? 0), 0);
   const totalCupoDisponible = balance.reduce((acc, b) => acc + (b.cupoDisponible ?? 0), 0);
   const totalRecaudado = compras
     .filter((c) => c.estado === 'CONFIRMADA' || c.estado === 'UTILIZADA')
     .reduce((acc, c) => acc + (Number(c.total) || 0), 0);
 
-  const marcarUtilizada = async (compra) => {
-    const compradorNombre = nombreCompleto(compra.comprador) || 'este asistente';
+  const ejecutarAccion = async (compra, accion) => {
+    const compradorNombre = nombreCompleto(compra.comprador) || 'este comprador';
     const confirmado = await confirmar({
-      titulo: 'Validar ingreso',
-      mensaje: `¿Deseás validar el ingreso de ${compradorNombre}? La entrada quedará marcada como UTILIZADA.`,
-      textoConfirmar: 'Validar ingreso',
-      textoCancelar: 'Cancelar',
+      titulo: accion.titulo,
+      mensaje: accion.pregunta(compradorNombre),
+      textoConfirmar: accion.titulo,
+      textoCancelar: 'Volver',
     });
     if (!confirmado) return;
 
     setErrorAccion(null);
     setProcesandoId(compra.id);
     try {
-      await utilizarCompra(compra.id);
+      await accion.ejecutar(compra.id);
       await recargarTodo();
     } catch (e) {
-      setErrorAccion(e.message || 'Error al validar la entrada.');
+      setErrorAccion(e.message || accion.error);
     } finally {
       setProcesandoId(null);
     }
@@ -142,6 +169,10 @@ export default function GestionEvento() {
                 <Text style={estilos.valorMetrica}>{totalEntradasVendidas}</Text>
               </View>
               <View style={estilos.tarjetaMetrica}>
+                <Text style={estilos.etiquetaMetrica}>RESERVADAS</Text>
+                <Text style={estilos.valorMetrica}>{totalEntradasReservadas}</Text>
+              </View>
+              <View style={estilos.tarjetaMetrica}>
                 <Text style={estilos.etiquetaMetrica}>DISPONIBLES</Text>
                 <Text style={estilos.valorMetrica}>{totalCupoDisponible}</Text>
               </View>
@@ -160,6 +191,7 @@ export default function GestionEvento() {
                 const total = item.cupoTotal ?? item.cupo ?? 0;
                 const vendidas = item.entradasVendidas ?? 0;
                 const disponibles = item.cupoDisponible ?? 0;
+                const reservadas = item.entradasReservadas ?? 0;
                 const porcentaje = total > 0 ? Math.min(100, Math.round((vendidas / total) * 100)) : 0;
 
                 return (
@@ -177,6 +209,7 @@ export default function GestionEvento() {
 
                     <Text style={estilos.detalleCupos}>
                       {disponibles === 0 ? 'Agotado' : `${disponibles} restantes`}
+                      {reservadas > 0 ? ` · ${reservadas} reservadas pendientes de pago` : ''}
                     </Text>
                   </View>
                 );
@@ -216,7 +249,9 @@ export default function GestionEvento() {
           const comprador = compra.comprador;
           const nombre = nombreCompleto(comprador) || comprador?.email || 'Comprador';
           const codigo = codigoCompra(compra);
-          const esConfirmada = compra.estado === 'CONFIRMADA';
+          // Una compra cancelada antes de confirmar el pago no tiene nada que reembolsar.
+          const sinReembolso = compra.estado === 'CANCELADA' && !compra.pagoConfirmado;
+          const accion = sinReembolso ? null : ACCIONES_POR_ESTADO[compra.estado];
           const procesando = procesandoId === compra.id;
           const tieneMensajes = compra.mensajes && compra.mensajes.length > 0;
 
@@ -257,13 +292,13 @@ export default function GestionEvento() {
               </View>
 
               <View style={estilos.accionesCompra}>
-                {esConfirmada ? (
+                {accion ? (
                   <Boton
-                    titulo="Validar ingreso"
-                    icono={<Ionicons name="checkmark-done" size={18} color={colores.sobreVioleta} />}
+                    titulo={accion.titulo}
+                    icono={<Ionicons name={accion.icono} size={18} color={colores.sobreVioleta} />}
                     cargando={procesando}
-                    onPress={() => marcarUtilizada(compra)}
-                    style={estilos.botonUtilizar}
+                    onPress={() => ejecutarAccion(compra, accion)}
+                    style={estilos.botonAccion}
                   />
                 ) : null}
 
@@ -320,10 +355,12 @@ const estilos = StyleSheet.create({
   },
   filaMetricas: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: espacios.sm,
   },
   tarjetaMetrica: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '45%',
     backgroundColor: colores.tarjetaAlta,
     borderRadius: radios.card,
     borderWidth: 1,
@@ -482,7 +519,7 @@ const estilos = StyleSheet.create({
     gap: espacios.sm,
     alignItems: 'center',
   },
-  botonUtilizar: {
+  botonAccion: {
     flex: 1,
   },
   botonChat: {

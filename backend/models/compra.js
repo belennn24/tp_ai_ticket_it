@@ -13,6 +13,9 @@ export const TRANSICIONES_COMPRA = Object.freeze({
     [estadoCompra.REEMBOLSADA]: []
 });
 
+// Estados a los que solo se llega con el pago ya confirmado.
+const ESTADOS_CON_PAGO = [estadoCompra.CONFIRMADA, estadoCompra.UTILIZADA, estadoCompra.REEMBOLSADA];
+
 export class Compra {
     constructor({
         id,
@@ -23,7 +26,8 @@ export class Compra {
         total,
         estado = estadoCompra.PENDIENTE,
         mensajes = [],
-        motivo = null
+        motivo = null,
+        fechaPago = null
     } = {}) {
         this.validar({ cantidad, estado });
 
@@ -36,6 +40,11 @@ export class Compra {
         this.estado = estado;
         this.mensajes = Array.isArray(mensajes) ? mensajes : [];
         this.motivo = motivo ? String(motivo).trim() : null;
+        // Cuándo el organizador confirmó el pago. Si la compra se rehidrata en un estado
+        // posterior al pago (por ejemplo, desde el seed) se la considera pagada.
+        this.fechaPago = fechaPago
+            ? new Date(fechaPago)
+            : (ESTADOS_CON_PAGO.includes(estado) ? new Date() : null);
 
         // Estados iniciales y trazabilidad
         this.fechaCompra = new Date();
@@ -167,8 +176,29 @@ export class Compra {
         }
     }
 
+    // Toda compra nace pendiente de pago: este es el primer registro de su historial.
+    registrarAlta(quien = null, fechaReferencia = new Date()) {
+        return new CambioEstadoCompra({
+            compra: this.id,
+            compraId: this.id,
+            estado: this.estado,
+            quien: quien ? (quien.id || quien) : null,
+            fechaHora: fechaReferencia instanceof Date ? fechaReferencia : new Date(fechaReferencia)
+        });
+    }
+
+    // El pago se coordina por fuera de la app: el organizador lo confirma manualmente.
     confirmar(quien = null, fechaReferencia = new Date()) {
-        return this.actualizarEstado(estadoCompra.CONFIRMADA, quien, fechaReferencia);
+        if (typeof this.evento?.finalizo === 'function' && this.evento.finalizo(fechaReferencia)) {
+            throw new ConflictError('No se puede confirmar el pago de una compra de un evento que ya finalizó.');
+        }
+        const cambio = this.actualizarEstado(estadoCompra.CONFIRMADA, quien, fechaReferencia);
+        this.fechaPago = cambio.fechaHora;
+        return cambio;
+    }
+
+    get pagoConfirmado() {
+        return this.fechaPago !== null;
     }
 
     #cupoRestituido = false;
@@ -200,7 +230,13 @@ export class Compra {
         this.#cupoRestituido = true;
     }
 
+    // La devolución también se coordina por fuera: el organizador registra que se concretó.
+    // Solo es posible desde CANCELADA (ver TRANSICIONES_COMPRA).
     reembolsar(quien = null, fechaReferencia = new Date(), motivo = null) {
+        // Si se canceló antes de confirmar el pago, no hay dinero que devolver.
+        if (this.estado === estadoCompra.CANCELADA && !this.pagoConfirmado) {
+            throw new ConflictError('Solo se puede reembolsar una compra cuyo pago fue confirmado.');
+        }
         return this.actualizarEstado(estadoCompra.REEMBOLSADA, quien, fechaReferencia, motivo);
     }
 
@@ -256,9 +292,12 @@ export class Compra {
             total: this.total,
             estado: this.estado,
             mensajes: this.mensajes,
+            motivo: this.motivo,
             fechaCompra: this.fechaCompra,
             fechaModificacion: this.fechaModificacion,
             fechaBaja: this.fechaBaja,
+            fechaPago: this.fechaPago,
+            pagoConfirmado: this.pagoConfirmado,
             borrada: this.borrada,
             diasFaltantes: this.diasFaltantes
         };

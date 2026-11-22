@@ -594,6 +594,38 @@ pm.test("El historial registra la transición a CANCELADA y guarda el motivo", (
     pm.expect(cancelado).to.be.an('object');
     pm.expect(cancelado.motivo).to.equal('Inconvenientes de fuerza mayor, solicito reembolso.');
 });`
+      }),
+      createRequestItem({
+        name: '4. Organizador registra el reembolso coordinado por fuera de la app',
+        method: 'PATCH',
+        urlPath: '/api/compras/{{compra2Id}}/estado',
+        authBearerVar: 'token_organizador',
+        body: {
+          estado: 'REEMBOLSADA',
+          motivo: 'Transferencia devuelta al comprador.'
+        },
+        testScript: `
+pm.test("Status code es 200 OK", () => {
+    pm.response.to.have.status(200);
+});
+pm.test("La compra pasa a estado REEMBOLSADA", () => {
+    const data = pm.response.json();
+    pm.expect(data.estado).to.equal('REEMBOLSADA');
+});`
+      }),
+      createRequestItem({
+        name: '5. El comprador ve el reembolso registrado en el historial',
+        method: 'GET',
+        urlPath: '/api/compras/{{compra2Id}}/historial',
+        authBearerVar: 'token_comprador',
+        testScript: `
+pm.test("Status code es 200", () => {
+    pm.response.to.have.status(200);
+});
+pm.test("El historial termina en CANCELADA y luego REEMBOLSADA", () => {
+    const estados = pm.response.json().map(h => h.estado);
+    pm.expect(estados.slice(-2)).to.eql(['CANCELADA', 'REEMBOLSADA']);
+});`
       })
     ]
   },
@@ -643,6 +675,32 @@ pm.test("Status code es 403 Forbidden", () => {
 pm.test("Status code es 404 Not Found", () => {
     pm.response.to.have.status(404);
 });`
+      }),
+      createRequestItem({
+        name: '4. Conflicto - Reembolsar una compra que no fue cancelada (409)',
+        method: 'PATCH',
+        urlPath: '/api/compras/{{compraId}}/estado',
+        authBearerVar: 'token_organizador',
+        body: {
+          estado: 'REEMBOLSADA'
+        },
+        testScript: `
+pm.test("Status code es 409 Conflict", () => {
+    pm.response.to.have.status(409);
+});`
+      }),
+      createRequestItem({
+        name: '5. Seguridad - El comprador no puede registrar reembolsos (403)',
+        method: 'PATCH',
+        urlPath: '/api/compras/{{compra2Id}}/estado',
+        authBearerVar: 'token_comprador',
+        body: {
+          estado: 'REEMBOLSADA'
+        },
+        testScript: `
+pm.test("Status code es 403 Forbidden", () => {
+    pm.response.to.have.status(403);
+});`
       })
     ]
   },
@@ -681,6 +739,8 @@ pm.test("Status code es 200 OK", () => {
 pm.test("Estado de compra cambia a UTILIZADA", () => {
     const data = pm.response.json();
     pm.expect(data.estado).to.equal('UTILIZADA');
+    // Se califica el evento de esta compra (CU04 pudo haber cambiado eventoId).
+    pm.collectionVariables.set("eventoCalificarId", data.evento.id);
 });`
       }),
       createRequestItem({
@@ -689,7 +749,7 @@ pm.test("Estado de compra cambia a UTILIZADA", () => {
         urlPath: '/api/resenias',
         authBearerVar: 'token_comprador',
         body: {
-          eventoId: '{{eventoId}}',
+          eventoId: '{{eventoCalificarId}}',
           puntuacion: 5,
           detalle: 'Excelente organización, sonido impecable y acceso rápido!'
         },
@@ -844,10 +904,10 @@ pm.test("Eventos ordenados por reputación del organizador", () => {
 pm.test("Status code es 201 Created", () => {
     pm.response.to.have.status(201);
 });
-pm.test("Compra creada en estado CONFIRMADA y descuenta cupo", () => {
+pm.test("Compra creada en estado PENDIENTE (pendiente de pago) y reserva cupo", () => {
     const data = pm.response.json();
     pm.expect(data).to.have.property('id');
-    pm.expect(data.estado).to.equal('CONFIRMADA');
+    pm.expect(data.estado).to.equal('PENDIENTE');
     pm.expect(data.cantidad).to.equal(2);
     pm.expect(data.total).to.equal(10000); // 2 * 5000
     pm.collectionVariables.set("compraId", data.id);
@@ -858,10 +918,12 @@ pm.test("Compra creada en estado CONFIRMADA y descuenta cupo", () => {
         method: 'POST',
         urlPath: '/api/compras',
         authBearerVar: 'token_comprador',
+        // La Mesa VIP del Jazz tiene cupo 2 en el seed: 3 entradas respetan el máximo
+        // por persona (5) pero superan el cupo disponible.
         body: {
-          eventoId: '{{eventoId}}',
-          tipoEntradaId: '{{tipoEntradaGeneralId}}',
-          cantidad: 999999
+          eventoId: 'evt-jazz-night-2',
+          tipoEntradaId: 'te-jazz-mesa',
+          cantidad: 3
         },
         testScript: `
 pm.test("Status code es 409 Conflict por cupo insuficiente", () => {
@@ -1257,9 +1319,26 @@ pm.test("Status code es 201 Created", () => {
 });
 var data = pm.response.json();
 pm.collectionVariables.set("compraId", data.id);
-pm.expect(data.estado).to.equal('CONFIRMADA');
+pm.expect(data.estado).to.equal('PENDIENTE');
 pm.expect(data.total).to.equal(10000);
-pm.expect(data).to.have.property('diasFaltantes');
+pm.expect(data.diasFaltantes).to.be.null;
+`
+  }),
+  createRequestItem({
+    name: '08b. Pago - Organizador confirma el pago de la Compra 1 (coordinado por fuera de la app)',
+    method: 'PATCH',
+    urlPath: '/api/compras/{{compraId}}/estado',
+    authBearerVar: 'token_organizador',
+    body: {
+      estado: 'CONFIRMADA'
+    },
+    testScript: `
+pm.test("Status code es 200 OK", () => {
+    pm.response.to.have.status(200);
+});
+var data = pm.response.json();
+pm.expect(data.estado).to.equal('CONFIRMADA');
+pm.expect(data.diasFaltantes).to.not.be.null;
 `
   }),
   createRequestItem({
@@ -1291,7 +1370,8 @@ var data = pm.response.json();
 pm.expect(data.compras.length).to.be.at.least(1);
 var cupos = data.cuposDisponibles || data.balanceCupos;
 var cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get("tipoEntradaGeneralId"));
-pm.expect(cupoGeneral.cupo).to.equal(48); // 50 iniciales - 2 vendidas
+pm.expect(cupoGeneral.cupoDisponible).to.equal(48); // 50 iniciales - 2 vendidas
+pm.expect(cupoGeneral.entradasVendidas).to.equal(2);
 `
   }),
   createRequestItem({
@@ -1352,6 +1432,22 @@ pm.test("Status code es 201 Created", () => {
 var data = pm.response.json();
 pm.collectionVariables.set("compra2Id", data.id);
 pm.expect(data.total).to.equal(25000);
+pm.expect(data.estado).to.equal('PENDIENTE');
+`
+  }),
+  createRequestItem({
+    name: '14b. Pago - Organizador confirma el pago de la Compra 2',
+    method: 'PATCH',
+    urlPath: '/api/compras/{{compra2Id}}/estado',
+    authBearerVar: 'token_organizador',
+    body: {
+      estado: 'CONFIRMADA'
+    },
+    testScript: `
+pm.test("Status code es 200 OK", () => {
+    pm.response.to.have.status(200);
+});
+pm.expect(pm.response.json().estado).to.equal('CONFIRMADA');
 `
   }),
   createRequestItem({
@@ -1370,6 +1466,22 @@ pm.test("Status code es 200 OK", () => {
 var data = pm.response.json();
 pm.expect(data.estado).to.equal('CANCELADA');
 pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');
+`
+  }),
+  createRequestItem({
+    name: '15b. Reembolso - Organizador registra la devolución de la Compra 2',
+    method: 'PATCH',
+    urlPath: '/api/compras/{{compra2Id}}/estado',
+    authBearerVar: 'token_organizador',
+    body: {
+      estado: 'REEMBOLSADA',
+      motivo: 'Transferencia devuelta.'
+    },
+    testScript: `
+pm.test("Status code es 200 OK", () => {
+    pm.response.to.have.status(200);
+});
+pm.expect(pm.response.json().estado).to.equal('REEMBOLSADA');
 `
   }),
   createRequestItem({
@@ -1437,10 +1549,12 @@ pm.expect(data.resenias.length).to.be.at.least(1);
     method: 'POST',
     urlPath: '/api/compras',
     authBearerVar: 'token_comprador',
+    // Mesa VIP del Jazz: cupo 2 en el seed. 3 entradas respetan el máximo por persona
+    // (5) pero superan el cupo disponible.
     body: {
-      eventoId: '{{eventoId}}',
-      tipoEntradaId: '{{tipoEntradaPlateaId}}',
-      cantidad: 1000
+      eventoId: 'evt-jazz-night-2',
+      tipoEntradaId: 'te-jazz-mesa',
+      cantidad: 3
     },
     testScript: `
 pm.test("Status code es 409 Conflict", () => {

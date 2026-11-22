@@ -165,8 +165,9 @@ export class Evento {
     }
 
     // Venta de entradas: valida todas las reglas antes de modificar nada y después
-    // descuenta el cupo, crea la compra y la confirma como una única operación.
-    // Devuelve la compra confirmada y el cambio de estado para el historial.
+    // reserva el cupo y crea la compra como una única operación. La compra queda
+    // PENDIENTE hasta que el organizador confirme el pago.
+    // Devuelve la compra y su registro de alta para el historial.
     venderEntradas({ comprador, tipoEntradaId, cantidad, comprasPrevias = [], fechaReferencia = new Date() } = {}) {
         if (this.yaOcurrio(fechaReferencia)) {
             throw new ConflictError('No se pueden comprar entradas para un evento que ya ocurrió.');
@@ -176,7 +177,7 @@ export class Evento {
         const compra = new Compra({ comprador, evento: this, tipoEntrada, cantidad });
 
         this.descontarCupo(tipoEntrada.id, cantidad);
-        const cambio = compra.confirmar(comprador, fechaReferencia);
+        const cambio = compra.registrarAlta(comprador, fechaReferencia);
         return { compra, cambio };
     }
 
@@ -191,15 +192,13 @@ export class Evento {
     calcularBalanceCupos(compras = []) {
         return (this.tiposEntrada || []).map(tipo => {
             const tipoId = String(extraerId(tipo));
-            const vendidas = compras
-                .filter(c => {
-                    const cTipoId = String(extraerId(c.tipoEntrada));
-                    const estado = c?.estado;
-                    // Solo las compras en CONFIRMADA o UTILIZADA son ventas reales
-                    const esVendida = estado === estadoCompra.CONFIRMADA || estado === estadoCompra.UTILIZADA;
-                    return esVendida && cTipoId === tipoId;
-                })
+            const delTipo = compras.filter(c => String(extraerId(c.tipoEntrada)) === tipoId);
+            const sumar = (estados) => delTipo
+                .filter(c => estados.includes(c?.estado))
                 .reduce((acum, c) => acum + (Number(c.cantidad) || 0), 0);
+            // Vendidas: pago confirmado. Reservadas: pendientes de pago, que ya ocupan cupo.
+            const vendidas = sumar([estadoCompra.CONFIRMADA, estadoCompra.UTILIZADA]);
+            const reservadas = sumar([estadoCompra.PENDIENTE]);
 
             const cupoTotal = tipo.cupoTotal !== undefined ? tipo.cupoTotal : (tipo.cupo + vendidas);
             const cupoDisponible = typeof tipo.cupoDisponible === 'number' ? tipo.cupoDisponible : tipo.cupo;
@@ -211,7 +210,8 @@ export class Evento {
                 cupo: cupoTotal,
                 cupoTotal: cupoTotal,
                 cupoDisponible: cupoDisponible,
-                entradasVendidas: vendidas
+                entradasVendidas: vendidas,
+                entradasReservadas: reservadas
             };
         });
     }

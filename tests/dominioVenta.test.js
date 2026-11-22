@@ -19,7 +19,7 @@ const compraCon = (estado, cantidad) => new Compra({ comprador, cantidad, estado
 
 describe('Reglas de venta en el dominio', () => {
   describe('Evento.venderEntradas', () => {
-    it('descuenta cupo, crea la compra confirmada y devuelve el cambio de estado', () => {
+    it('reserva el cupo, crea la compra pendiente de pago y devuelve su registro de alta', () => {
       const { evento, tipo } = crearEvento();
 
       const { compra, cambio } = evento.venderEntradas({
@@ -27,11 +27,11 @@ describe('Reglas de venta en el dominio', () => {
       });
 
       expect(tipo.cupo).toBe(7);
-      expect(compra.estado).toBe(estadoCompra.CONFIRMADA);
+      expect(compra.estado).toBe(estadoCompra.PENDIENTE);
       expect(compra.evento).toBe(evento);
       expect(compra.comprador).toBe(comprador);
       expect(compra.total).toBe(3000);
-      expect(cambio.estado).toBe(estadoCompra.CONFIRMADA);
+      expect(cambio.estado).toBe(estadoCompra.PENDIENTE);
       expect(cambio.quien).toBe('usr-1');
       expect(cambio.fechaHora).toEqual(ahora);
     });

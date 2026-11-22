@@ -255,7 +255,7 @@ function BarraCompra({ eventoId, tipo, onComprada, onError }) {
   const comprar = async () => {
     const confirmado = await confirmar({
       titulo: 'Confirmar compra',
-      mensaje: `${cantidadValida} × ${tipo.nombre}\nTotal: ${formatearPrecio(total)}`,
+      mensaje: `${cantidadValida} × ${tipo.nombre}\nTotal: ${formatearPrecio(total)}\n\nLas entradas quedan reservadas hasta que el organizador confirme el pago.`,
       textoConfirmar: 'Comprar',
     });
     if (!confirmado) return;

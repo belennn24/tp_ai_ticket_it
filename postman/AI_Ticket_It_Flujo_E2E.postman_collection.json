@@ -13,17 +13,17 @@
     },
     {
       "key": "token_comprador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NTMwNDU1N30.NccULIJJfVE-2EM3g5LvthdTTsM66atVj-ImNVkT_zI",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMSIsImVtYWlsIjoiY29tcHJhZG9yQHRpY2tldGl0LmNvbSIsInJvbGUiOiJjb21wcmFkb3IiLCJyb2wiOiJjb21wcmFkb3IiLCJub21icmUiOiJKdWFuIENvbXByYWRvciIsImlhdCI6MTc5NTMwNjQwNH0.nRh8oeiWyqBKSFtiOIk6qoHV0gstGbZ-ymtKvYWE0e8",
       "type": "string"
     },
     {
       "key": "token_organizador",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTUzMDQ1NTd9.HMThMtClYCz45mf9HyHzHraXo2FjRszboJubHolt3qc",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1vcmdhbml6YWRvci0xIiwiZW1haWwiOiJvcmdhbml6YWRvckB0aWNrZXRpdC5jb20iLCJyb2xlIjoib3JnYW5pemFkb3IiLCJyb2wiOiJvcmdhbml6YWRvciIsIm5vbWJyZSI6IkNhcmxvcyBQcm9kdWN0b3IiLCJpYXQiOjE3OTUzMDY0MDR9.pHuyw8Zciqk_MvQGUmHwsXJkQ-DwdPzof27QHFfcVZs",
       "type": "string"
     },
     {
       "key": "token_comprador_2",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTUzMDQ1NTd9.4ny6pJ74dJO8o4kP4HhNrRxBaA3Tg-SA_BlhtHcpYls",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzci1jb21wcmFkb3ItMiIsImVtYWlsIjoibWFyaWFAdGlja2V0aXQuY29tIiwicm9sZSI6ImNvbXByYWRvciIsInJvbCI6ImNvbXByYWRvciIsIm5vbWJyZSI6Ik1hcmlhIENvbXByYWRvcmEiLCJpYXQiOjE3OTUzMDY0MDR9.bVrX283ZsHy8eL6Y7Fl7Kdmu9QhYujZT8-H2YbUGC3o",
       "type": "string"
     },
     {
@@ -472,9 +472,66 @@
               "});",
               "var data = pm.response.json();",
               "pm.collectionVariables.set(\"compraId\", data.id);",
-              "pm.expect(data.estado).to.equal('CONFIRMADA');",
+              "pm.expect(data.estado).to.equal('PENDIENTE');",
               "pm.expect(data.total).to.equal(10000);",
-              "pm.expect(data).to.have.property('diasFaltantes');",
+              "pm.expect(data.diasFaltantes).to.be.null;",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "08b. Pago - Organizador confirma el pago de la Compra 1 (coordinado por fuera de la app)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_organizador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compraId}}/estado",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compraId}}",
+            "estado"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"CONFIRMADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var data = pm.response.json();",
+              "pm.expect(data.estado).to.equal('CONFIRMADA');",
+              "pm.expect(data.diasFaltantes).to.not.be.null;",
               ""
             ],
             "type": "text/javascript"
@@ -562,7 +619,8 @@
               "pm.expect(data.compras.length).to.be.at.least(1);",
               "var cupos = data.cuposDisponibles || data.balanceCupos;",
               "var cupoGeneral = cupos.find(c => c.id === pm.collectionVariables.get(\"tipoEntradaGeneralId\"));",
-              "pm.expect(cupoGeneral.cupo).to.equal(48); // 50 iniciales - 2 vendidas",
+              "pm.expect(cupoGeneral.cupoDisponible).to.equal(48); // 50 iniciales - 2 vendidas",
+              "pm.expect(cupoGeneral.entradasVendidas).to.equal(2);",
               ""
             ],
             "type": "text/javascript"
@@ -768,6 +826,62 @@
               "var data = pm.response.json();",
               "pm.collectionVariables.set(\"compra2Id\", data.id);",
               "pm.expect(data.total).to.equal(25000);",
+              "pm.expect(data.estado).to.equal('PENDIENTE');",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "14b. Pago - Organizador confirma el pago de la Compra 2",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_organizador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compra2Id}}/estado",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compra2Id}}",
+            "estado"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"CONFIRMADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.expect(pm.response.json().estado).to.equal('CONFIRMADA');",
               ""
             ],
             "type": "text/javascript"
@@ -825,6 +939,61 @@
               "var data = pm.response.json();",
               "pm.expect(data.estado).to.equal('CANCELADA');",
               "pm.expect(data.motivo).to.equal('Un amigo no podrá asistir.');",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "15b. Reembolso - Organizador registra la devolución de la Compra 2",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token_organizador}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/compras/{{compra2Id}}/estado",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "compras",
+            "{{compra2Id}}",
+            "estado"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"REEMBOLSADA\",\n  \"motivo\": \"Transferencia devuelta.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "",
+              "pm.test(\"Status code es 200 OK\", () => {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.expect(pm.response.json().estado).to.equal('REEMBOLSADA');",
               ""
             ],
             "type": "text/javascript"
@@ -1043,7 +1212,7 @@
         },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"eventoId\": \"{{eventoId}}\",\n  \"tipoEntradaId\": \"{{tipoEntradaPlateaId}}\",\n  \"cantidad\": 1000\n}",
+          "raw": "{\n  \"eventoId\": \"evt-jazz-night-2\",\n  \"tipoEntradaId\": \"te-jazz-mesa\",\n  \"cantidad\": 3\n}",
           "options": {
             "raw": {
               "language": "json"

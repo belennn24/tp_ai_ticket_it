@@ -23,7 +23,7 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       usuarios: 4,
       categorias: 4,
       eventos: 10,
-      compras: 4,
+      compras: 7,
       mensajes: 2,
       resenias: 1
     });
@@ -102,8 +102,31 @@ describe('Seed de Datos de Prueba (seedDatabase)', () => {
       expect(compraActiva.mensajes).toHaveLength(2);
 
       const historial = await cambioEstadoCompraRepository.findByCompraId('cmp-activa-1');
-      expect(historial.length).toBeGreaterThanOrEqual(1);
-      expect(historial[0].estado).toBe(estadoCompra.CONFIRMADA);
+      // Nace pendiente y el organizador confirma el pago.
+      expect(historial.map(h => h.estado)).toEqual([estadoCompra.PENDIENTE, estadoCompra.CONFIRMADA]);
+      expect(historial[1].quien.id).toBe('usr-organizador-1');
+    });
+
+    it('debe precargar una compra en cada estado para la demo, con historial coherente', async () => {
+      const estados = (await compraRepository.findAll()).map(c => c.estado);
+      for (const estado of Object.values(estadoCompra)) {
+        expect(estados).toContain(estado);
+      }
+
+      const pendiente = await compraRepository.findById('cmp-pendiente-1');
+      expect(pendiente.estado).toBe(estadoCompra.PENDIENTE);
+      const pitbull = await eventoRepository.findById('evt-pitbull-live-6');
+      const [campo] = pitbull.calcularBalanceCupos(await compraRepository.findByEventoId('evt-pitbull-live-6'));
+      expect(campo.entradasReservadas).toBe(2);
+      expect(campo.cupoDisponible + campo.entradasReservadas).toBe(campo.cupoTotal);
+
+      const historialReembolso = await cambioEstadoCompraRepository.findByCompraId('cmp-reembolsada-1');
+      expect(historialReembolso.map(h => h.estado)).toEqual([
+        estadoCompra.PENDIENTE, estadoCompra.CONFIRMADA, estadoCompra.CANCELADA, estadoCompra.REEMBOLSADA
+      ]);
+
+      const cancelada = await compraRepository.findById('cmp-cancelada-1');
+      expect(cancelada.puedePasarA(estadoCompra.REEMBOLSADA)).toBe(true);
     });
 
     it('debe precargar compras en estado UTILIZADA que habiliten reseñas', async () => {

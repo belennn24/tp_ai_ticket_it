@@ -146,24 +146,27 @@ describe('CompraValidation (Declarativo)', () => {
     describe('cambiarEstadoCompraSchema y agregarMensajeSchema', () => {
         test('cambiarEstadoCompraSchema rechaza estado faltante o inválido', () => {
             expect(cambiarEstadoCompraSchema.safeParse({}).success).toBe(false);
-            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'CONFIRMADA' }).success).toBe(false);
+            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'PENDIENTE' }).success).toBe(false);
             expect(cambiarEstadoCompraSchema.safeParse({ estado: 'cancelada' }).success).toBe(false);
         });
 
-        test('cambiarEstadoCompraSchema valida estado CANCELADA (con/sin motivo) y UTILIZADA', () => {
+        test('cambiarEstadoCompraSchema valida CONFIRMADA, CANCELADA (con/sin motivo), UTILIZADA y REEMBOLSADA', () => {
+            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'CONFIRMADA' }).success).toBe(true);
             expect(cambiarEstadoCompraSchema.safeParse({ estado: 'CANCELADA' }).success).toBe(true);
             expect(cambiarEstadoCompraSchema.safeParse({ estado: 'CANCELADA', motivo: 'Problemas de agenda' }).success).toBe(true);
             expect(cambiarEstadoCompraSchema.safeParse({ estado: 'UTILIZADA' }).success).toBe(true);
+            expect(cambiarEstadoCompraSchema.safeParse({ estado: 'REEMBOLSADA' }).success).toBe(true);
         });
 
         test('cambiarEstadoCompraSchema rechaza estado faltante o inválido (para responder 400)', () => {
             const sinEstado = cambiarEstadoCompraSchema.safeParse({});
             expect(sinEstado.success).toBe(false);
-            expect(sinEstado.error.issues[0].message).toContain('CANCELADA o UTILIZADA');
+            expect(sinEstado.error.issues[0].message).toContain('UTILIZADA o REEMBOLSADA');
 
-            const estadoInvalido = cambiarEstadoCompraSchema.safeParse({ estado: 'CONFIRMADA' });
+            // Nadie puede volver una compra a PENDIENTE: solo es el estado inicial.
+            const estadoInvalido = cambiarEstadoCompraSchema.safeParse({ estado: 'PENDIENTE' });
             expect(estadoInvalido.success).toBe(false);
-            expect(estadoInvalido.error.issues[0].message).toContain('CANCELADA o UTILIZADA');
+            expect(estadoInvalido.error.issues[0].message).toContain('UTILIZADA o REEMBOLSADA');
 
             const otroInvalido = cambiarEstadoCompraSchema.safeParse({ estado: 'OTRO_ESTADO' });
             expect(otroInvalido.success).toBe(false);

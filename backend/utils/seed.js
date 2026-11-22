@@ -204,7 +204,9 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     nombre: 'Campo General',
     descripcion: 'Acceso general al show Party After Dark',
     precio: 42000,
-    cupo: 300
+    cupo: 298, // Disponibles: originalmente 300, 2 reservadas por cmp-pendiente-1
+    cupoTotal: 300,
+    entradasVendidas: 2
   });
 
   const tePitbullVip = new TipoEntrada({
@@ -599,55 +601,106 @@ export async function seedDatabase({ clearExisting = false } = {}) {
     mensajes: []
   });
 
-  const compras = [compraActiva, compraActiva2, compraUtilizadaJuan, compraUtilizadaMaria];
+  // Compra pendiente: María pidió 2 Campo General para Pitbull y el organizador todavía
+  // no confirmó el pago. Las entradas ya quedan reservadas (ver cupo de tePitbullCampo).
+  const compraPendiente = new Compra({
+    id: 'cmp-pendiente-1',
+    comprador: mariaCompradora,
+    evento: eventoPitbull,
+    tipoEntrada: tePitbullCampo,
+    cantidad: 2,
+    total: 84000,
+    estado: estadoCompra.PENDIENTE,
+    mensajes: []
+  });
+
+  // Compra cancelada a la espera del reembolso: el organizador todavía no registró la devolución.
+  const compraCanceladaMaria = new Compra({
+    id: 'cmp-cancelada-1',
+    comprador: mariaCompradora,
+    evento: eventoEkoparty,
+    tipoEntrada: teEkoGeneral,
+    cantidad: 1,
+    total: 32000,
+    estado: estadoCompra.CANCELADA,
+    motivo: 'Me surgió un viaje de trabajo esa semana.',
+    fechaPago: new Date(ahora.getTime() - 68 * 60 * 60 * 1000), // el organizador había confirmado el pago
+    mensajes: []
+  });
+
+  // Compra reembolsada: Juan canceló y el organizador ya registró la devolución.
+  const compraReembolsada = new Compra({
+    id: 'cmp-reembolsada-1',
+    comprador: juanComprador,
+    evento: eventoEkoparty,
+    tipoEntrada: teEkoTraining,
+    cantidad: 1,
+    total: 68000,
+    estado: estadoCompra.REEMBOLSADA,
+    motivo: 'Transferencia devuelta al comprador.',
+    mensajes: []
+  });
+
+  const compras = [
+    compraActiva,
+    compraActiva2,
+    compraUtilizadaJuan,
+    compraUtilizadaMaria,
+    compraPendiente,
+    compraCanceladaMaria,
+    compraReembolsada
+  ];
   for (const comp of compras) {
     await compraRepository.save(comp);
   }
 
   // 8. Historial de Auditoría de Estados (CambioEstadoCompra)
+  // Toda compra nace PENDIENTE (la registra el comprador). El pago y la devolución se
+  // coordinan por fuera de la app: el organizador confirma el pago, registra el ingreso
+  // y, si la compra se canceló, registra el reembolso.
+  const carlos = usuarios[0]; // Carlos Productor, organizador de los eventos con compras
+  const horas = (h) => h * 60 * 60 * 1000;
+  const historialDe = (compra, pasos) => pasos.map(([estado, quien, fechaHora, motivo = null], i) =>
+    new CambioEstadoCompra({ id: `trans-${compra.id}-${i + 1}`, compra, estado, quien, fechaHora, motivo })
+  );
+  const hace3Dias = new Date(ahora.getTime() - horas(72));
+  const hace2Dias = new Date(ahora.getTime() - horas(48));
+  const haceUnDia = new Date(ahora.getTime() - horas(24));
+  const compraHistorica = (dias) => new Date(fechaPasada15Dias.getTime() - horas(24 * dias));
+
   const transiciones = [
-    new CambioEstadoCompra({
-      id: 'trans-activa-1',
-      compra: compraActiva,
-      estado: estadoCompra.CONFIRMADA,
-      quien: juanComprador,
-      fechaHora: new Date(ahora.getTime() - 3 * 24 * 60 * 60 * 1000)
-    }),
-    new CambioEstadoCompra({
-      id: 'trans-activa-2',
-      compra: compraActiva2,
-      estado: estadoCompra.CONFIRMADA,
-      quien: juanComprador,
-      fechaHora: new Date(ahora.getTime() - 2 * 24 * 60 * 60 * 1000)
-    }),
-    new CambioEstadoCompra({
-      id: 'trans-utilizada-juan-1',
-      compra: compraUtilizadaJuan,
-      estado: estadoCompra.CONFIRMADA,
-      quien: juanComprador,
-      fechaHora: new Date(fechaPasada15Dias.getTime() - 5 * 24 * 60 * 60 * 1000)
-    }),
-    new CambioEstadoCompra({
-      id: 'trans-utilizada-juan-2',
-      compra: compraUtilizadaJuan,
-      estado: estadoCompra.UTILIZADA,
-      quien: usuarios[0], // Carlos Productor (acceso)
-      fechaHora: fechaPasada15Dias
-    }),
-    new CambioEstadoCompra({
-      id: 'trans-utilizada-maria-1',
-      compra: compraUtilizadaMaria,
-      estado: estadoCompra.CONFIRMADA,
-      quien: mariaCompradora,
-      fechaHora: new Date(fechaPasada15Dias.getTime() - 4 * 24 * 60 * 60 * 1000)
-    }),
-    new CambioEstadoCompra({
-      id: 'trans-utilizada-maria-2',
-      compra: compraUtilizadaMaria,
-      estado: estadoCompra.UTILIZADA,
-      quien: usuarios[0],
-      fechaHora: fechaPasada15Dias
-    })
+    ...historialDe(compraActiva, [
+      [estadoCompra.PENDIENTE, juanComprador, hace3Dias],
+      [estadoCompra.CONFIRMADA, carlos, new Date(hace3Dias.getTime() + horas(2))]
+    ]),
+    ...historialDe(compraActiva2, [
+      [estadoCompra.PENDIENTE, juanComprador, hace2Dias],
+      [estadoCompra.CONFIRMADA, carlos, new Date(hace2Dias.getTime() + horas(3))]
+    ]),
+    ...historialDe(compraUtilizadaJuan, [
+      [estadoCompra.PENDIENTE, juanComprador, compraHistorica(5)],
+      [estadoCompra.CONFIRMADA, carlos, new Date(compraHistorica(5).getTime() + horas(1))],
+      [estadoCompra.UTILIZADA, carlos, fechaPasada15Dias]
+    ]),
+    ...historialDe(compraUtilizadaMaria, [
+      [estadoCompra.PENDIENTE, mariaCompradora, compraHistorica(4)],
+      [estadoCompra.CONFIRMADA, carlos, new Date(compraHistorica(4).getTime() + horas(1))],
+      [estadoCompra.UTILIZADA, carlos, fechaPasada15Dias]
+    ]),
+    ...historialDe(compraPendiente, [
+      [estadoCompra.PENDIENTE, mariaCompradora, new Date(ahora.getTime() - horas(1))]
+    ]),
+    ...historialDe(compraCanceladaMaria, [
+      [estadoCompra.PENDIENTE, mariaCompradora, hace3Dias],
+      [estadoCompra.CONFIRMADA, carlos, new Date(hace3Dias.getTime() + horas(4))],
+      [estadoCompra.CANCELADA, mariaCompradora, haceUnDia, compraCanceladaMaria.motivo]
+    ]),
+    ...historialDe(compraReembolsada, [
+      [estadoCompra.PENDIENTE, juanComprador, hace3Dias],
+      [estadoCompra.CONFIRMADA, carlos, new Date(hace3Dias.getTime() + horas(1))],
+      [estadoCompra.CANCELADA, juanComprador, hace2Dias, 'No voy a poder asistir.'],
+      [estadoCompra.REEMBOLSADA, carlos, haceUnDia, compraReembolsada.motivo]
+    ])
   ];
 
   for (const t of transiciones) {

@@ -40,7 +40,7 @@ describe('CompraService (Pruebas Unitarias)', () => {
   });
 
   describe('Creación de compras (create / crearCompra)', () => {
-    it('debe crear una compra exitosamente, descontar cupo, registrar auditoría y calcular diasFaltantes', async () => {
+    it('debe crear una compra pendiente de pago, reservar el cupo y registrar el alta en el historial', async () => {
       const tipoEntrada = new TipoEntrada({
         id: 'tipo-1',
         nombre: 'General',
@@ -63,12 +63,14 @@ describe('CompraService (Pruebas Unitarias)', () => {
       });
 
       expect(resultado).toBeDefined();
-      expect(resultado.estado).toBe(estadoCompra.CONFIRMADA);
+      // La compra queda pendiente de pago hasta que el organizador la confirme.
+      expect(resultado.estado).toBe(estadoCompra.PENDIENTE);
       expect(resultado.cantidad).toBe(3);
       expect(resultado.total).toBe(3000);
       expect(resultado.comprador).toBeInstanceOf(Usuario);
       expect(resultado.comprador.id).toBe('user-123');
-      expect(resultado.diasFaltantes).toBe(5);
+      // Los días faltantes solo se informan en compras confirmadas.
+      expect(resultado.diasFaltantes).toBeNull();
 
       // Verificación de decremento de cupo en el tipo de entrada
       expect(tipoEntrada.cupo).toBe(7);
@@ -76,7 +78,7 @@ describe('CompraService (Pruebas Unitarias)', () => {
       // Verificación de registro histórico en CambioEstadoCompra
       const historial = await cambioEstadoRepo.findByCompraId(resultado.id);
       expect(historial).toHaveLength(1);
-      expect(historial[0].estado).toBe(estadoCompra.CONFIRMADA);
+      expect(historial[0].estado).toBe(estadoCompra.PENDIENTE);
       expect(historial[0].quien).toBe('user-123');
     });
 
